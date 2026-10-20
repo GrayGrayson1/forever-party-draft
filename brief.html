@@ -209,7 +209,7 @@ async function sha256hex(s){ const b = await crypto.subtle.digest("SHA-256", new
 
 function blankBallot(){
   return {v:1, name:"", classes:[], faction:null, style:null, rulesets:{}, favRuleset:null,
-    roles:{tank:null,healer:null,dps:null}, race:null, skyborne:null, profs:[],
+    roles:{tank:null,healer:null,dps:null}, race:null, skyborne:null, profs:[], profMode:"first", profsBy:{},
     days:[], times:[], hours:null, pace:null, hardcore:null, launch:null};
 }
 function normBallot(b){
@@ -227,10 +227,17 @@ function normBallot(b){
   n.skyborne = pick(b.skyborne,SKY); n.hours = pick(b.hours,HOURS); n.pace = pick(b.pace,PACE);
   n.hardcore = pick(b.hardcore,HC); n.launch = pick(b.launch,LAUNCH);
   n.profs = Array.isArray(b.profs) ? b.profs.filter(p=>PROF[p]).slice(0,2) : [];
+  n.profMode = b.profMode==="each" ? "each" : "first";
+  if (b.profsBy && typeof b.profsBy==="object") Object.keys(b.profsBy).forEach(c=>{ if (CLS[c] && n.classes.includes(c) && Array.isArray(b.profsBy[c])) n.profsBy[c] = b.profsBy[c].filter(p=>PROF[p]).slice(0,2); });
+  if (n.profMode==="each" && n.classes[0] && n.profsBy[n.classes[0]]) n.profs = n.profsBy[n.classes[0]].slice();
   n.days = Array.isArray(b.days) ? b.days.filter(d=>Number.isInteger(d)&&d>=0&&d<7) : [];
   n.times = Array.isArray(b.times) ? b.times.filter(t=>TIMES.some(o=>o[0]===t)) : [];
   return n;
 }
+
+/* Professions can be set once (for the #1 pick) or per ranked class. */
+function profsFor(b, c){ const p = b.profMode==="each" && c && b.profsBy && b.profsBy[c] && b.profsBy[c].length ? b.profsBy[c] : b.profs; return p || []; }
+function profCountsFor(entries, plan){ const o = {}; PROFS.forEach(p=>o[p.id]=0); entries.forEach(([k,b],i)=>{ const c = plan && plan.pick[i] ? plan.pick[i].c : b.classes[0]; profsFor(b, c).forEach(p=>o[p]++); }); return o; }
 
 /* Example ballots shown only in preview mode, when no shared store is connected. */
 const EXAMPLES = [
@@ -519,6 +526,7 @@ function render(){
   const T = tally(entries), n = T.n;
   const alias = aliasMap(entries.map(([k])=>k));
   const plan = planParty(entries);
+  T.prof = profCountsFor(entries, plan);
   const mem = members(entries, plan, alias);
   const sugg = buildSuggestions(T, plan, entries, mine, alias, mem);
   const nights = pickNights(T);
@@ -598,7 +606,7 @@ function render(){
     const brings = UTILS.filter(u=>u.by[m.o.c]).map(u=>u.name.toLowerCase());
     return `<div class="mem ${m.me?"me":""}" style="--cc:var(--c-${m.o.c})"><span class="a">${m.me?"You":esc(m.name)}</span>
       <span class="c">${CLS[m.o.c].name}</span><span class="r">${roleWord(m.o.role)[0].toUpperCase()+roleWord(m.o.role).slice(1)} · ${m.me?"your":"their"} #${m.o.rank+1} pick</span>
-      <span class="b">Brings ${listJoin(brings) || "damage"}.</span></div>`; }).join("") +
+      <span class="b">Brings ${listJoin(brings) || "damage"}.</span>${(()=>{ const pf = profsFor(Store.ballots.get(m.k)||{profs:[]}, m.o.c); return pf.length?`<span class="b">Professions: ${pf.map(p=>PROF[p].name).join(" + ")}</span>`:""; })()}</div>`; }).join("") +
     (n<5 ? `<div class="mem empty"><span class="a">Open slot</span><span class="c">${listJoin(fifth.top.map(x=>CLS[x.c.id].name).slice(0,2)).replace(" and "," or ")}</span><span class="r">${fifth.needRole ? fifth.needRole[0].toUpperCase()+fifth.needRole.slice(1) : "Damage"}</span><span class="b">${fifth.top[0].adds.length?`Would add ${listJoin(fifth.top[0].adds)}.`:"Best fit for a 5th."}</span></div>` : "");
   const missingNow = UTILS.filter(u=>!mem.some(m=>u.by[m.o.c]));
 
@@ -673,7 +681,7 @@ function render(){
     <div class="you"><dl>
       <dt>Your slot</dt><dd>${my ? `<b style="color:var(--c-${my.c})">${CLS[my.c].name}</b>, ${roleWord(my.role)} (your #${my.rank+1} pick)` : "Not placed yet"}</dd>
       <dt>Race</dt><dd>${myRace ? `${esc(myRace.name)}${myRace.pack?" · needs the Skyborne pack":""}` : "Not picked. Choose one on your ballot."}</dd>
-      <dt>Professions</dt><dd>${mine.profs.length ? mine.profs.map(p=>PROF[p].name).join(" + ") : "Not picked."}${mine.profs.some(p=>T.prof[p]>=2)?" · someone else picked the same, see adjustments":""}</dd>
+      <dt>Professions</dt><dd>${(()=>{ const pf = profsFor(mine, my?my.c:mine.classes[0]); return pf.length ? pf.map(p=>PROF[p].name).join(" + ") + (my && mine.profMode==="each" ? ` (for ${CLS[my.c].name})` : "") + (pf.some(p=>T.prof[p]>=2)?" · someone else picked the same, see adjustments":"") : "Not picked."; })()}</dd>
       <dt>Best partner</dt><dd>${partner ? `You share the most time with <b>${esc(shortAlias(alias[partner.k]))}</b> (${partner.c} slots a week).` : "Add your schedule to see this."}</dd>
       <dt>Pace</dt><dd>${myHoursRank>=0 ? `${HOURS[myHoursRank][1]} hours a week. ${myHoursRank>=2 && used.length>=2 && hi.indexOf(used[0])<=1 ? "You'll out-level the lighter players, so save extra hours for alts or professions." : myHoursRank<=1 && used.some(h=>hi.indexOf(h)>=3) ? "Others play a lot more. Ask them to keep a party character at your level." : "In line with the party."}` : "Not answered."}</dd>
     </dl>
