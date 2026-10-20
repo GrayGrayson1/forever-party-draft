@@ -58,7 +58,7 @@ section:last-of-type{border-bottom:0}
 .short{display:grid;gap:10px;margin:0;padding:0;list-style:none}
 .short li{display:grid;grid-template-columns:22px 1fr;gap:10px;font-size:1.08rem}
 .short li::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--gold);margin-top:.5em}
-.short li.warn::before{background:var(--warn)}
+.short li.warn::before{background:var(--bad)}
 .pill{display:inline-block;font-family:var(--f-mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;border-radius:999px;border:1px solid;white-space:nowrap}
 .pill.settled{color:var(--good);border-color:color-mix(in srgb,var(--good) 50%,transparent);background:color-mix(in srgb,var(--good) 10%,transparent)}
 .pill.leaning{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 50%,transparent);background:color-mix(in srgb,var(--warn) 10%,transparent)}
@@ -460,6 +460,7 @@ const pill = (k, label) => `<span class="pill ${k}">${esc(label || k)}</span>`;
 const slotName = (di,ti) => `${DAYS[di]} ${TIMES[ti][1].toLowerCase()}`;
 const listJoin = a => a.length<=1 ? (a[0]||"") : a.slice(0,-1).join(", ") + " and " + a[a.length-1];
 const vb = (n, one, many) => n + " " + (n===1 ? one : many);
+const FULLDAY = {Mon:"Mondays",Tue:"Tuesdays",Wed:"Wednesdays",Thu:"Thursdays",Fri:"Fridays",Sat:"Saturdays",Sun:"Sundays"};
 const roleWord = r => r==="dps" ? "damage" : r;
 
 /* Two group nights: the best full-party slot, then the best one at least two days away. */
@@ -580,7 +581,7 @@ function render(){
   if (n>=2 && !T.prof.alchemy && entries.some(([,b])=>b.profs.length)) add("medium", "Anyone", "Nobody makes potions", `Alchemy, fed by Herbalism, makes healing and mana potions and raid flasks. It matters most once raids open on Dec 9. ${T.prof.herbalism?"Someone already gathers herbs, so it's an easy add.":"Herbalism and Alchemy together are a natural pair for one person."}`);
   if (n<10) add("medium", "Everyone", "Raids need more people", `Barrow Deeps (10 players) and Hyjal Summit (20) open Dec 9. With ${n} you'd need ${10-n} more for the smaller raid, either friends or another group. Dungeons and leveling don't need anyone else.`);
   const worstDay = DAYS.map((d,di)=>({d, v:Math.max(...T.heat.map(r=>r[di]))})).sort((a,b)=>a.v-b.v)[0];
-  if (T.schedVoters>=3 && worstDay.v<=Math.floor(T.schedVoters/2)) add("low", "Everyone", `Skip ${worstDay.d}days`, `At most ${worstDay.v} of ${T.schedVoters} are ever free on ${worstDay.d}. Keep group plans off it.`);
+  if (T.schedVoters>=3 && worstDay.v<=Math.floor(T.schedVoters/2)) add("low", "Everyone", `Skip ${FULLDAY[worstDay.d]}`, `At most ${worstDay.v} of ${T.schedVoters} are ever free on ${FULLDAY[worstDay.d]}. Keep group plans off them.`);
   const order = {high:0, medium:1, low:2};
   adj.sort((a,b)=>order[a.impact]-order[b.impact]);
 
