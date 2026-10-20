@@ -272,6 +272,17 @@ table.picks{border-collapse:collapse;width:100%;min-width:900px;font-size:.88rem
 .prow .chip{padding:5px 10px;font-size:.86rem}
 .row-sug{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .picks .pp{font-size:.74rem;color:var(--muted);margin-top:2px}
+.slot .sx{grid-column:2 / 4;display:flex;gap:4px;flex-wrap:wrap}
+.spec{border:1px solid var(--line);background:none;color:var(--muted);border-radius:999px;padding:2px 9px;font-size:.78rem;display:inline-flex;gap:5px;align-items:center}
+.spec i{font-style:normal;font-family:var(--f-mono);font-size:.66rem;color:var(--faint)}
+.spec[aria-pressed="true"]{border-color:var(--cc,var(--gold));color:var(--fg);background:color-mix(in srgb,var(--cc,var(--gold)) 16%,transparent)}
+.spec.dibs[aria-pressed="true"]{border-color:var(--gold);color:var(--gold);background:var(--gold-soft)}
+.chip.nope[aria-pressed="true"]{border-color:var(--bad);color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,transparent)}
+.charlist{display:grid;gap:8px}
+.charrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.charrow .name-input{flex:1 1 200px;max-width:none;font-size:.95rem;padding:8px 12px}
+.charrow select{font:inherit;font-size:.9rem;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface-2);color:var(--fg)}
+.specl{margin:0;padding-left:18px;display:grid;gap:5px;font-size:.9rem}
 /* Guide */
 .guide{display:grid;gap:26px;grid-template-columns:minmax(0,1fr)}
 .guide > *, .board > *, .ballot > *, .cols > *{min-width:0}
@@ -320,6 +331,7 @@ table.matrix{border-collapse:collapse;width:100%;min-width:720px;font-size:.9rem
     <button class="tab" role="tab" id="tab-results" data-tab="results" aria-selected="false">Party board <span class="count" id="vote-count">0</span></button>
     <button class="tab" role="tab" id="tab-guide" data-tab="guide" aria-selected="false">Field guide</button>
     <a class="tab" href="brief.html" style="text-decoration:none">Game plan</a>
+    <a class="tab" href="launch.html" style="text-decoration:none">Launch guide</a>
     <span class="conn" id="conn"><i></i><span>Connecting…</span></span>
   </nav>
 
@@ -359,6 +371,7 @@ table.matrix{border-collapse:collapse;width:100%;min-width:720px;font-size:.9rem
 </div>
 <div class="toast" id="toast" hidden></div>
 
+<script src="forever-data.js"></script>
 <script>
 /* ---------- Config for hosting outside Claude (GitHub Pages) ----------
    Leave blank inside Claude. For GitHub Pages, paste your Supabase project URL
@@ -384,7 +397,7 @@ const CLASSES = [
    news:["Discipline gets Penance and Renewed Hope","Holy adds Prayer of Mending, Binding Heal and Litany of Light","Fear Ward and Devouring Plague available to every race","Gnome Priest is a new combo"]},
   {id:"shaman", name:"Shaman", armor:"Mail", roles:["healer","melee","ranged"], specs:["Elemental","Enhancement","Restoration"],
    blurb:"Totems, lightning and big group buffs.",
-   tankNote:"Rockbiter Weapon may let Enhancement tank. Not confirmed, so the party planner doesn't count Shaman as a tank.",
+   tankNote:"Enhancement's Rockbiter supports short off-tanking, but the planner doesn't count Shaman as a main tank.",
    news:["Now on Alliance too, as Dwarf Shaman","Totem overhaul: drop several at once, Totemic Projection and Recall","Elemental adds Lava Burst; Restoration adds Riptide","Enhancement uses two-handers with no talent; Maelstrom Weapon speeds Lightning Bolt"]},
   {id:"mage", name:"Mage", armor:"Cloth", roles:["ranged"], specs:["Arcane","Fire","Frost"],
    blurb:"Crowd control, AoE, portals and food for the group.",
@@ -400,14 +413,14 @@ const CLS = Object.fromEntries(CLASSES.map(c=>[c.id,c]));
 const ROLE_LABEL = {tank:"Tank",healer:"Healer",melee:"Melee",ranged:"Ranged"};
 
 const RACES = [
-  {id:"orc", name:"Orc", f:"H", classes:["hunter","mage","rogue","shaman","warlock","warrior"], newc:["mage"], racials:"Blood Fury, Shatter Curse · Axe Specialization, Hardiness"},
+  {id:"orc", name:"Orc", f:"H", classes:["hunter","mage","rogue","shaman","warlock","warrior"], newc:["mage"], racials:"Blood Fury, Shatter Curse · Savage (+1% crit), Hardiness"},
   {id:"tauren", name:"Tauren", f:"H", classes:["druid","hunter","shaman","warrior"], newc:[], racials:"War Stomp, Cultivation · Plainsrunning, Endurance"},
   {id:"troll", name:"Troll", f:"H", classes:["hunter","mage","priest","rogue","shaman","warlock","warrior"], newc:["warlock"], racials:"Berserking, Rapid Regeneration · Beast Slaying, Regeneration"},
   {id:"undead", name:"Undead", f:"H", classes:["mage","paladin","priest","rogue","warlock","warrior"], newc:["paladin"], racials:"Will of the Forsaken, Cannibalize · Underwater Breathing, Touch of the Grave"},
   {id:"sky-h", name:"Skyborne (Windshaper)", short:"Skyborne", f:"H", pack:true, classes:["druid","hunter","rogue","shaman","warrior"], newc:["druid","hunter","rogue","shaman","warrior"], racials:"Walk on Air, Skysight · Wind Blessed, Elemental Insight"},
-  {id:"dwarf", name:"Dwarf", f:"A", classes:["hunter","paladin","priest","rogue","shaman","warrior"], newc:["shaman"], racials:"Stoneform, Find Treasure · Mace Specialization, Big Game Hunter"},
+  {id:"dwarf", name:"Dwarf", f:"A", classes:["hunter","paladin","priest","rogue","shaman","warrior"], newc:["shaman"], racials:"Stoneform, Find Treasure · Earth Fury, Big Game Hunter"},
   {id:"gnome", name:"Gnome", f:"A", classes:["mage","priest","rogue","warlock","warrior"], newc:["priest"], racials:"Escape Artist, Eureka! · Expansive Mind, Engineering Specialization"},
-  {id:"human", name:"Human", f:"A", classes:["hunter","mage","paladin","priest","rogue","warlock","warrior"], newc:["hunter"], racials:"Will to Survive, Perception · Sword Specialization, The Human Spirit"},
+  {id:"human", name:"Human", f:"A", classes:["hunter","mage","paladin","priest","rogue","warlock","warrior"], newc:["hunter"], racials:"Will to Survive, Perception · Ruthless (+2% crit), The Human Spirit"},
   {id:"nelf", name:"Night Elf", f:"A", classes:["druid","hunter","priest","rogue","warrior"], newc:[], racials:"Elune's Light, Shadowmeld · Quickness, Wisp Spirit"},
   {id:"sky-a", name:"Skyborne (High Order)", short:"Skyborne", f:"A", pack:true, classes:["druid","hunter","mage","rogue","warrior"], newc:["druid","hunter","mage","rogue","warrior"], racials:"Walk on Air, Read Ley Line · Wind Blessed, Elemental Insight"},
 ];
@@ -455,9 +468,9 @@ const SKY = [["yes","Buying it"],["maybe","Maybe"],["no","No"]];
 
 const DATES = [
   {d:"2026-10-21T21:00:00Z", label:"Stress test", sub:"Oct 21, 2 PM PDT. Open to any account, wiped afterward."},
-  {d:"2026-10-27T17:00:00Z", label:"Name reservation", sub:"Oct 27 – Nov 3. Pick your ruleset first, then claim names."},
+  {d:"2026-10-27T17:00:00Z", label:"Name reservation", sub:"Oct 27 – Nov 3. Needs the Heroic Pack. Up to 3 characters."},
   {d:"2026-11-04T23:00:00Z", label:"Launch", sub:"Nov 4, 3 PM PST. No early access."},
-  {d:"2026-12-09T16:00:00Z", label:"Raids unlock", sub:"Dec 9. Barrow Deeps (10) and Hyjal Summit (20)."},
+  {d:"2026-12-09T16:00:00Z", label:"Raids unlock", sub:"Dec 9. Barrow Deeps (10), Hyjal Summit (20) and Onyxia's Lair (40)."},
 ];
 
 /* ---------- Helpers ---------- */
@@ -482,7 +495,7 @@ const ICON = {
 function blankBallot(){
   return {v:1, name:"", classes:[], faction:null, style:null, rulesets:{}, favRuleset:null,
     roles:{tank:null,healer:null,dps:null}, race:null, skyborne:null, profs:[], profMode:"first", profsBy:{},
-    days:[], times:[], hours:null, pace:null, hardcore:null, launch:null};
+    days:[], times:[], hours:null, pace:null, hardcore:null, launch:null, ...extraDefaults()};
 }
 function normBallot(b){
   const n = blankBallot();
@@ -504,6 +517,7 @@ function normBallot(b){
   if (n.profMode==="each" && n.classes[0] && n.profsBy[n.classes[0]]) n.profs = n.profsBy[n.classes[0]].slice();
   n.days = Array.isArray(b.days) ? b.days.filter(d=>Number.isInteger(d)&&d>=0&&d<7) : [];
   n.times = Array.isArray(b.times) ? b.times.filter(t=>TIMES.some(o=>o[0]===t)) : [];
+  normExtra(b, n);
   return n;
 }
 
@@ -522,7 +536,8 @@ function loadDraft(){
 }
 function persistDraft(){ lsSet("fpd-draft", JSON.stringify(draft)); }
 function syncProfs(b){ Object.keys(b.profsBy||{}).forEach(c=>{ if (!b.classes.includes(c)) delete b.profsBy[c]; }); if (b.profMode==="each" && b.classes[0]) b.profs = (b.profsBy[b.classes[0]]||[]).slice(0,2); }
-function change(fn){ fn(draft); syncProfs(draft); dirty = true; persistDraft(); renderBallot(); updateSaveBar(); }
+function syncExtra(b){ Object.keys(b.specBy||{}).forEach(c=>{ if (!b.classes.includes(c)) delete b.specBy[c]; }); if (b.claim && !b.classes.includes(b.claim)) b.claim = null; b.nope = (b.nope||[]).filter(c=>!b.classes.includes(c)); }
+function change(fn){ fn(draft); syncProfs(draft); syncExtra(draft); dirty = true; persistDraft(); renderBallot(); updateSaveBar(); }
 
 /* ---------- Store: Claude db, Supabase, or a local preview ---------- */
 const Store = {
@@ -587,7 +602,10 @@ const Store = {
     if (!r.ok) throw {code:"unavailable", message:"HTTP "+r.status};
   },
   async save(b){
-    const clean = normBallot(b);
+    const clean = normBallot(b); cleanChars(clean);
+    try { clean.tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ""; } catch(e){}
+    clean.upd = new Date().toISOString();
+    const live = this.mine(); if (live) LIVE_FIELDS.forEach(k=>{ clean[k] = live[k]; });
     if (this.mode === "claude"){ await this.db.doc("ballots/"+this.myKey).set(clean); }
     else if (this.mode === "supabase"){ await this.rpc("submit_ballot", {p_token:this.token, p_ballot:clean}); await this.refresh(); }
     else if (this.mode === "local"){ this.ballots.set(this.myKey, clean); lsSet("fpd-local-ballot", JSON.stringify(clean)); this.emit(); }
@@ -667,11 +685,12 @@ function planParty(entries){
   const opts = entries.map(([k,b])=>{
     const anyRole = ["tank","healer","dps"].some(r=>b.roles[r]!==null);
     const list = [];
-    b.classes.forEach((c,i)=>partyRoles(c).forEach(role=>{
+    const dib = claimOf(b);
+    b.classes.forEach((c,i)=>{ if (dib && c!==dib) return; rolesFor(b,c).forEach(role=>{
       const pref = anyRole ? (b.roles[role] ?? 0) : 1;
       if (pref>0) list.push({c, role, rank:i, score:(5-i)*2 + pref*3});
-    }));
-    if (!list.length) b.classes.forEach((c,i)=>partyRoles(c).forEach(role=>list.push({c, role, rank:i, score:(5-i)*2 - 2})));
+    }); });
+    if (!list.length) b.classes.forEach((c,i)=>{ if (dib && c!==dib) return; rolesFor(b,c).forEach(role=>list.push({c, role, rank:i, score:(5-i)*2 - 2})); });
     return list.sort((a,b)=>b.score-a.score);
   });
   const groups = Math.max(1, Math.ceil(n/5));
@@ -744,10 +763,14 @@ function renderBallot(){
               <button type="button" class="ib" data-move="${i}" data-dir="-1" aria-label="Move ${CLS[c].name} up" ${i===0?"disabled":""}>${ICON.up}</button>
               <button type="button" class="ib" data-move="${i}" data-dir="1" aria-label="Move ${CLS[c].name} down" ${i===b.classes.length-1?"disabled":""}>${ICON.down}</button>
               <button type="button" class="ib" data-remove="${i}" aria-label="Remove ${CLS[c].name}">${ICON.x}</button>
-            </span></div>`; }).join("")}
-        <p class="small muted">Dual spec unlocks at level 40, so a hybrid can cover two roles.</p>
+            </span>
+            <span class="sx">${fdSpecs(c).map(s=>`<button type="button" class="spec" data-spec="${c}:${s.name}" aria-pressed="${(b.specBy[c]||[]).includes(s.name)}" title="${esc(s.new)}">${s.name}<i>${s.roles.map(r=>r==="dps"?"dmg":r).join("/")}</i></button>`).join("")}<button type="button" class="spec dibs" data-claim="${c}" aria-pressed="${b.claim===c}" title="Dibs: the planner always slots you as this class">${b.claim===c?"★ Dibs":"☆ Dibs"}</button></span></div>`; }).join("")}
+        <p class="small muted">Tap the spec you'd play for each class. Pick up to two, since dual spec unlocks at 40. No spec means any role the class can fill. <b>Dibs</b> tells the planner you're set on that class.</p>
       </div>
     </div>
+    <div class="field" style="margin-top:14px"><span class="lbl">Won't play <span class="sub">(optional)</span></span>
+      <div class="chips">${CLASSES.map(c=>{ const rk = b.classes.includes(c.id); return `<button type="button" class="chip nope" data-nope="${c.id}" aria-pressed="${b.nope.includes(c.id)}" ${rk?"disabled":""}>${c.name}</button>`; }).join("")}</div>
+      <span class="sub">Classes you'd rather not play at all. Suggestions will never push you toward them, and the party can see them on the board.</span></div>
   </div>
 
   <div class="step">
@@ -791,9 +814,18 @@ function renderBallot(){
           return `<button type="button" class="chip" data-race="${r.id}" aria-pressed="${b.race===r.id}" ${ok?"":"disabled"} title="${esc(r.racials)}">${esc(r.name)}${r.pack?'<span class="tag">pack</span>':isNewCombo?'<span class="tag">new</span>':""}</button>`; }).join("")}
       </div></div>`).join("")}
     </div>
-    <div class="field"><span class="lbl">Skyborne pack</span>
+    ${b.race && FD.starts[b.race] ? `<p class="small muted">${esc(RACE[b.race].name)} starts in <b>${FD.starts[b.race].zone}</b> (${FD.starts[b.race].area}).</p>` : ""}
+    <div class="field"><span class="lbl">Heroic Pack</span>
       ${segHTML("seg-sky", SKY, b.skyborne)}
-      <span class="sub">The new Skyborne race needs the Skyborne Heroic Pack or higher. The Epic Pack also includes 30 days of game time.</span></div>
+      <span class="sub">$29.99. Needed for the Skyborne race and for early name reservation, and it includes an Invite-A-Friend code (a friend plays free Nov 4–11). The Epic Pack adds 30 days of game time.</span></div>
+    <div class="field" id="chars"><span class="lbl">Character names <span class="sub">(up to 3 for reservation, Oct 27 – Nov 3)</span></span>
+      <div class="charlist">${b.chars.map((x,i)=>`<div class="charrow">
+        <input type="text" class="name-input" data-charname="${i}" maxlength="40" value="${esc(x.n)}" placeholder="First name and surname" aria-label="Character name ${i+1}">
+        <select data-charclass="${i}" aria-label="Class for this name"><option value="">Class…</option>${CLASSES.map(c=>`<option value="${c.id}" ${x.c===c.id?"selected":""}>${c.name}</option>`).join("")}</select>
+        <button type="button" class="chip" data-charres="${i}" aria-pressed="${x.r}">${x.r?"Reserved ✓":"Reserved?"}</button>
+        <button type="button" class="ib" data-chardel="${i}" aria-label="Remove this name">${ICON.x}</button></div>`).join("")}</div>
+      ${b.chars.length<3 ? `<button type="button" class="mini" data-charadd="1" style="justify-self:start">+ Add a name idea</button>` : ""}
+      <span class="sub">Names have a first name and a surname, and only the pair has to be unique in your region. Reserving needs the Heroic Pack. Mark a name reserved once you've claimed it, so the party can see.</span></div>
   </div>
 
   <div class="step" id="step-profs">
@@ -822,6 +854,7 @@ function renderBallot(){
       <div class="field"><span class="lbl">Leveling pace</span>${segHTML("seg-pace", PACE, b.pace)}</div>
       <div class="field"><span class="lbl">Hardcore when it opens?</span>${segHTML("seg-hc", HC, b.hardcore)}</div>
       <div class="field"><span class="lbl">Playing launch night, Nov 4?</span>${segHTML("seg-launch", LAUNCH, b.launch)}</div>
+      <div class="field"><span class="lbl">How should we split loot?</span>${segHTML("seg-loot", LOOT, b.loot)}</div>
     </div>
   </div>`;
 }
@@ -839,6 +872,12 @@ $("#view-ballot").addEventListener("click", e=>{
   if (d.class) return change(b=>{ const i=b.classes.indexOf(d.class); if (i>=0) b.classes.splice(i,1); else if (b.classes.length<5) b.classes.push(d.class); fixRace(b); });
   if (d.move!==undefined) return change(b=>{ const i=+d.move, j=i+(+d.dir); if (j<0||j>=b.classes.length) return; [b.classes[i],b.classes[j]]=[b.classes[j],b.classes[i]]; fixRace(b); });
   if (d.remove!==undefined) return change(b=>{ b.classes.splice(+d.remove,1); fixRace(b); });
+  if (d.spec) return change(b=>{ const j = d.spec.indexOf(":"), c = d.spec.slice(0,j), sp = d.spec.slice(j+1); const cur = (b.specBy[c]||[]).slice(); const i = cur.indexOf(sp); if (i>=0) cur.splice(i,1); else { cur.push(sp); if (cur.length>2) cur.shift(); } if (cur.length) b.specBy[c] = cur; else delete b.specBy[c]; });
+  if (d.claim) return change(b=>{ b.claim = b.claim===d.claim ? null : d.claim; });
+  if (d.nope) return change(b=>{ const i = b.nope.indexOf(d.nope); if (i>=0) b.nope.splice(i,1); else b.nope.push(d.nope); });
+  if (d.charadd) return change(b=>{ if (b.chars.length<3) b.chars.push({n:"", c:b.classes[0]||null, r:false}); });
+  if (d.chardel!==undefined) return change(b=>{ b.chars.splice(+d.chardel,1); });
+  if (d.charres!==undefined) return change(b=>{ const x = b.chars[+d.charres]; if (x) x.r = !x.r; });
   if (d.rs) return change(b=>{ if (b.rulesets[d.rs]) { delete b.rulesets[d.rs]; if (b.favRuleset===d.rs) b.favRuleset=null; } else b.rulesets[d.rs]=true; });
   if (d.fav) return change(b=>{ if (b.favRuleset===d.fav) b.favRuleset=null; else { b.favRuleset=d.fav; b.rulesets[d.fav]=true; } });
   if (d.race) return change(b=>{ b.race = b.race===d.race ? null : d.race; });
@@ -849,7 +888,7 @@ $("#view-ballot").addEventListener("click", e=>{
   if (d.time) return change(b=>{ const i=b.times.indexOf(d.time); if (i>=0) b.times.splice(i,1); else b.times.push(d.time); });
   const seg = t.closest(".seg");
   if (seg && d.v!==undefined){
-    const map = {"seg-faction":["faction",true],"seg-style":["style",true],"seg-sky":["skyborne"],"seg-hours":["hours"],"seg-pace":["pace"],"seg-hc":["hardcore"],"seg-launch":["launch"]};
+    const map = {"seg-faction":["faction",true],"seg-style":["style",true],"seg-sky":["skyborne"],"seg-hours":["hours"],"seg-pace":["pace"],"seg-hc":["hardcore"],"seg-launch":["launch"],"seg-loot":["loot"]};
     if (seg.id==="seg-profmode") return change(b=>{ b.profMode = d.v; if (d.v==="each" && b.classes[0] && !(b.profsBy[b.classes[0]]||[]).length) b.profsBy[b.classes[0]] = b.profs.slice(); });
     if (seg.id.startsWith("seg-role-")){ const k=seg.id.slice(9); const v=+d.v; return change(b=>{ b.roles[k] = b.roles[k]===v ? null : v; }); }
     const m = map[seg.id]; if (!m) return;
@@ -857,10 +896,12 @@ $("#view-ballot").addEventListener("click", e=>{
     return change(b=>{ b[m[0]] = b[m[0]]===v ? null : v; });
   }
 });
+$("#view-ballot").addEventListener("input", e=>{ const t = e.target; if (t.dataset && t.dataset.charname!==undefined){ const x = draft.chars[+t.dataset.charname]; if (x){ x.n = t.value.slice(0,40); dirty = true; persistDraft(); updateSaveBar(); } } });
+$("#view-ballot").addEventListener("change", e=>{ const t = e.target; if (t.dataset && t.dataset.charclass!==undefined) change(b=>{ const x = b.chars[+t.dataset.charclass]; if (x) x.c = t.value || null; }); });
 function fixRace(b){ if (b.race && !(b.classes[0] && RACE[b.race].classes.includes(b.classes[0]))) b.race = null; }
 
 /* ---------- Save bar ---------- */
-function same(a,b){ return JSON.stringify(normBallot(a))===JSON.stringify(normBallot(b)); }
+function same(a,b){ const strip = x => { const n = normBallot(x); cleanChars(n); delete n.upd; delete n.tz; LIVE_FIELDS.forEach(k=>delete n[k]); return JSON.stringify(n); }; return strip(a)===strip(b); }
 function updateSaveBar(){
   const mine = Store.mine();
   const st = $("#save-status"), save = $("#btn-save"), clr = $("#btn-clear");
@@ -919,7 +960,7 @@ const UTILS = [
   {id:"dispel", name:"Dispel and cleanse", why:"Poisons, diseases, curses and magic debuffs stack up in later dungeons.",
    by:{priest:"Dispel Magic, Cure Disease", paladin:"Cleanse", shaman:"Cure Poison and Disease, Purge", druid:"Remove Curse, Cure Poison", mage:"Remove Lesser Curse"}},
   {id:"buff", name:"Group buffs", why:"Buffs from different classes stack, so a varied party is stronger than five of one class.",
-   by:{priest:"Power Word: Fortitude", mage:"Arcane Intellect", druid:"Mark of the Wild", paladin:"Blessings (Kings is now baseline)", warrior:"Battle Shout", shaman:"Totems", hunter:"Aspect of the Pack"}},
+   by:{priest:"Power Word: Fortitude", mage:"Arcane Intellect", druid:"Mark of the Wild", paladin:"Blessings (Kings is now baseline)", warrior:"Battle Shout (raid-wide)", shaman:"Raid-wide totems", hunter:"Aspect of the Pack"}},
   {id:"supply", name:"Free supplies", why:"Saves gold and bag space on food, water and healing.",
    by:{mage:"Conjured food and water", warlock:"Healthstones"}},
   {id:"travel", name:"Group travel", why:"Gets late arrivals to the dungeon, which matters more with no flying.",
@@ -1070,6 +1111,9 @@ function buildSuggestions(T, plan, entries, mine, alias, mem){
   if (n>=2 && T.launch.yes < Math.ceil(n/2)) add("party", "Most of the party can't confirm launch night", `Only ${T.launch.yes} of ${n} said yes for Nov 4. Plan the first real group session for the best weekly slot instead.`);
   PROFS.filter(p=>p.kind==="gather").forEach(g=>{ const crafters = g.pairs.split(", ").reduce((s,c)=>s+T.prof[c],0); if (crafters && !T.prof[g.id]) add("party", `Crafters without a ${g.name.toLowerCase()} supplier`, `${g.pairs.split(", ").map(c=>PROF[c].name).join(" and ")} use materials that come from ${g.name}. A crafter could take ${g.name} as their second profession, or someone could switch one of theirs to it.`); });
 
+  const dibs = {}; entries.forEach(([k,b])=>{ const c = claimOf(b); if (c) (dibs[c] = dibs[c] || []).push(k===Store.myKey ? "you" : shortAlias(alias[k])); });
+  Object.entries(dibs).forEach(([c,who])=>{ if (who.length>1) add("party", `${who.length} people called dibs on ${CLS[c].name}`, `${who.join(" and ")} both claimed it. Two of a class is fine for damage, but a different class adds buffs and utility, so talk it through.`); });
+
   let twins = 0;
   for (let i=0;i<entries.length;i++) for (let j=i+1;j<entries.length;j++){ const a=entries[i][1], b=entries[j][1];
     if (a.classes.length>=3 && a.classes.join()===b.classes.join() && a.race===b.race && a.profs.join()===b.profs.join()) twins++; }
@@ -1175,10 +1219,10 @@ function renderResults(){
 
   <div class="board">
     <div class="panel" id="picks">
-      <div class="panel-head"><h3>Everyone's picks</h3><span class="small muted">${plural(n,"ballot")} · classes ranked 1st to 5th</span></div>
+      <div class="panel-head"><h3>Everyone's picks</h3><span class="small muted">${plural(n,"ballot")} · classes ranked 1st to 5th · ★ = dibs</span></div>
       <div class="picks-wrap"><table class="picks">
-        <thead><tr><th>Name</th><th>1st</th><th>2nd</th><th>3rd</th><th>4th</th><th>5th</th><th>Faction</th><th>Ruleset</th><th>Main role</th><th>Race</th><th>Hours</th></tr></thead>
-        <tbody>${entries.map(([k,b])=>`<tr class="${k===Store.myKey?"me":""}"><td class="nm">${k===Store.myKey?"You":esc(alias[k])}</td>${[0,1,2,3,4].map(i=>b.classes[i]?`<td><span style="color:var(--c-${b.classes[i]})">${CLS[b.classes[i]].name}</span>${b.profMode==="each"&&(b.profsBy[b.classes[i]]||[]).length?`<div class="pp">${b.profsBy[b.classes[i]].map(p=>PROF[p].name).join(" + ")}</div>`:i===0&&b.profs.length?`<div class="pp">${b.profs.map(p=>PROF[p].name).join(" + ")}</div>`:""}</td>`:`<td class="muted">—</td>`).join("")}<td>${b.faction===null?"—":esc(FACTION_OPTS.find(o=>o[0]===b.faction)[1])}</td><td>${b.favRuleset?esc(RULESETS.find(r=>r.id===b.favRuleset).name):"—"}</td><td>${["tank","healer","dps"].filter(r=>b.roles[r]===2).map(r=>r==="dps"?"Damage":r[0].toUpperCase()+r.slice(1)).join(", ")||"—"}</td><td>${b.race?esc(RACE[b.race].short||RACE[b.race].name):"—"}</td><td>${b.hours?esc(HOURS.find(h=>h[0]===b.hours)[1]):"—"}</td></tr>`).join("")}</tbody>
+        <thead><tr><th>Name</th><th>1st</th><th>2nd</th><th>3rd</th><th>4th</th><th>5th</th><th>Faction</th><th>Ruleset</th><th>Main role</th><th>Race</th><th>Hours</th><th>Won't play</th></tr></thead>
+        <tbody>${entries.map(([k,b])=>`<tr class="${k===Store.myKey?"me":""}"><td class="nm">${k===Store.myKey?"You":esc(alias[k])}</td>${[0,1,2,3,4].map(i=>b.classes[i]?`<td><span style="color:var(--c-${b.classes[i]})">${b.claim===b.classes[i]?"★ ":""}${(b.specBy[b.classes[i]]||[]).length?esc(b.specBy[b.classes[i]].join("/"))+" ":""}${CLS[b.classes[i]].name}</span>${b.profMode==="each"&&(b.profsBy[b.classes[i]]||[]).length?`<div class="pp">${b.profsBy[b.classes[i]].map(p=>PROF[p].name).join(" + ")}</div>`:i===0&&b.profs.length?`<div class="pp">${b.profs.map(p=>PROF[p].name).join(" + ")}</div>`:""}</td>`:`<td class="muted">—</td>`).join("")}<td>${b.faction===null?"—":esc(FACTION_OPTS.find(o=>o[0]===b.faction)[1])}</td><td>${b.favRuleset?esc(RULESETS.find(r=>r.id===b.favRuleset).name):"—"}</td><td>${["tank","healer","dps"].filter(r=>b.roles[r]===2).map(r=>r==="dps"?"Damage":r[0].toUpperCase()+r.slice(1)).join(", ")||"—"}</td><td>${b.race?esc(RACE[b.race].short||RACE[b.race].name):"—"}</td><td>${b.hours?esc(HOURS.find(h=>h[0]===b.hours)[1]):"—"}</td><td class="muted">${b.nope.map(c=>CLS[c].name).join(", ")||"—"}</td></tr>`).join("")}</tbody>
       </table></div>
     </div>
     <div class="panel" id="changes">
@@ -1194,7 +1238,7 @@ function renderResults(){
       <div class="party">
         ${plan?entries.map(([k],i)=>{ const o=plan.pick[i]; if (!o) return ""; const me=k===Store.myKey;
           return `<div class="member ${me?"me":""}" style="--cc:var(--c-${o.c})"><span class="alias">${me?"You":esc(examples&&k.startsWith("example")?alias[k]+" (example)":alias[k])}</span>
-            <span class="cls">${CLS[o.c].name}</span><span class="why">${o.role==="dps"?"Damage":o.role==="tank"?"Tank":"Healer"} · their #${o.rank+1} pick</span>${(()=>{ const pf = profsFor(Store.ballots.get(k)||{profs:[]}, o.c); return pf.length?`<span class="why">${pf.map(p=>PROF[p].name).join(" + ")}</span>`:""; })()}</div>`; }).join(""):""}
+            <span class="cls">${esc(specLabel(Store.ballots.get(k)||{}, o.c, o.role))}${CLS[o.c].name}${claimOf(Store.ballots.get(k))===o.c?" ★":""}</span><span class="why">${o.role==="dps"?"Damage":o.role==="tank"?"Tank":"Healer"} · their #${o.rank+1} pick</span>${(()=>{ const pf = profsFor(Store.ballots.get(k)||{profs:[]}, o.c); return pf.length?`<span class="why">${pf.map(p=>PROF[p].name).join(" + ")}</span>`:""; })()}</div>`; }).join(""):""}
       </div>
       ${plan && n>=3 && plan.tanks<plan.needT ? `<div class="callout warn"><div>The planner couldn't find enough tanks. Someone could rank a Warrior, Paladin or Druid and mark Tank.</div></div>`:""}
       ${plan && n>=2 && plan.healers<plan.needH ? `<div class="callout warn"><div>The planner couldn't find enough healers. Someone could rank a Priest, Druid, Paladin or Shaman and mark Healer.</div></div>`:""}
@@ -1219,6 +1263,7 @@ function renderResults(){
         <div class="panel-head"><h3>Class standings</h3><span class="small muted">1st = 5 pts … 5th = 1</span></div>
         ${barsHTML(classRows, maxPts)}
         <p class="small muted">${T.classRank.filter(c=>T.firsts[c]).map(c=>`${CLS[c].name} ${T.firsts[c]}×`).join(" · ")} first place</p>
+        ${(()=>{ const v = {}; entries.forEach(([,b])=>b.nope.forEach(c=>v[c]=(v[c]||0)+1)); const l = Object.entries(v).sort((a,b)=>b[1]-a[1]); return l.length ? `<p class="small muted">Won't play: ${l.map(([c,k])=>`${CLS[c].name} ${k}×`).join(" · ")}</p>` : ""; })()}
       </div>
       <div class="panel">
         <div class="panel-head"><h3>Faction</h3><span class="you-mark">${mine.faction!==null?"You: "+FACTION_OPTS.find(o=>o[0]===mine.faction)[1]:""}</span></div>
@@ -1311,19 +1356,23 @@ function renderGuide(){
         <li><b>Dual spec at 40.</b> Every talent tree was reworked, and every race has 2 active and 2 passive racials.</li>
         <li><b>Legacy system.</b> Account-wide points across Professions, Adventure and Resourcefulness, up to 16 per character at launch. They're shared across rulesets, but not into Hardcore.</li>
         <li><b>Camping.</b> Campfires give vendors, repairs and 1-hour buffs. Better ones come from profession blueprints.</li>
-        <li><b>Included with a WoW subscription.</b> Skyborne needs the Heroic Pack or higher.</li>
+        <li><b>Included with a WoW subscription.</b> Skyborne and early name reservation need the Heroic Pack or higher.</li>
+        <li><b>Two-part names.</b> A first name plus a surname, unique per region. Reserve up to 3 characters Oct 27 – Nov 3.</li>
+        <li><b>More in the <a href="launch.html">launch guide</a>:</b> dungeons by level, starting zones, campfire buffs, costs and raids.</li>
       </ul>
     </div>
   </div>
 
-  <div><div class="panel-head" style="margin-bottom:12px"><h2>Classes</h2><span class="small muted">New in Forever, from the BlizzCon and beta notes</span></div>
+  <div><div class="panel-head" style="margin-bottom:12px"><h2>Classes</h2><span class="small muted">Updated with the Oct 15 beta notes · <a href="launch.html#classes">more in the launch guide</a></span></div>
   <div class="class-guide">
     ${CLASSES.map(c=>{ const h=RACES.filter(r=>r.f==="H"&&r.classes.includes(c.id)), a=RACES.filter(r=>r.f==="A"&&r.classes.includes(c.id));
       const nm = r => (r.short||r.name) + (r.newc.includes(c.id)&&!r.pack?"*":"");
       return `<article class="cg" style="--cc:var(--c-${c.id})">
         <div class="panel-head"><h3>${c.name}</h3><span class="roles">${rolePills(c.id)}</span></div>
         <p class="small">${esc(c.blurb)} <span class="muted">${c.armor} · ${c.specs.join(", ")}</span></p>
-        <ul>${c.news.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>
+        ${FD.classes[c.id] ? `<p class="small"><b>Biggest change:</b> ${esc(FD.classes[c.id].headline)}</p>
+        <ul class="specl">${FD.classes[c.id].specs.map(sp=>`<li><b>${sp.name}</b> <span class="muted">${sp.roles.map(r=>r==="dps"?"damage":r).join(" or ")}</span> · ${esc(sp.new)}</li>`).join("")}</ul>
+        <p class="small muted"><b>For the group:</b> ${esc(FD.classes[c.id].group.join(" "))}</p>` : `<ul>${c.news.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`}
         ${c.tankNote?`<p class="small muted">${esc(c.tankNote)}</p>`:""}
         ${PROF_REC[c.id]?`<p class="rr"><b>Good professions:</b> ${PROF_REC[c.id].p.map(p=>PROF[p].name).join(" + ")}. ${esc(PROF_REC[c.id].why)}</p>`:""}
         <p class="rr"><b class="H">Horde:</b> ${h.map(nm).join(", ")}<br><b class="A">Alliance:</b> ${a.map(nm).join(", ")}</p>
@@ -1350,7 +1399,7 @@ function renderGuide(){
       <a href="https://games.gg/world-of-warcraft/guides/wow-forever-every-class-new-ability-and-talent-change/" target="_blank" rel="noopener">games.gg: every class's new abilities and talents</a>
       <a href="https://www.warcrafttavern.com/forever/guides/professions/" target="_blank" rel="noopener">Warcraft Tavern: professions</a>
       <a href="https://lfcarry.com/guides/wow-forever-blizzcon-2026" target="_blank" rel="noopener">LFCarry: BlizzCon 2026 roadmap and dates</a>
-      <span>Compiled October 19, 2026. Beta details can still change before launch.</span>
+      <span>Updated October 20, 2026 with the Oct 15 beta notes. The full source list is in the <a href="launch.html#sources">launch guide</a>. Beta details can still change before launch.</span>
     </div>
   </div>`;
 }
