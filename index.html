@@ -164,6 +164,10 @@ button:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid var(
 .btn.primary{background:var(--gold);color:var(--gold-ink);border-color:var(--gold)}
 .btn[disabled]{opacity:.45;cursor:not-allowed}
 .btn.ghost{background:none}
+.btn.danger{color:var(--bad)}
+.manage{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end;margin-top:22px;padding-top:16px;border-top:1px solid var(--line-soft)}
+.manage .small{margin-right:auto}
+.name-input.need{border-color:var(--bad);box-shadow:0 0 0 3px color-mix(in srgb,var(--bad) 25%,transparent)}
 
 /* Results */
 .locked{border:1px dashed var(--line);border-radius:var(--r);padding:42px 22px;text-align:center;display:grid;gap:12px;justify-items:center}
@@ -356,6 +360,11 @@ table.matrix{border-collapse:collapse;width:100%;min-width:720px;font-size:.9rem
       <input id="voter-name" class="name-input" type="text" maxlength="40" autocomplete="nickname" placeholder="Your name or in-game name">
     </div>
     <section id="view-ballot" class="ballot" aria-labelledby="tab-ballot"></section>
+    <div class="manage" id="manage" hidden>
+      <span class="small muted">Want a do-over? Start over clears the form. Withdraw removes your ballot from the board.</span>
+      <button class="btn ghost" id="btn-restart" type="button">Start over</button>
+      <button class="btn ghost danger" id="btn-clear" type="button">Withdraw ballot</button>
+    </div>
     <section id="view-results" aria-labelledby="tab-results" hidden></section>
     <section id="view-guide" class="guide" aria-labelledby="tab-guide" hidden></section>
   </main>
@@ -364,8 +373,6 @@ table.matrix{border-collapse:collapse;width:100%;min-width:720px;font-size:.9rem
 <div class="savebar" id="savebar">
   <div class="in">
     <div class="st" id="save-status">Pick at least one class to save your ballot.</div>
-    <button class="btn ghost" id="btn-restart" type="button" hidden>Start over</button>
-    <button class="btn ghost" id="btn-clear" type="button" hidden>Withdraw ballot</button>
     <button class="btn primary" id="btn-save" type="button" disabled>Save my ballot</button>
   </div>
 </div>
@@ -904,13 +911,12 @@ function fixRace(b){ if (b.race && !(b.classes[0] && RACE[b.race].classes.includ
 function same(a,b){ const strip = x => { const n = normBallot(x); cleanChars(n); delete n.upd; delete n.tz; LIVE_FIELDS.forEach(k=>delete n[k]); return JSON.stringify(n); }; return strip(a)===strip(b); }
 function updateSaveBar(){
   const mine = Store.mine();
-  const st = $("#save-status"), save = $("#btn-save"), clr = $("#btn-clear");
-  const canSave = draft.classes.length>0 && (Store.mode!=="supabase" || (draft.name||"").trim()) && Store.ready && Store.canWrite && Store.mode!=="readonly" && !saving;
+  const st = $("#save-status"), save = $("#btn-save");
+  const canSave = Store.ready && Store.canWrite && Store.mode!=="readonly" && !saving;
   const changed = !mine || !same(mine, draft);
   save.disabled = !canSave || !changed;
-  save.textContent = mine ? "Update my ballot" : "Save my ballot";
-  clr.hidden = !mine;
-  $("#btn-restart").hidden = !mine;
+  save.textContent = saving ? "Saving…" : mine ? "Update my ballot" : "Save my ballot";
+  $("#manage").hidden = !mine || currentTab!=="ballot";
   if (!Store.ready && Store.mode!=="local") st.innerHTML = "Connecting to the party board…";
   else if (!Store.canWrite || Store.mode==="readonly") st.innerHTML = "This link is view-only, so you can't vote from it.";
   else if (Store.mode==="supabase" && !(draft.name||"").trim()) st.innerHTML = "Add your name at the top to save your ballot.";
@@ -918,13 +924,16 @@ function updateSaveBar(){
   else if (mine && !changed) st.innerHTML = `<b>Ballot saved.</b> Only you can see it. Change anything and save again.`;
   else if (mine) st.innerHTML = `<b>Unsaved changes.</b> The board still has your earlier ballot.`;
   else st.innerHTML = `Ranked: <b>${draft.classes.map(c=>CLS[c].name).join(" › ")}</b>. Save to see the party board.`;
-  if (confirmFirst && !mine && canSave){ save.textContent = "Yes, save my one ballot"; st.innerHTML = "<b>One ballot per person.</b> Already voted on another device? Use the vote link box at the top instead."; }
+  const tt = $("#toast"); if (tt && !tt.hidden) placeToast(tt);
+  { const sb = $("#savebar"); if (!sb.hidden) document.body.style.paddingBottom = Math.max(120, sb.offsetHeight + 28) + "px"; }
 }
 $("#btn-save").addEventListener("click", async ()=>{
-  if (Store.mode==="supabase" && !Store.mine() && !confirmFirst){ confirmFirst = true; clearTimeout(confirmTimer); confirmTimer = setTimeout(()=>{ confirmFirst = false; updateSaveBar(); }, 12000); updateSaveBar(); return; }
-  confirmFirst = false;
+  if (saving) return;
+  if (Store.mode==="supabase" && !(draft.name||"").trim()){ const el = $("#voter-name"); el.classList.add("need"); el.scrollIntoView({behavior:"smooth", block:"center"}); setTimeout(()=>{ try { el.focus({preventScroll:true}); } catch(e){} }, 400); toast("Add your name at the top first, then tap Save."); return; }
+  if (!draft.classes.length){ const el = document.getElementById("step-classes"); if (el) el.scrollIntoView({behavior:"smooth", block:"start"}); toast("Pick at least one class first."); return; }
+  const first = !Store.mine();
   saving = true; updateSaveBar();
-  try { await Store.save(draft); dirty=false; lsDel("fpd-draft"); toast("Ballot saved. The party board is open.", "See the board", ()=>setTab("results")); }
+  try { await Store.save(draft); dirty=false; lsDel("fpd-draft"); lastSaveAt = Date.now(); toast(first ? "Ballot saved. The party board is open." : "Ballot updated.", "See the board", ()=>setTab("results")); }
   catch(e){
     if (e && e.code==="invalid_argument"){ Store.canWrite=false; toast("This link doesn't allow voting. Ask the organizer to invite you as an Editor."); }
     else if (e && e.code==="quota_exceeded") toast("The board is full and can't take new ballots.");
@@ -932,10 +941,11 @@ $("#btn-save").addEventListener("click", async ()=>{
   }
   saving = false; updateSaveBar(); renderBallot();
 });
-let confirmClear = false;
+let confirmClear = false, lastSaveAt = 0;
 $("#btn-restart").addEventListener("click", ()=>{ const nm = draft.name; draft = blankBallot(); draft.name = nm; dirty = true; persistDraft(); renderBallot(); updateSaveBar(); window.scrollTo({top: $(".tabs").offsetTop, behavior:"smooth"}); toast("Form cleared. Your old ballot stays on the board until you save the new one."); });
 $("#btn-clear").addEventListener("click", async ()=>{
   const btn = $("#btn-clear");
+  if (Date.now() - lastSaveAt < 3000) return;
   if (!confirmClear){ confirmClear = true; btn.textContent = "Tap again to withdraw"; setTimeout(()=>{ confirmClear=false; btn.textContent="Withdraw ballot"; }, 4000); return; }
   confirmClear = false; btn.textContent = "Withdraw ballot";
   try { await Store.remove(); toast("Ballot withdrawn. Your picks are still here if you want to save again."); }
@@ -943,9 +953,10 @@ $("#btn-clear").addEventListener("click", async ()=>{
   updateSaveBar();
 });
 let toastTimer;
+function placeToast(t){ const sb = $("#savebar"); t.style.bottom = (sb && !sb.hidden ? sb.offsetHeight + 12 : 20) + "px"; }
 function toast(msg, action, fn){
   const t = $("#toast"); t.innerHTML = `<span>${esc(msg)}</span>` + (action?`<button type="button">${esc(action)}</button>`:"");
-  t.hidden = false; if (action) t.querySelector("button").onclick = ()=>{ t.hidden=true; fn(); };
+  t.hidden = false; placeToast(t); if (action) t.querySelector("button").onclick = ()=>{ t.hidden=true; fn(); };
   clearTimeout(toastTimer); toastTimer = setTimeout(()=>t.hidden=true, 6000);
 }
 
@@ -1408,7 +1419,7 @@ $("#view-results").addEventListener("click", e=>{ const t = e.target.closest("[d
 
 /* ---------- Voter name ---------- */
 const nameEl = $("#voter-name");
-nameEl.addEventListener("input", ()=>{ draft.name = nameEl.value.slice(0,40); dirty = true; persistDraft(); updateSaveBar(); });
+nameEl.addEventListener("input", ()=>{ draft.name = nameEl.value.slice(0,40); if (draft.name.trim()) nameEl.classList.remove("need"); dirty = true; persistDraft(); updateSaveBar(); });
 function syncName(){ $("#name-step").hidden = currentTab!=="ballot" || Store.mode!=="supabase"; if (document.activeElement !== nameEl && nameEl.value !== (draft.name||"")) nameEl.value = draft.name||""; }
 
 /* ---------- One ballot per person across devices ---------- */
@@ -1452,6 +1463,7 @@ function setTab(name){
   document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected", t.dataset.tab===name));
   $("#view-ballot").hidden = name!=="ballot"; $("#view-results").hidden = name!=="results"; $("#view-guide").hidden = name!=="guide";
   $("#savebar").hidden = name!=="ballot";
+  $("#manage").hidden = name!=="ballot" || !Store.mine();
   renderDevice(); syncName();
   if (name==="results") renderResults();
   try { history.replaceState(null, "", "#"+name); } catch(e){}
@@ -1466,7 +1478,9 @@ function renderConn(){
 Store.on(()=>{
   const mine = Store.mine();
   if (mine && !dirty) draft = normBallot(mine);
-  renderConn(); updateSaveBar(); renderBallot(); renderDevice(); syncName();
+  renderConn(); updateSaveBar();
+  { const ae = document.activeElement; if (!(ae && $("#view-ballot").contains(ae) && /^(INPUT|SELECT|TEXTAREA)$/.test(ae.tagName))) renderBallot(); }
+  renderDevice(); syncName();
   $("#vote-count").textContent = Store.count ?? [...Store.ballots.values()].filter(b=>b.classes.length).length;
   if (currentTab==="results") renderResults();
 });
