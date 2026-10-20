@@ -329,11 +329,11 @@ function downloadText(name, text, type){
    Desktop: a fixed sidebar listing every page, with the current page's sections underneath.
    Phone: a "Legend" button in the bottom-left corner opens the same list as a drawer. */
 const FD_PAGES = [
-  {id:"ballot", label:"My ballot", href:"index.html#ballot", hint:"Vote or update your picks"},
-  {id:"results", label:"Party board", href:"index.html#results", hint:"Everyone's picks and the suggested party"},
-  {id:"guide", label:"Field guide", href:"index.html#guide", hint:"Classes, races and key dates"},
-  {id:"plan", label:"Game plan", href:"brief.html", hint:"Decisions, sample parties, lineup lock"},
-  {id:"launch", label:"Launch guide", href:"launch.html", hint:"Checklist, names, dungeons, costs"},
+  {id:"ballot", label:"My ballot", href:"#ballot", hint:"Vote or update your picks"},
+  {id:"results", label:"Party board", href:"#results", hint:"Everyone's picks and the suggested party"},
+  {id:"guide", label:"Field guide", href:"#guide", hint:"Classes, races and key dates"},
+  {id:"plan", label:"Game plan", href:"#plan", hint:"Decisions, sample parties, lineup lock"},
+  {id:"launch", label:"Launch guide", href:"#launch", hint:"Checklist, names, dungeons, costs"},
 ];
 function fdNav(opts){
   if (document.getElementById("fd-nav")) return;
@@ -342,15 +342,19 @@ function fdNav(opts){
   st.textContent = `
 #fd-nav{position:fixed;left:0;top:0;bottom:0;width:240px;overflow-y:auto;z-index:30;background:var(--surface);border-right:1px solid var(--line);padding:18px 12px 28px;display:none;font-family:var(--f-body)}
 #fd-nav .fd-h{display:flex;align-items:center;justify-content:space-between;margin:0 6px 12px}
-#fd-nav .fd-h b{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:500}
+#fd-nav .fd-h b{font-family:var(--f-display);font-size:1.12rem;color:var(--fg);font-weight:400}
 #fd-nav .fd-x{display:none;border:0;background:none;color:var(--fg);font-size:1.5rem;line-height:1;cursor:pointer;padding:2px 6px}
 #fd-nav ul{list-style:none;margin:0;padding:0}
 #fd-nav .fd-pages>li{margin-bottom:3px}
 #fd-nav .fd-pages>li>a{display:grid;gap:1px;padding:7px 10px;border-radius:8px;text-decoration:none;color:var(--fg)}
-#fd-nav .fd-pages>li>a span{font-weight:600;font-size:.95rem}
+#fd-nav .fd-pages>li>a span{font-weight:600;font-size:.95rem;display:flex;align-items:center;gap:8px}
+#fd-nav .fd-pages>li>a span svg{width:17px;height:17px;color:var(--gold);flex:none}
+#fd-nav .fd-pages>li>a small{padding-left:25px}
 #fd-nav .fd-pages>li>a small{font-size:.75rem;color:var(--muted);line-height:1.3}
 #fd-nav .fd-pages>li>a:hover{background:var(--surface-2)}
-#fd-nav .fd-pages>li.on>a{background:var(--gold-soft);box-shadow:inset 3px 0 0 var(--gold)}
+#fd-nav .fd-pages>li.on>a{background:var(--gold-soft)}
+#fd-nav .fd-pages>li.on>a span{color:var(--gold)}
+#fd-nav .fd-x svg{width:20px;height:20px;display:block}
 #fd-nav .fd-secs{margin:4px 0 10px 14px;border-left:1px solid var(--line);padding-left:4px}
 #fd-nav .fd-secs a{display:block;padding:4px 8px;font-size:.86rem;color:var(--muted);text-decoration:none;border-radius:6px;line-height:1.3}
 #fd-nav .fd-secs li.l2 a{padding-left:20px;font-size:.82rem}
@@ -358,14 +362,14 @@ function fdNav(opts){
 #fd-nav .fd-secs a.act{color:var(--gold);font-weight:600}
 #fd-fab{position:fixed;left:16px;bottom:16px;z-index:28;border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:999px;padding:9px 15px;font:inherit;font-size:.92rem;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.25);cursor:pointer;display:flex;gap:8px;align-items:center}
 #fd-scrim{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:29;display:none}
-@media (min-width:1100px){
+@media (min-width:980px){
   body.fd-has-nav{padding-left:264px !important}
   #fd-nav{display:block}
   #fd-fab{display:none}
   body.fd-has-nav .savebar{left:240px}
   body.fd-has-nav .jump{display:none !important}
 }
-@media (max-width:1099.98px){
+@media (max-width:979.98px){
   body.fd-open #fd-nav{display:block;width:min(300px,86vw);box-shadow:4px 0 24px rgba(0,0,0,.3)}
   body.fd-open #fd-scrim{display:block}
   #fd-nav .fd-x{display:block}
@@ -392,8 +396,9 @@ function fdNav(opts){
     lastSig = sig;
     const tabs = document.querySelector(".tabs"), curTab = tabs && tabs.querySelector('.tab[aria-current="page"], .tab[aria-selected="true"]');
     if (curTab && tabs.scrollWidth > tabs.clientWidth) tabs.scrollLeft = Math.max(0, curTab.offsetLeft - tabs.offsetLeft - (tabs.clientWidth - curTab.offsetWidth)/2);
-    nav.innerHTML = `<div class="fd-h"><b>Legend</b><button type="button" class="fd-x" aria-label="Close the legend">×</button></div>
-      <ul class="fd-pages">${FD_PAGES.map(p=>`<li class="${p.id===cur?"on":""}"><a href="${p.href}" data-page="${p.id}" ${p.id===cur?'aria-current="page"':""}><span>${e(p.label)}</span><small>${e(p.hint)}</small></a>${p.id===cur && items.length ? `<ul class="fd-secs">${items.map((x,i)=>`<li class="l${x.level||1}"><a href="#${e(x.el.id)}" data-i="${i}">${e(x.label)}</a></li>`).join("")}</ul>` : ""}</li>`).join("")}</ul>`;
+    nav.innerHTML = `<div class="fd-h"><b>Legend</b><button type="button" class="fd-x" aria-label="Close the legend"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button></div>
+      <ul class="fd-pages">${FD_PAGES.map(p=>`<li class="${p.id===cur?"on":""}"><a href="${p.href}" data-page="${p.id}" ${p.id===cur?'aria-current="page"':""}><span>${fdIcon(p.id)}${e(p.label)}</span><small>${e(p.hint)}</small></a>${p.id===cur && items.length ? `<ul class="fd-secs">${items.map((x,i)=>`<li class="l${x.level||1}"><a href="#${e(x.el.id)}" data-i="${i}">${e(x.label)}</a></li>`).join("")}</ul>` : ""}</li>`).join("")}</ul><div class="fd-fx fx-ctl" data-fx-ctl></div>`;
+    if (window.FX) FX.mount();
     spy();
   }
   nav.onclick = ev => {
@@ -401,7 +406,7 @@ function fdNav(opts){
     const a = ev.target.closest("a"); if (!a) return;
     if (a.dataset.i !== undefined){ ev.preventDefault(); const x = items[+a.dataset.i]; if (!x) return; close();
       const y = x.el.getBoundingClientRect().top + window.scrollY - offset() - 12; window.scrollTo({top:Math.max(0,y), behavior:"smooth"}); return; }
-    if (a.dataset.page && opts.onPage && opts.onPage(a.dataset.page)) { ev.preventDefault(); close(); lastSig = ""; setTimeout(build, 30); }
+    if (a.dataset.page && opts.onPage && opts.onPage(a.dataset.page)) { ev.preventDefault(); if (window.innerWidth >= 980) close(); lastSig = ""; setTimeout(build, 30); }
   };
   function spy(){
     const sb = document.getElementById("savebar");
@@ -440,3 +445,86 @@ async function fdInvite(){
   try { if (navigator.share){ await navigator.share({title:"Forever Party Draft", text:"Vote on our WoW Forever party: classes, faction, ruleset, schedule and names.", url}); return; } } catch(e){ if (e && e.name==="AbortError") return; }
   try { await navigator.clipboard.writeText(url); say("Invite link copied."); } catch(e){ say("Share this link: " + url); }
 }
+
+/* ---------- Original artwork: icons, class emblems and the hero illustration (drawn for this site) ---------- */
+const FD_ICONS = {
+  ballot:'<path d="M4 4h16v16H4z"/><path d="M8 12l3 3 5-6"/>',
+  results:'<circle cx="8" cy="8" r="3"/><path d="M2 20c0-3 3-5 6-5s6 2 6 5"/><path d="M16 5a3 3 0 0 1 0 6"/><path d="M18 15c2 .5 4 2 4 5"/>',
+  guide:'<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 5v16"/><path d="M8 7h7"/>',
+  plan:'<path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3z"/><path d="M9 3v15"/><path d="M15 6v15"/>',
+  launch:'<path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/>',
+  list:'<path d="M8 6h13M8 12h13M8 18h13M3.5 6h.5M3.5 12h.5M3.5 18h.5"/>',
+  check:'<circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/>',
+  sliders:'<path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"/><path d="M14 4v4M8 10v4M16 16v4"/>',
+  shield:'<path d="M12 3l8 3v6c0 5-4 8-8 9-4-1-8-4-8-9V6z"/>',
+  layers:'<path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>',
+  user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>',
+  calendar:'<path d="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4"/>',
+  quill:'<path d="M20 4c-6 1-11 6-13 13l-3 3"/><path d="M7 17c3 0 6-1 8-4"/>',
+  pin:'<path d="M12 21s-7-6-7-11a7 7 0 0 1 14 0c0 5-7 11-7 11z"/><circle cx="12" cy="10" r="2"/>',
+  sparkle:'<path d="M12 3l2 6 6 2-6 2-2 6-2-6-6-2 6-2z"/><path d="M19 3v4M17 5h4"/>',
+  gate:'<path d="M5 21V10a7 7 0 0 1 14 0v11"/><path d="M3 21h18M12 13v3"/>',
+  fire:'<path d="M12 3c2 3 4 4 4 7a4 4 0 0 1-8 0c0-2 1-3 2-4 0 2 1 3 2 3 0-2-1-4 0-6z"/><path d="M5 21l14-3M5 18l14 3"/>',
+  coins:'<ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v6c0 1.7 3 3 7 3s7-1.3 7-3V6"/><path d="M5 12v6c0 1.7 3 3 7 3s7-1.3 7-3v-6"/>',
+  swords:'<path d="M4 20L20 4M20 20L4 4M7 14l3 3M17 14l-3 3"/>',
+  scales:'<path d="M12 3v18M5 7h14M8 21h8"/><path d="M5 7l-3 7h6zM19 7l-3 7h6z"/>',
+  book:'<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 5v16"/>',
+  bars:'<path d="M5 20V10M12 20V4M19 20v-7"/>',
+  flag:'<path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/>',
+};
+function fdIcon(name){ const p = FD_ICONS[name]; return p ? `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${p}</svg>` : ""; }
+const FD_EMBLEM = {
+  warrior:'<path d="M4 20L18 6M20 20L6 6"/><path d="M18 6l1.5-3.5L21 4l-1.5 1.5zM6 6L4.5 2.5 3 4l1.5 1.5z"/><path d="M7 15l2 2M17 15l-2 2"/>',
+  paladin:'<path d="M6 4h12v5H6z"/><path d="M12 9v12"/><path d="M3 4.5h1M20 4.5h1M3 8.5h1M20 8.5h1"/>',
+  hunter:'<path d="M7 3c6 4 6 14 0 18"/><path d="M7 3v18"/><path d="M3 12h15"/><path d="M15 9l3 3-3 3"/>',
+  rogue:'<path d="M12 2l2.5 4.5V15h-5V6.5z"/><path d="M7.5 15h9"/><path d="M12 15v4.5"/><circle cx="12" cy="21" r="1"/>',
+  priest:'<circle cx="12" cy="12" r="3.2"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l2.6 2.6M16.4 16.4L19 19M19 5l-2.6 2.6M7.6 16.4L5 19"/>',
+  shaman:'<path d="M13.5 2L5 14h6l-1.5 8L18 10h-6z"/>',
+  mage:'<path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4z"/><circle cx="12" cy="12" r="1.4"/>',
+  warlock:'<path d="M12 22c-4 0-7-3-7-7 0-4 4-6 4-11 3 2 4 5 3 8 1-1 2-2 2-4 3 2 5 5 5 7 0 4-3 7-7 7z"/><path d="M12 22c-1.6 0-3-1.3-3-3 0-1.6 1.4-2.6 2-4 1.6 1 4 2.4 4 4 0 1.7-1.4 3-3 3z"/>',
+  druid:'<path d="M5 19C5 9 11 4 20 4c0 9-5 15-15 15z"/><path d="M5 19l9-9"/>',
+};
+function fdEmblem(c){ const p = FD_EMBLEM[c]; return p ? `<svg class="emb" viewBox="0 0 24 24" aria-hidden="true" style="color:var(--c-${c})" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${p}</svg>` : ""; }
+const FD_SEC_ICONS = [[/short version/i,"list"],[/^decisions/i,"check"],[/adjustments|could change/i,"sliders"],[/lineup|suggested party|role coverage/i,"shield"],[/sample parties/i,"layers"],[/when (to|we can) play/i,"clock"],[/your plan/i,"user"],[/happens next|before oct|key dates/i,"calendar"],[/^the party$|everyone's picks|^races$/i,"results"],[/^names$/i,"quill"],[/start/i,"pin"],[/new for your classes|party brings|^classes$/i,"sparkle"],[/dungeons/i,"gate"],[/professions|campfire/i,"fire"],[/costs/i,"coins"],[/raids|pvp/i,"swords"],[/ruleset/i,"scales"],[/sources/i,"book"],[/standings|gear overlap/i,"bars"],[/faction/i,"flag"],[/landing/i,"plan"],[/how forever works|race and class/i,"guide"]];
+function fdDecorate(root){
+  if (!root) return;
+  root.querySelectorAll(".sec-head h2, .panel-head h3, .panel > h3, .panel-head h2, .verdict h2").forEach(h=>{
+    if (h.querySelector(".sic") || h.closest(".cg")) return;
+    const t = h.textContent.trim(); const hit = FD_SEC_ICONS.find(([re])=>re.test(t));
+    if (hit) h.insertAdjacentHTML("afterbegin", `<span class="sic">${fdIcon(hit[1])}</span>`);
+  });
+}
+const FD_ART = `<svg viewBox="0 0 480 300" preserveAspectRatio="xMidYMax slice" role="img" aria-label="Five adventurers walking toward a hilltop keep under a full moon">
+<defs>
+<linearGradient id="fdSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#121839"/><stop offset=".55" stop-color="#382a5c"/><stop offset=".85" stop-color="#93573f"/><stop offset="1" stop-color="#d98a4a"/></linearGradient>
+<radialGradient id="fdGlow" cx=".72" cy=".27" r=".46"><stop offset="0" stop-color="#ffe7a8" stop-opacity=".42"/><stop offset="1" stop-color="#ffe7a8" stop-opacity="0"/></radialGradient>
+<radialGradient id="fdHalo" cx=".5" cy=".5" r=".5"><stop offset=".5" stop-color="#fff2cc" stop-opacity=".3"/><stop offset="1" stop-color="#fff2cc" stop-opacity="0"/></radialGradient>
+<radialGradient id="fdMoon" cx=".38" cy=".36" r=".72"><stop offset="0" stop-color="#fffaf0"/><stop offset=".72" stop-color="#f2e0b4"/><stop offset="1" stop-color="#d6bb85"/></radialGradient>
+<linearGradient id="fdMist" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e3b94f" stop-opacity="0"/><stop offset="1" stop-color="#e3b94f" stop-opacity=".2"/></linearGradient>
+<radialGradient id="fdFly"><stop offset="0" stop-color="#fff6c4"/><stop offset=".35" stop-color="#ffd56a" stop-opacity=".75"/><stop offset="1" stop-color="#ffd56a" stop-opacity="0"/></radialGradient>
+</defs>
+<rect width="480" height="300" fill="url(#fdSky)"/>
+<rect width="480" height="300" fill="url(#fdGlow)"/>
+<g fill="#fff6dc"><circle cx="40" cy="30" r="1.2"/><circle cx="92" cy="58" r=".9"/><circle cx="150" cy="22" r="1.4"/><circle cx="210" cy="48" r="1"/><circle cx="262" cy="18" r="1.1"/><circle cx="420" cy="40" r="1.3"/><circle cx="455" cy="88" r=".9"/><circle cx="120" cy="96" r=".8"/><circle cx="300" cy="70" r=".8"/><circle cx="18" cy="84" r="1"/><circle cx="188" cy="88" r=".7"/><circle cx="400" cy="12" r=".8"/></g>
+<circle cx="346" cy="82" r="64" fill="url(#fdHalo)"/>
+<circle cx="346" cy="82" r="30" fill="url(#fdMoon)"/>
+<g fill="#b89a66" opacity=".3"><circle cx="336" cy="74" r="5.2"/><circle cx="356" cy="93" r="7"/><circle cx="353" cy="67" r="3"/><circle cx="332" cy="94" r="2.6"/><circle cx="366" cy="78" r="2"/></g>
+<path d="M0 205L60 160L104 186L170 126L232 182L292 140L352 188L414 150L480 178V300H0Z" fill="#2c2550"/>
+<path d="M292 140L352 188M414 150L480 178M170 126L232 182M60 160L104 186" stroke="#a594e0" stroke-opacity=".3" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+<path d="M0 238L84 192L140 222L214 176L282 216L360 186L430 214L480 196V300H0Z" fill="#1f1a3a"/>
+<path d="M214 176L282 216M360 186L430 214" stroke="#a594e0" stroke-opacity=".18" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+<path d="M150 236L178 196L200 204L226 168L252 200L278 190L304 236Z" fill="#171329"/>
+<g fill="#110e20"><rect x="204" y="150" width="14" height="40"/><rect x="232" y="134" width="16" height="56"/><rect x="258" y="156" width="14" height="34"/><rect x="214" y="168" width="48" height="24"/>
+<path d="M204 150h3v-4h3v4h2v-4h3v4h3v4h-14zM232 134h3v-5h3v5h3v-5h3v5h4v4h-16zM258 156h3v-4h3v4h2v-4h3v4h3v4h-14z"/></g>
+<path d="M240 129V112" stroke="#110e20" stroke-width="2"/><path d="M241 112h16l-4 4 4 4h-16z" fill="#e3b94f"/>
+<g fill="#ffd27a"><rect x="238" y="150" width="3" height="5" rx="1"/><rect x="210" y="166" width="2.5" height="4" rx="1"/><rect x="263" y="168" width="2.5" height="4" rx="1"/><rect x="243" y="176" width="2.5" height="4" rx="1"/></g>
+<rect y="200" width="480" height="100" fill="url(#fdMist)"/>
+<path d="M134 252Q176 246 214 236" stroke="#e8c48a" stroke-opacity=".2" stroke-width="4" fill="none" stroke-linecap="round"/>
+<path d="M0 270Q120 238 240 260T480 252V300H0Z" fill="#0d0b19"/>
+<g transform="translate(100 254) scale(1.45) translate(-100 -254)"><g fill="#0d0b19" stroke="#e8c37a" stroke-opacity=".55" stroke-width=".6" stroke-linejoin="round"><path d="M122 251.3l1-7.4h4l1 7.4z"/><circle cx="125" cy="241.7" r="2.1"/><circle cx="129.4" cy="246.6" r="2.4"/><path d="M109 251.9l1-7.4h4l1 7.4z"/><circle cx="112" cy="242.3" r="2.1"/><path d="M109.4 241.4L112 235.6l2.6 5.8z"/><path d="M115.6 251.9l1-13.4" stroke-width="1"/><path d="M96 252.8l1-7.4h4l1 7.4z"/><circle cx="99" cy="243.2" r="2.1"/><path d="M95.6 240q-3.2 6.4 0 12.8" fill="none" stroke-width=".9"/><path d="M83 254.0l1-7.4h4l1 7.4z"/><circle cx="86" cy="244.4" r="2.1"/><path d="M89 247.6v1.6" stroke-width=".8"/><path d="M69 255.7l1-7.4h4l1 7.4z"/><circle cx="72" cy="246.1" r="2.1"/><path d="M68.6 247.6l7.6-7" stroke-width="1.1"/></g>
+<circle cx="116.7" cy="238" r="4.5" fill="#3FC7EB" opacity=".3"/><circle cx="116.7" cy="238" r="1.4" fill="#bff1ff"/>
+<circle cx="89.4" cy="250.6" r="5.5" fill="#ffd56a" opacity=".32"/><circle cx="89.4" cy="250.6" r="1.5" fill="#fff2b8"/></g>
+<g><circle cx="60" cy="230" r="4" fill="url(#fdFly)"/><circle cx="188" cy="224" r="3.4" fill="url(#fdFly)"/><circle cx="412" cy="232" r="3.6" fill="url(#fdFly)"/><circle cx="300" cy="242" r="3" fill="url(#fdFly)"/><circle cx="448" cy="212" r="2.8" fill="url(#fdFly)"/></g>
+<g stroke="#0d0b19" stroke-width="1.6" fill="none" stroke-linecap="round"><path d="M96 120q4-4 8 0q4-4 8 0"/><path d="M122 104q3-3 6 0q3-3 6 0"/><path d="M402 120q3-3 6 0q3-3 6 0"/></g>
+</svg>`;
