@@ -251,6 +251,13 @@ button:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid var(
 .sg p{font-size:.92rem;color:var(--muted)}
 .sg-tag{font-family:var(--f-mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--faint)}
 .sg.sg-you .sg-tag{color:var(--gold)}
+.device{background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--r);padding:16px 18px;display:grid;gap:10px;margin-bottom:22px}
+.device.import{border-color:var(--gold)}
+.device .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.device input{flex:1 1 240px;min-width:0;font:inherit;font-size:.92rem;padding:9px 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface-2);color:var(--fg)}
+.device .warnline{font-size:.86rem;color:var(--muted)}
+.invite{justify-self:start;border:1px solid var(--line);background:none;border-radius:999px;padding:6px 14px;font-size:.9rem;color:var(--fg)}
+.invite:hover{border-color:var(--gold)}
 /* Guide */
 .guide{display:grid;gap:26px;grid-template-columns:minmax(0,1fr)}
 .guide > *, .board > *, .ballot > *, .cols > *{min-width:0}
@@ -291,6 +298,7 @@ table.matrix{border-collapse:collapse;width:100%;min-width:720px;font-size:.9rem
     <h1>Forever Party Draft</h1>
     <p class="lede">Rank the classes you'd play and say how you like to play. Once you've voted, you'll see where the whole party lands. Your ballot stays private, and the board only shows group totals under anonymous names.</p>
     <div class="dates" id="dates"></div>
+    <button class="invite" id="btn-invite" type="button">Invite your party</button>
   </header>
 
   <nav class="tabs" role="tablist" aria-label="Sections">
@@ -302,6 +310,20 @@ table.matrix{border-collapse:collapse;width:100%;min-width:720px;font-size:.9rem
   </nav>
 
   <main>
+    <div id="device-panel" hidden>
+      <div class="device import" id="dev-import" hidden>
+        <p><b>Use your ballot from another device?</b> <span id="dev-import-note"></span></p>
+        <div class="row"><button class="btn primary" id="dev-import-yes" type="button">Use it here</button><button class="btn ghost" id="dev-import-no" type="button">Cancel</button></div>
+      </div>
+      <div class="device" id="dev-have" hidden>
+        <p><b>Voting on another device?</b> Don't vote again there. Open your vote link on that device instead and it will show this same ballot, so you're only counted once.</p>
+        <div class="row"><button class="btn" id="dev-copy" type="button">Copy my vote link</button><span class="warnline">Keep it to yourself. Anyone with it can change your ballot.</span></div>
+      </div>
+      <div class="device" id="dev-need" hidden>
+        <p><b>Already voted on another device?</b> Paste your vote link here instead of voting again.</p>
+        <div class="row"><input id="dev-code" type="text" autocomplete="off" spellcheck="false" placeholder="Paste your vote link"><button class="btn" id="dev-use" type="button">Use it</button></div>
+      </div>
+    </div>
     <section id="view-ballot" class="ballot" aria-labelledby="tab-ballot"></section>
     <section id="view-results" aria-labelledby="tab-results" hidden></section>
     <section id="view-guide" class="guide" aria-labelledby="tab-guide" hidden></section>
@@ -452,6 +474,7 @@ function normBallot(b){
 let draft = blankBallot();
 let dirty = false;
 let saving = false;
+let confirmFirst = false, confirmTimer = null, pendingToken = null;
 let currentTab = "ballot";
 
 function loadDraft(){
@@ -800,8 +823,11 @@ function updateSaveBar(){
   else if (mine && !changed) st.innerHTML = `<b>Ballot saved.</b> Only you can see it. Change anything and save again.`;
   else if (mine) st.innerHTML = `<b>Unsaved changes.</b> The board still has your earlier ballot.`;
   else st.innerHTML = `Ranked: <b>${draft.classes.map(c=>CLS[c].name).join(" › ")}</b>. Save to see the party board.`;
+  if (confirmFirst && !mine && canSave){ save.textContent = "Yes, save my one ballot"; st.innerHTML = "<b>One ballot per person.</b> Already voted on another device? Use the vote link box at the top instead."; }
 }
 $("#btn-save").addEventListener("click", async ()=>{
+  if (Store.mode==="supabase" && !Store.mine() && !confirmFirst){ confirmFirst = true; clearTimeout(confirmTimer); confirmTimer = setTimeout(()=>{ confirmFirst = false; updateSaveBar(); }, 12000); updateSaveBar(); return; }
+  confirmFirst = false;
   saving = true; updateSaveBar();
   try { await Store.save(draft); dirty=false; lsDel("fpd-draft"); toast("Ballot saved. The party board is open.", "See the board", ()=>setTab("results")); }
   catch(e){
@@ -988,6 +1014,11 @@ function buildSuggestions(T, plan, entries, mine, alias, mem){
   if (T.pace.race && T.pace.chill) add("party", "Racers and chill players are in the same party", `${T.pace.race} want to race to 60 and ${T.pace.chill} want to take it slow. A common fix is to level the party characters only when you're together, and have the racers race on an alt.`);
   if (n>=2 && T.launch.yes < Math.ceil(n/2)) add("party", "Most of the party can't confirm launch night", `Only ${T.launch.yes} of ${n} said yes for Nov 4. Plan the first real group session for the best weekly slot instead.`);
   PROFS.filter(p=>p.kind==="gather").forEach(g=>{ const crafters = g.pairs.split(", ").reduce((s,c)=>s+T.prof[c],0); if (crafters && !T.prof[g.id]) add("party", `Crafters without a ${g.name.toLowerCase()} supplier`, `${g.pairs.split(", ").map(c=>PROF[c].name).join(" and ")} use materials that come from ${g.name}. A crafter could take ${g.name} as their second profession, or someone could switch one of theirs to it.`); });
+
+  let twins = 0;
+  for (let i=0;i<entries.length;i++) for (let j=i+1;j<entries.length;j++){ const a=entries[i][1], b=entries[j][1];
+    if (a.classes.length>=3 && a.classes.join()===b.classes.join() && a.race===b.race && a.profs.join()===b.profs.join()) twins++; }
+  if (twins) add("party", twins===1 ? "Two ballots look nearly identical" : `${twins} pairs of ballots look nearly identical`, "They rank the same classes in the same order with the same race and professions. If one is yours from a second device, open your vote link on that device and withdraw the extra, so you're only counted once.");
 
   // Personal
   if (mine){
@@ -1260,12 +1291,48 @@ function renderGuide(){
   </div>`;
 }
 
+/* ---------- One ballot per person across devices ---------- */
+function parseToken(s){ s = String(s||"").trim(); const m = s.match(/vote=([^&\s]+)/); if (m) s = decodeURIComponent(m[1]); return /^[A-Za-z0-9-]{24,200}$/.test(s) ? s : null; }
+function voteLink(){ return location.origin + location.pathname + "#vote=" + encodeURIComponent(Store.token); }
+function renderDevice(){
+  const on = Store.mode==="supabase" && Store.ready && currentTab==="ballot";
+  $("#device-panel").hidden = !on;
+  if (!on) return;
+  const mine = Store.mine();
+  $("#dev-import").hidden = !pendingToken;
+  $("#dev-import-note").textContent = pendingToken ? (mine ? "This device already has its own ballot. Using the other one withdraws this one, so you're only counted once." : "This device will show and update that same ballot.") : "";
+  $("#dev-have").hidden = !!pendingToken || !mine;
+  $("#dev-need").hidden = !!pendingToken || !!mine;
+}
+async function adoptToken(tok){
+  if (!tok){ toast("That doesn't look like a vote link. Copy it again on the device where you voted."); return; }
+  if (tok === Store.token){ pendingToken = null; renderDevice(); toast("This device already uses that ballot."); return; }
+  const oldTok = Store.token, hadOwn = !!Store.mine();
+  try { if (hadOwn) await Store.rpc("delete_ballot", {p_token: oldTok}); } catch(e){ toast("Couldn't withdraw this device's ballot. Try again."); return; }
+  Store.token = tok; lsSet("fpd-voter-token", tok); Store.myKey = await sha256hex(tok);
+  pendingToken = null; dirty = false; lsDel("fpd-draft"); draft = blankBallot(); $("#dev-code").value = "";
+  await Store.refresh();
+  toast(Store.mine() ? "This device now shows your ballot." : "Linked. No ballot exists for that link yet, so your next save will use it.");
+}
+$("#dev-import-yes").addEventListener("click", ()=>adoptToken(pendingToken));
+$("#dev-import-no").addEventListener("click", ()=>{ pendingToken = null; renderDevice(); });
+$("#dev-use").addEventListener("click", ()=>adoptToken(parseToken($("#dev-code").value)));
+$("#dev-copy").addEventListener("click", async ()=>{ const link = voteLink(); try { await navigator.clipboard.writeText(link); toast("Vote link copied. Open it on your other device."); } catch(e){ toast("Copy this link to your other device: " + link); } });
+$("#btn-invite").addEventListener("click", async ()=>{
+  const url = location.origin + location.pathname;
+  try { if (navigator.share){ await navigator.share({title:"Forever Party Draft", text:"Vote on our WoW Forever party: classes, faction, ruleset and schedule. It's anonymous.", url}); return; } } catch(e){ if (e && e.name==="AbortError") return; }
+  try { await navigator.clipboard.writeText(url); toast("Invite link copied."); } catch(e){ toast("Share this link: " + url); }
+});
+{ const m = (location.hash||"").match(/^#vote=.+$/); if (m){ pendingToken = parseToken(m[0]); try { history.replaceState(null, "", "#ballot"); } catch(e){} } }
+window.addEventListener("hashchange", ()=>{ const m = (location.hash||"").match(/^#vote=.+$/); if (m){ pendingToken = parseToken(m[0]); try { history.replaceState(null, "", "#ballot"); } catch(e){} setTab("ballot"); } });
+
 /* ---------- Tabs, connection, boot ---------- */
 function setTab(name){
   currentTab = name;
   document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected", t.dataset.tab===name));
   $("#view-ballot").hidden = name!=="ballot"; $("#view-results").hidden = name!=="results"; $("#view-guide").hidden = name!=="guide";
   $("#savebar").hidden = name!=="ballot";
+  renderDevice();
   if (name==="results") renderResults();
   try { history.replaceState(null, "", "#"+name); } catch(e){}
   window.scrollTo({top: Math.min(window.scrollY, $(".tabs").offsetTop), behavior:"auto"});
@@ -1279,7 +1346,7 @@ function renderConn(){
 Store.on(()=>{
   const mine = Store.mine();
   if (mine && !dirty) draft = normBallot(mine);
-  renderConn(); updateSaveBar(); renderBallot();
+  renderConn(); updateSaveBar(); renderBallot(); renderDevice();
   $("#vote-count").textContent = [...Store.ballots.values()].filter(b=>b.classes.length).length;
   if (currentTab==="results") renderResults();
 });
