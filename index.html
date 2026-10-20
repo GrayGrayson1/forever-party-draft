@@ -258,6 +258,13 @@ button:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid var(
 .device .warnline{font-size:.86rem;color:var(--muted)}
 .invite{justify-self:start;border:1px solid var(--line);background:none;border-radius:999px;padding:6px 14px;font-size:.9rem;color:var(--fg)}
 .invite:hover{border-color:var(--gold)}
+.name-input{font:inherit;font-size:1.05rem;padding:11px 14px;border-radius:8px;border:1px solid var(--line);background:var(--surface-2);color:var(--fg);width:100%;max-width:420px}
+.picks-wrap{overflow-x:auto}
+table.picks{border-collapse:collapse;width:100%;min-width:900px;font-size:.88rem}
+.picks th{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:500;text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
+.picks td{padding:8px;border-bottom:1px solid var(--line-soft);white-space:nowrap}
+.picks td.nm{font-weight:700}
+.picks tr.me td{background:var(--gold-soft)}
 /* Guide */
 .guide{display:grid;gap:26px;grid-template-columns:minmax(0,1fr)}
 .guide > *, .board > *, .ballot > *, .cols > *{min-width:0}
@@ -296,7 +303,7 @@ table.matrix{border-collapse:collapse;width:100%;min-width:720px;font-size:.9rem
   <header class="hero">
     <div class="eyebrow">World of Warcraft: Forever · Level 60 · 9 classes</div>
     <h1>Forever Party Draft</h1>
-    <p class="lede">Rank the classes you'd play and say how you like to play. Once you've voted, you'll see where the whole party lands. Your ballot stays private, and the board only shows group totals under anonymous names.</p>
+    <p class="lede">Rank the classes you'd play and say how you like to play. The board stays locked until you've voted, so nobody gets swayed. After that you'll see everyone's picks by name and where the party lands.</p>
     <div class="dates" id="dates"></div>
     <button class="invite" id="btn-invite" type="button">Invite your party</button>
   </header>
@@ -323,6 +330,11 @@ table.matrix{border-collapse:collapse;width:100%;min-width:720px;font-size:.9rem
         <p><b>Already voted on another device?</b> Paste your vote link here instead of voting again.</p>
         <div class="row"><input id="dev-code" type="text" autocomplete="off" spellcheck="false" placeholder="Paste your vote link"><button class="btn" id="dev-use" type="button">Use it</button></div>
       </div>
+    </div>
+    <div class="step" id="name-step" style="margin-bottom:22px">
+      <div class="step-head"><span class="n">Your name</span><h2>Who's voting?</h2>
+        <p class="hint">Everyone's picks show by name on the party board, but only to people who have already voted.</p></div>
+      <input id="voter-name" class="name-input" type="text" maxlength="40" autocomplete="nickname" placeholder="Your name or in-game name">
     </div>
     <section id="view-ballot" class="ballot" aria-labelledby="tab-ballot"></section>
     <section id="view-results" aria-labelledby="tab-results" hidden></section>
@@ -449,13 +461,14 @@ const ICON = {
 
 /* ---------- Ballot state ---------- */
 function blankBallot(){
-  return {v:1, classes:[], faction:null, style:null, rulesets:{}, favRuleset:null,
+  return {v:1, name:"", classes:[], faction:null, style:null, rulesets:{}, favRuleset:null,
     roles:{tank:null,healer:null,dps:null}, race:null, skyborne:null, profs:[],
     days:[], times:[], hours:null, pace:null, hardcore:null, launch:null};
 }
 function normBallot(b){
   const n = blankBallot();
   if (!b || typeof b!=="object") return n;
+  n.name = typeof b.name==="string" ? b.name.trim().slice(0,40) : "";
   n.classes = Array.isArray(b.classes) ? b.classes.filter(c=>CLS[c]).slice(0,5) : [];
   const num = (x,lo,hi) => (typeof x==="number" && x>=lo && x<=hi) ? x : null;
   n.faction = num(b.faction,-2,2); n.style = num(b.style,-2,2);
@@ -534,11 +547,11 @@ const Store = {
   supaHeaders(){ return {apikey:SUPABASE.anonKey, Authorization:"Bearer "+SUPABASE.anonKey, "Content-Type":"application/json"}; },
   async refresh(){
     try {
-      const r = await fetch(SUPABASE.url.replace(/\/$/,"") + "/rest/v1/ballots_public?select=voter,ballot", {headers:this.supaHeaders()});
+      const r = await fetch(SUPABASE.url.replace(/\/$/,"") + "/rest/v1/rpc/get_ballots", {method:"POST", headers:this.supaHeaders(), body:JSON.stringify({p_token:this.token})});
       if (!r.ok) throw new Error("HTTP "+r.status);
-      const rows = await r.json(); const m = new Map();
-      rows.forEach(row => m.set(row.voter, normBallot(row.ballot)));
-      this.ballots = m; this.ready = true; this.error = null;
+      const data = await r.json(); const m = new Map();
+      (data.ballots||[]).forEach(row => m.set(row.voter, normBallot(row.ballot)));
+      this.ballots = m; this.count = data.count||0; this.ready = true; this.error = null;
     } catch(e){ this.error = "unavailable"; }
     this.emit();
   },
@@ -579,6 +592,8 @@ function aliasMap(keys){
     name = used.has(CREATURES[i]) ? CREATURES[i]+" "+(used.size+1) : CREATURES[i];
     used.add(CREATURES[i]); out[k] = "Anonymous " + name;
   });
+  const seen = {};
+  keys.forEach(k=>{ const nm = ((Store.ballots.get(k)||{}).name||"").trim(); if (!nm) return; const key = nm.toLowerCase(); seen[key] = (seen[key]||0)+1; out[k] = seen[key]>1 ? `${nm} (${seen[key]})` : nm; });
   return out;
 }
 
@@ -780,7 +795,7 @@ function renderBallot(){
 function privacyText(){
   if (Store.mode==="local") return "<b>Preview mode.</b> This copy isn't connected to a shared board, so your ballot stays in this browser and the board shows four example voters.";
   if (Store.mode==="readonly" || !Store.canWrite) return "You can look around, but this link doesn't let you vote. Ask whoever shared it to invite you by email as an Editor.";
-  return "Only you can see your picks. The party board shows group totals, and each voter appears under a random creature name, so nobody can tell whose ballot is whose. That includes the person who made this page.";
+  return "Nobody sees your picks until they've voted too. The party board unlocks once you save, and then everyone's picks show by name.";
 }
 
 /* Ballot interactions (one delegated listener) */
@@ -812,13 +827,14 @@ function same(a,b){ return JSON.stringify(normBallot(a))===JSON.stringify(normBa
 function updateSaveBar(){
   const mine = Store.mine();
   const st = $("#save-status"), save = $("#btn-save"), clr = $("#btn-clear");
-  const canSave = draft.classes.length>0 && Store.ready && Store.canWrite && Store.mode!=="readonly" && !saving;
+  const canSave = draft.classes.length>0 && (Store.mode!=="supabase" || (draft.name||"").trim()) && Store.ready && Store.canWrite && Store.mode!=="readonly" && !saving;
   const changed = !mine || !same(mine, draft);
   save.disabled = !canSave || !changed;
   save.textContent = mine ? "Update my ballot" : "Save my ballot";
   clr.hidden = !mine;
   if (!Store.ready && Store.mode!=="local") st.innerHTML = "Connecting to the party board…";
   else if (!Store.canWrite || Store.mode==="readonly") st.innerHTML = "This link is view-only, so you can't vote from it.";
+  else if (Store.mode==="supabase" && !(draft.name||"").trim()) st.innerHTML = "Add your name at the top to save your ballot.";
   else if (!draft.classes.length) st.innerHTML = mine ? "Your ballot needs at least one class." : "Pick at least one class to save your ballot.";
   else if (mine && !changed) st.innerHTML = `<b>Ballot saved.</b> Only you can see it. Change anything and save again.`;
   else if (mine) st.innerHTML = `<b>Unsaved changes.</b> The board still has your earlier ballot.`;
@@ -1054,11 +1070,11 @@ function renderResults(){
   const el = $("#view-results");
   const entries = [...Store.ballots.entries()].filter(([,b])=>b.classes.length);
   const mine = Store.mine();
-  $("#vote-count").textContent = entries.length;
+  $("#vote-count").textContent = Store.count ?? entries.length;
   if (!Store.ready && Store.mode!=="local"){ el.innerHTML = `<div class="locked"><div class="big">…</div><h2>Connecting to the party board</h2><p class="muted">Ballots load in a moment.</p></div>`; return; }
   if (!mine){
-    el.innerHTML = `<div class="locked"><div class="big mono">${entries.length}</div>
-      <h2>${entries.length===1?"ballot is in":"ballots are in"}</h2>
+    el.innerHTML = `<div class="locked"><div class="big mono">${Store.count ?? entries.length}</div>
+      <h2>${(Store.count ?? entries.length)===1?"ballot is in":"ballots are in"}</h2>
       <p class="muted" style="max-width:52ch">The board opens once you've saved your own ballot, so nobody gets swayed before they pick. ${Store.canWrite&&Store.mode!=="readonly"?"":"This link is view-only."}</p>
       ${Store.canWrite&&Store.mode!=="readonly"?`<button type="button" class="btn primary" id="go-ballot">Fill out my ballot</button>`:""}</div>`;
     const g=$("#go-ballot"); if (g) g.onclick=()=>setTab("ballot");
@@ -1118,6 +1134,13 @@ function renderResults(){
   </div>
 
   <div class="board">
+    <div class="panel" id="picks">
+      <div class="panel-head"><h3>Everyone's picks</h3><span class="small muted">${plural(n,"ballot")} · classes ranked 1st to 5th</span></div>
+      <div class="picks-wrap"><table class="picks">
+        <thead><tr><th>Name</th><th>1st</th><th>2nd</th><th>3rd</th><th>4th</th><th>5th</th><th>Faction</th><th>Ruleset</th><th>Main role</th><th>Race</th><th>Professions</th><th>Hours</th></tr></thead>
+        <tbody>${entries.map(([k,b])=>`<tr class="${k===Store.myKey?"me":""}"><td class="nm">${k===Store.myKey?"You":esc(alias[k])}</td>${[0,1,2,3,4].map(i=>b.classes[i]?`<td style="color:var(--c-${b.classes[i]})">${CLS[b.classes[i]].name}</td>`:`<td class="muted">—</td>`).join("")}<td>${b.faction===null?"—":esc(FACTION_OPTS.find(o=>o[0]===b.faction)[1])}</td><td>${b.favRuleset?esc(RULESETS.find(r=>r.id===b.favRuleset).name):"—"}</td><td>${["tank","healer","dps"].filter(r=>b.roles[r]===2).map(r=>r==="dps"?"Damage":r[0].toUpperCase()+r.slice(1)).join(", ")||"—"}</td><td>${b.race?esc(RACE[b.race].short||RACE[b.race].name):"—"}</td><td>${b.profs.map(p=>PROF[p].name).join(", ")||"—"}</td><td>${b.hours?esc(HOURS.find(h=>h[0]===b.hours)[1]):"—"}</td></tr>`).join("")}</tbody>
+      </table></div>
+    </div>
     <div class="panel" id="changes">
       <div class="panel-head"><h3>What could change, and why</h3><span class="small muted">${sugg.length ? plural(sugg.length,"suggestion") : ""}</span></div>
       ${sugg.length ? `<div class="sugg">${[...suggYou, ...suggParty].map(s=>`<div class="sg sg-${s.who}"><span class="sg-tag">${s.who==="you"?"For you":"For the party"}</span><b>${esc(s.title)}</b><p>${esc(s.why)}</p></div>`).join("")}</div>`
@@ -1127,7 +1150,7 @@ function renderResults(){
 
     <div class="panel">
       <div class="panel-head"><h3>Suggested party</h3><span class="small muted">${plan?`${plan.tanks} tank${plan.tanks===1?"":"s"} · ${plan.healers} healer${plan.healers===1?"":"s"} · ${plan.dps} damage`:""}</span></div>
-      <p class="small muted">Each voter gets one of their ranked classes in a role they said they'd play. The planner fills a tank and a healer for every five people first, then goes as high on each ballot as it can and avoids duplicate classes. Everyone appears under an anonymous name. Yours is outlined.</p>
+      <p class="small muted">Each voter gets one of their ranked classes in a role they said they'd play. The planner fills a tank and a healer for every five people first, then goes as high on each ballot as it can and avoids duplicate classes. Yours is outlined.</p>
       <div class="party">
         ${plan?entries.map(([k],i)=>{ const o=plan.pick[i]; if (!o) return ""; const me=k===Store.myKey;
           return `<div class="member ${me?"me":""}" style="--cc:var(--c-${o.c})"><span class="alias">${me?"You":esc(examples&&k.startsWith("example")?alias[k]+" (example)":alias[k])}</span>
@@ -1291,6 +1314,11 @@ function renderGuide(){
   </div>`;
 }
 
+/* ---------- Voter name ---------- */
+const nameEl = $("#voter-name");
+nameEl.addEventListener("input", ()=>{ draft.name = nameEl.value.slice(0,40); dirty = true; persistDraft(); updateSaveBar(); });
+function syncName(){ $("#name-step").hidden = currentTab!=="ballot" || Store.mode!=="supabase"; if (document.activeElement !== nameEl && nameEl.value !== (draft.name||"")) nameEl.value = draft.name||""; }
+
 /* ---------- One ballot per person across devices ---------- */
 function parseToken(s){ s = String(s||"").trim(); const m = s.match(/vote=([^&\s]+)/); if (m) s = decodeURIComponent(m[1]); return /^[A-Za-z0-9-]{24,200}$/.test(s) ? s : null; }
 function voteLink(){ return location.origin + location.pathname + "#vote=" + encodeURIComponent(Store.token); }
@@ -1332,7 +1360,7 @@ function setTab(name){
   document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected", t.dataset.tab===name));
   $("#view-ballot").hidden = name!=="ballot"; $("#view-results").hidden = name!=="results"; $("#view-guide").hidden = name!=="guide";
   $("#savebar").hidden = name!=="ballot";
-  renderDevice();
+  renderDevice(); syncName();
   if (name==="results") renderResults();
   try { history.replaceState(null, "", "#"+name); } catch(e){}
   window.scrollTo({top: Math.min(window.scrollY, $(".tabs").offsetTop), behavior:"auto"});
@@ -1346,8 +1374,8 @@ function renderConn(){
 Store.on(()=>{
   const mine = Store.mine();
   if (mine && !dirty) draft = normBallot(mine);
-  renderConn(); updateSaveBar(); renderBallot(); renderDevice();
-  $("#vote-count").textContent = [...Store.ballots.values()].filter(b=>b.classes.length).length;
+  renderConn(); updateSaveBar(); renderBallot(); renderDevice(); syncName();
+  $("#vote-count").textContent = Store.count ?? [...Store.ballots.values()].filter(b=>b.classes.length).length;
   if (currentTab==="results") renderResults();
 });
 
