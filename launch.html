@@ -32,36 +32,38 @@
 }}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:17px;line-height:1.55;
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.5;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 80px}
-.wrap{max-width:920px;margin:0 auto}
+.wrap{max-width:1080px;margin:0 auto}
 h1,h2,h3{font-family:var(--f-display);font-weight:400;text-wrap:balance;margin:0}
-h1{font-size:clamp(2rem,5vw,3rem);line-height:1.05}
-h2{font-size:1.5rem;line-height:1.2}
-h3{font-size:1.12rem}
+h1{font-size:clamp(2.1rem,5vw,3.3rem);line-height:1.05;letter-spacing:.01em}
+h2{font-size:1.55rem;line-height:1.15}
+h3{font-size:1.15rem;line-height:1.2}
 p{margin:0}
 a{color:var(--gold)}
 .eyebrow{font-family:var(--f-mono);font-size:.74rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
 .muted{color:var(--muted)} .small{font-size:.9rem} .faint{color:var(--faint)}
 .mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
-.top{display:flex;gap:16px;flex-wrap:wrap;align-items:center;padding-block:18px 0;font-size:.95rem}
-.top a{text-decoration:none;border-bottom:1px solid transparent}
-.top a:hover{border-bottom-color:var(--gold)}
-.top .live{margin-left:auto;font-family:var(--f-mono);font-size:.74rem;color:var(--faint);display:flex;gap:6px;align-items:center}
-.top .live i{width:7px;height:7px;border-radius:50%;background:var(--faint)}
-.top .live.on i{background:var(--good)}
-.hero{padding-block:28px 18px;display:grid;gap:12px}
-.hero .lede{color:var(--muted);max-width:62ch}
-.count{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
-.cd{background:var(--surface);border:1px solid var(--line-soft);border-radius:10px;padding:10px 14px;display:grid;gap:2px}
-.cd.next{border-color:var(--gold);background:linear-gradient(180deg,var(--gold-soft),transparent),var(--surface)}
-.cd.done{opacity:.55}
-.cd .k{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
-.cd .v{font-family:var(--f-display);font-size:1.25rem}
-.jump{display:flex;gap:6px;flex-wrap:wrap;position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0;border-bottom:1px solid var(--line)}
-.jump a{font-size:.85rem;text-decoration:none;color:var(--fg);border:1px solid var(--line);border-radius:999px;padding:3px 11px;white-space:nowrap}
-.jump a:hover{border-color:var(--gold)}
-section{padding-block:26px;border-bottom:1px solid var(--line-soft);display:grid;gap:14px;scroll-margin-top:60px}
+/* Header and tabs: the same on every page */
+.hero{padding-block:40px 18px;display:grid;gap:14px}
+.hero .lede{max-width:62ch;color:var(--muted);font-size:1.08rem}
+.dates{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.date{display:flex;gap:10px;align-items:baseline;padding:7px 12px;border:1px solid var(--line);border-radius:999px;background:var(--surface)}
+.date b{font-family:var(--f-mono);font-weight:500;color:var(--gold);font-size:.92rem}
+.date span{font-size:.92rem}
+.date.past{opacity:.55}
+.date.next{border-color:var(--gold)}
+.invite{justify-self:start;border:1px solid var(--line);background:none;border-radius:999px;padding:6px 14px;font:inherit;font-size:.9rem;color:var(--fg);cursor:pointer}
+.invite:hover{border-color:var(--gold)}
+.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:26px;overflow-x:auto}
+.tab{background:none;border:0;padding:14px 14px 12px;font-family:var(--f-display);font-size:1.05rem;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap;display:flex;gap:8px;align-items:center;text-decoration:none}
+.tab:hover{color:var(--fg)}
+.tab[aria-selected="true"],.tab[aria-current="page"]{color:var(--fg);border-bottom-color:var(--gold)}
+.tab .count{font-family:var(--f-mono);font-size:.75rem;background:var(--surface-2);border-radius:999px;padding:1px 7px;color:var(--muted)}
+.conn{margin-left:auto;align-self:center;font-family:var(--f-mono);font-size:.72rem;color:var(--faint);white-space:nowrap;padding-left:12px;display:flex;align-items:center;gap:6px}
+.conn i{width:7px;height:7px;border-radius:50%;background:var(--faint);display:inline-block}
+.conn.live i{background:var(--good)}
+section{padding-block:26px;border-bottom:1px solid var(--line-soft);display:grid;gap:14px;scroll-margin-top:70px}
 section:last-of-type{border-bottom:0}
 .sec-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
 .card{background:var(--surface);border:1px solid var(--line-soft);border-radius:10px;padding:14px 16px;display:grid;gap:8px;min-width:0}
@@ -115,22 +117,20 @@ ul.plain{margin:0;padding-left:18px;display:grid;gap:6px}
 </head>
 <body>
 <div class="wrap">
-  <nav class="top" aria-label="Pages">
-    <a href="index.html#ballot">My ballot</a>
-    <a href="index.html#results">Party board</a>
-    <a href="brief.html">Game plan</a>
-    <b>Launch guide</b>
-    <span class="live" id="live"><i></i><span>Loading…</span></span>
-  </nav>
   <header class="hero">
-    <div class="eyebrow">Forever Party Draft · Launch guide</div>
-    <h1>Forever Launch Guide</h1>
+    <div class="eyebrow">World of Warcraft: Forever · Level 60 · 9 classes</div>
+    <h1>Launch Guide</h1>
     <p class="lede">Everything new in World of Warcraft: Forever that changes your plans, tied to your party's ballots: what's new for your classes, where you'll start, which dungeon fits your levels, what your professions bring, and what to do before each date.</p>
-    <div class="count" id="count"></div>
+    <div class="dates" id="dates"></div>
+    <button class="invite" id="btn-invite" type="button">Invite your party</button>
   </header>
-  <nav class="jump" aria-label="Sections">
-    <a href="#before">Before Oct 27</a><a href="#party">The party</a><a href="#names">Names</a><a href="#start">Starting zones</a>
-    <a href="#classes">Class changes</a><a href="#levels">Levels and dungeons</a><a href="#profs">Professions</a><a href="#money">Costs</a><a href="#raids">Raids and PvP</a><a href="#rules">Rulesets</a><a href="#sources">Sources</a>
+  <nav class="tabs" aria-label="Pages">
+    <a class="tab" href="index.html#ballot">My ballot</a>
+    <a class="tab" href="index.html#results">Party board <span class="count" id="vote-count">…</span></a>
+    <a class="tab" href="index.html#guide">Field guide</a>
+    <a class="tab" href="brief.html">Game plan</a>
+    <a class="tab" href="launch.html" aria-current="page">Launch guide</a>
+    <span class="conn" id="conn"><i></i><span>Connecting…</span></span>
   </nav>
   <main id="main"><p class="muted" style="padding:30px 0">Loading…</p></main>
 </div>
@@ -223,17 +223,10 @@ let dungeonSide = null, levelDraft = null;
 function tzAbbr(z){ try { return new Intl.DateTimeFormat("en-US",{timeZone:z, timeZoneName:"short"}).formatToParts(new Date()).find(p=>p.type==="timeZoneName").value; } catch(e){ return ""; } }
 function ago(iso){ if (!iso) return ""; const m = Math.round((Date.now()-new Date(iso).getTime())/60000); if (isNaN(m)) return ""; if (m<60) return m<=1?"just now":m+" min ago"; const h=Math.round(m/60); if (h<48) return h+" h ago"; return Math.round(h/24)+" days ago"; }
 
-function renderCount(){
-  const now = Date.now(); let nextSet = false;
-  $("#count").innerHTML = FD.timeline.slice(0,4).map(x=>{ const t = new Date(x.d).getTime(); let cls="cd", when;
-    if (t<now){ cls+=" done"; when="Done"; } else { if (!nextSet){ cls+=" next"; nextSet=true; } const d = (t-now)/86400000; when = d<1 ? Math.max(1,Math.round(d*24))+" hours" : Math.ceil(d)+" days"; }
-    return `<div class="${cls}" title="${esc(x.s)}"><span class="k">${esc(x.w)} · ${esc(x.t)}</span><span class="v">${when}</span></div>`; }).join("");
-}
-
 function render(){
-  const live = $("#live"); live.classList.toggle("on", Store.ready && !Store.error);
-  live.querySelector("span").textContent = Store.error ? "Can't reach the board" : "Live · " + new Date().toLocaleTimeString([], {hour:"numeric", minute:"2-digit"});
-  renderCount();
+  const live = $("#conn"); live.classList.toggle("live", Store.ready && !Store.error);
+  live.querySelector("span").textContent = Store.error ? "Board offline, retrying" : "Live board";
+  $("#vote-count").textContent = Store.count;
   const entries = [...Store.ballots.entries()].filter(([,b])=>b.classes.length);
   const mine = Store.myKey ? Store.ballots.get(Store.myKey) : null;
   const voted = !!mine;
@@ -387,7 +380,10 @@ function render(){
 }
 let toastT; function toast(msg){ let t = document.querySelector(".toast"); if (!t){ t = document.createElement("div"); t.className = "toast"; t.setAttribute("role","status"); document.body.appendChild(t); } t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(()=>t.hidden = true, 4000); }
 
-(async()=>{ await load(); render(); if (location.hash){ const el = document.getElementById(location.hash.slice(1)); if (el) el.scrollIntoView(); }
+fdDates($("#dates")); $("#btn-invite").addEventListener("click", fdInvite);
+(async()=>{ await load(); render();
+  fdNav({current:"launch", root:$("#main"), sticky:".tabs", items:()=>{ const out = []; document.querySelectorAll("#main section").forEach(sec=>{ const h = sec.querySelector(".sec-head h2"); if (h) out.push({el:sec, label:h.textContent, level:1}); sec.querySelectorAll(".sec-head h3").forEach(h3=>out.push({el:h3.closest(".sec-head"), label:h3.textContent, level:2})); }); return out; }});
+  if (location.hash){ const el = document.getElementById(location.hash.slice(1)); if (el) el.scrollIntoView(); }
   setInterval(async()=>{ if (!document.hidden && document.activeElement && document.activeElement.id!=="lv-in"){ await load(); render(); } }, 30000); })();
 </script>
 </body>
