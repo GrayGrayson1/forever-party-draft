@@ -127,7 +127,7 @@ section:last-of-type{border-bottom:0}
   <header class="hero">
     <div class="eyebrow">Forever Party Draft · Game plan</div>
     <h1>Forever Game Plan</h1>
-    <p class="lede">The plain-English read of everyone's ballots: what's decided, what still needs a call, and what to change. It updates as people vote, and everyone stays anonymous.</p>
+    <p class="lede">The plain-English read of everyone's ballots: what's decided, what still needs a call, and what to change. It updates as people vote and only opens once you've voted yourself.</p>
   </header>
   <main id="brief"><div class="locked"><h2>Reading the ballots…</h2></div></main>
 </div>
@@ -208,13 +208,14 @@ async function sha256hex(s){ const b = await crypto.subtle.digest("SHA-256", new
 
 
 function blankBallot(){
-  return {v:1, classes:[], faction:null, style:null, rulesets:{}, favRuleset:null,
+  return {v:1, name:"", classes:[], faction:null, style:null, rulesets:{}, favRuleset:null,
     roles:{tank:null,healer:null,dps:null}, race:null, skyborne:null, profs:[],
     days:[], times:[], hours:null, pace:null, hardcore:null, launch:null};
 }
 function normBallot(b){
   const n = blankBallot();
   if (!b || typeof b!=="object") return n;
+  n.name = typeof b.name==="string" ? b.name.trim().slice(0,40) : "";
   n.classes = Array.isArray(b.classes) ? b.classes.filter(c=>CLS[c]).slice(0,5) : [];
   const num = (x,lo,hi) => (typeof x==="number" && x>=lo && x<=hi) ? x : null;
   n.faction = num(b.faction,-2,2); n.style = num(b.style,-2,2);
@@ -250,6 +251,8 @@ function aliasMap(keys){
     name = used.has(CREATURES[i]) ? CREATURES[i]+" "+(used.size+1) : CREATURES[i];
     used.add(CREATURES[i]); out[k] = "Anonymous " + name;
   });
+  const seen = {};
+  keys.forEach(k=>{ const nm = ((Store.ballots.get(k)||{}).name||"").trim(); if (!nm) return; const key = nm.toLowerCase(); seen[key] = (seen[key]||0)+1; out[k] = seen[key]>1 ? `${nm} (${seen[key]})` : nm; });
   return out;
 }
 
@@ -449,11 +452,11 @@ async function loadBallots(){
   const t = lsGet("fpd-voter-token");
   Store.myKey = t ? await sha256hex(t) : null;
   try {
-    const H = {apikey:SUPABASE.anonKey, Authorization:"Bearer "+SUPABASE.anonKey};
-    const r = await fetch(SUPABASE.url.replace(/\/$/,"") + "/rest/v1/ballots_public?select=voter,ballot", {headers:H});
+    const H = {apikey:SUPABASE.anonKey, Authorization:"Bearer "+SUPABASE.anonKey, "Content-Type":"application/json"};
+    const r = await fetch(SUPABASE.url.replace(/\/$/,"") + "/rest/v1/rpc/get_ballots", {method:"POST", headers:H, body:JSON.stringify({p_token:t||""})});
     if (!r.ok) throw new Error("HTTP "+r.status);
-    const m = new Map(); (await r.json()).forEach(row=>m.set(row.voter, normBallot(row.ballot)));
-    Store.ballots = m; Store.ready = true; Store.error = null;
+    const data = await r.json(); const m = new Map(); (data.ballots||[]).forEach(row=>m.set(row.voter, normBallot(row.ballot)));
+    Store.ballots = m; Store.count = data.count||0; Store.ready = true; Store.error = null;
   } catch(e){ Store.error = "offline"; }
 }
 function barsHTML(rows, max){
@@ -508,7 +511,7 @@ function render(){
   const entries = [...Store.ballots.entries()].filter(([,b])=>b.classes.length);
   const mine = Store.myKey ? Store.ballots.get(Store.myKey) : null;
   if (!mine){
-    el.innerHTML = `<div class="locked"><div class="mono" style="font-size:2.4rem;color:var(--gold)">${entries.length}</div><h2>${entries.length===1?"ballot is in":"ballots are in"}</h2>
+    el.innerHTML = `<div class="locked"><div class="mono" style="font-size:2.4rem;color:var(--gold)">${Store.count ?? entries.length}</div><h2>${(Store.count ?? entries.length)===1?"ballot is in":"ballots are in"}</h2>
       <p class="muted" style="max-width:50ch">The game plan opens once you've voted, the same as the party board. Vote from this browser, or open your vote link here first.</p>
       <a class="btn" href="index.html#ballot">Fill out my ballot</a></div>`;
     return;
