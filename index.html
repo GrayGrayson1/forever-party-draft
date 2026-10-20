@@ -48,7 +48,7 @@
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.5;
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.5;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 120px}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
 .wrap{max-width:1080px;margin:0 auto}
@@ -77,8 +77,9 @@ button:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid var(
 
 /* Tabs */
 .tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:26px;overflow-x:auto}
-.tab{background:none;border:0;padding:14px 14px 12px;font-family:var(--f-display);font-size:1.05rem;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap;display:flex;gap:8px;align-items:center}
-.tab[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--gold)}
+.tab{background:none;border:0;padding:14px 14px 12px;font-family:var(--f-display);font-size:1.05rem;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap;display:flex;gap:8px;align-items:center;text-decoration:none}
+.tab:hover{color:var(--fg)}
+.tab[aria-selected="true"],.tab[aria-current="page"]{color:var(--fg);border-bottom-color:var(--gold)}
 .tab .count{font-family:var(--f-mono);font-size:.75rem;background:var(--surface-2);border-radius:999px;padding:1px 7px;color:var(--muted)}
 .conn{margin-left:auto;align-self:center;font-family:var(--f-mono);font-size:.72rem;color:var(--faint);white-space:nowrap;padding-left:12px;display:flex;align-items:center;gap:6px}
 .conn i{width:7px;height:7px;border-radius:50%;background:var(--faint);display:inline-block}
@@ -330,12 +331,12 @@ table.matrix{border-collapse:collapse;width:100%;min-width:720px;font-size:.9rem
     <button class="invite" id="btn-invite" type="button">Invite your party</button>
   </header>
 
-  <nav class="tabs" role="tablist" aria-label="Sections">
+  <nav class="tabs" role="tablist" aria-label="Pages">
     <button class="tab" role="tab" id="tab-ballot" data-tab="ballot" aria-selected="true">My ballot</button>
     <button class="tab" role="tab" id="tab-results" data-tab="results" aria-selected="false">Party board <span class="count" id="vote-count">0</span></button>
     <button class="tab" role="tab" id="tab-guide" data-tab="guide" aria-selected="false">Field guide</button>
-    <a class="tab" href="brief.html" style="text-decoration:none">Game plan</a>
-    <a class="tab" href="launch.html" style="text-decoration:none">Launch guide</a>
+    <a class="tab" href="brief.html">Game plan</a>
+    <a class="tab" href="launch.html">Launch guide</a>
     <span class="conn" id="conn"><i></i><span>Connecting…</span></span>
   </nav>
 
@@ -473,12 +474,7 @@ const HC = [["no","No thanks"],["curious","Curious"],["yes","Yes, a run"]];
 const LAUNCH = [["yes","Yes"],["maybe","Maybe"],["no","No"]];
 const SKY = [["yes","Buying it"],["maybe","Maybe"],["no","No"]];
 
-const DATES = [
-  {d:"2026-10-21T21:00:00Z", label:"Stress test", sub:"Oct 21, 2 PM PDT. Open to any account, wiped afterward."},
-  {d:"2026-10-27T17:00:00Z", label:"Name reservation", sub:"Oct 27 – Nov 3. Needs the Heroic Pack. Up to 3 characters."},
-  {d:"2026-11-04T23:00:00Z", label:"Launch", sub:"Nov 4, 3 PM PST. No early access."},
-  {d:"2026-12-09T16:00:00Z", label:"Raids unlock", sub:"Dec 9. Barrow Deeps (10), Hyjal Summit (20) and Onyxia's Lair (40)."},
-];
+const DATES = FD.timeline.slice(0,4).map(x=>({d:x.d, label:x.t, sub:x.s}));
 
 /* ---------- Helpers ---------- */
 const $ = s => document.querySelector(s);
@@ -723,16 +719,7 @@ function planParty(entries){
 }
 
 /* ---------- Render: dates ---------- */
-function renderDates(){
-  const now = Date.now(); let nextSet=false;
-  $("#dates").innerHTML = DATES.map(x=>{
-    const t = new Date(x.d).getTime(); const days = Math.ceil((t-now)/86400000);
-    let cls = "date", when;
-    if (t < now) { cls += " past"; when = "done"; }
-    else { if (!nextSet){ cls += " next"; nextSet = true; } when = days<=1 ? (t-now<86400000 ? "today" : "1 day") : days+" days"; }
-    return `<div class="${cls}" title="${esc(x.sub)}"><b>${esc(when)}</b><span>${esc(x.label)}</span></div>`;
-  }).join("");
-}
+function renderDates(){ fdDates($("#dates")); }
 
 /* ---------- Render: ballot ---------- */
 function rolePills(c){ return CLS[c].roles.map(r=>`<span class="rp ${r}">${ROLE_LABEL[r]}</span>`).join(""); }
@@ -1449,11 +1436,7 @@ $("#dev-import-yes").addEventListener("click", ()=>adoptToken(pendingToken));
 $("#dev-import-no").addEventListener("click", ()=>{ pendingToken = null; renderDevice(); });
 $("#dev-use").addEventListener("click", ()=>adoptToken(parseToken($("#dev-code").value)));
 $("#dev-copy").addEventListener("click", async ()=>{ const link = voteLink(); try { await navigator.clipboard.writeText(link); toast("Vote link copied. Open it on your other device."); } catch(e){ toast("Copy this link to your other device: " + link); } });
-$("#btn-invite").addEventListener("click", async ()=>{
-  const url = location.origin + location.pathname;
-  try { if (navigator.share){ await navigator.share({title:"Forever Party Draft", text:"Vote on our WoW Forever party: classes, faction, ruleset and schedule. It's anonymous.", url}); return; } } catch(e){ if (e && e.name==="AbortError") return; }
-  try { await navigator.clipboard.writeText(url); toast("Invite link copied."); } catch(e){ toast("Share this link: " + url); }
-});
+$("#btn-invite").addEventListener("click", fdInvite);
 { const m = (location.hash||"").match(/^#vote=.+$/); if (m){ pendingToken = parseToken(m[0]); try { history.replaceState(null, "", "#ballot"); } catch(e){} } }
 window.addEventListener("hashchange", ()=>{ const m = (location.hash||"").match(/^#vote=.+$/); if (m){ pendingToken = parseToken(m[0]); try { history.replaceState(null, "", "#ballot"); } catch(e){} setTab("ballot"); } });
 
@@ -1489,6 +1472,26 @@ loadDraft();
 renderDates(); renderBallot(); renderGuide(); updateSaveBar();
 const h = (location.hash||"").slice(1); if (["ballot","results","guide"].includes(h)) setTab(h);
 Store.init();
+fdNav({current:()=>currentTab, root:document.querySelector("main"), sticky:".tabs",
+  onPage:id=>{ if (["ballot","results","guide"].includes(id)){ setTab(id); window.scrollTo({top:0, behavior:"smooth"}); return true; } return false; },
+  items:()=>{
+    const out = [];
+    if (currentTab==="ballot"){
+      const ns = $("#name-step"); if (ns && !ns.hidden) out.push({el:ns, label:"Your name", level:1});
+      document.querySelectorAll("#view-ballot .step").forEach(sec=>{
+        const h = sec.querySelector(".step-head h2"), n = sec.querySelector(".step-head .n"); if (!h) return;
+        out.push({el:sec, label:(n ? n.textContent.replace("Step ","") + ". " : "") + h.textContent, level:1});
+        [["[data-nope]","Won't play"],["#seg-sky","Heroic Pack"],["#chars","Character names"],["#seg-loot","Loot rule"]].forEach(([q,label])=>{ const f = sec.querySelector(q); if (f) out.push({el:f.closest(".field")||f, label, level:2}); });
+      });
+      const mg = $("#manage"); if (mg && !mg.hidden) out.push({el:mg, label:"Start over or withdraw", level:1});
+    } else if (currentTab==="results"){
+      const v = document.querySelector("#view-results .verdict"); if (v) out.push({el:v, label:"Where we're landing", level:1});
+      document.querySelectorAll("#view-results .panel-head h3").forEach(h=>out.push({el:h.closest(".panel-head"), label:h.textContent, level:1}));
+    } else if (currentTab==="guide"){
+      document.querySelectorAll("#view-guide h2, #view-guide h3").forEach(h=>{ const cg = h.closest(".cg"); out.push({el:cg || h.parentElement, label:h.textContent, level:cg ? 2 : 1}); });
+    }
+    return out;
+  }});
 setTimeout(()=>{ if (!Store.ready && Store.mode==="connecting") Store.initLocal(); }, 12000);
 </script>
 
