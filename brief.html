@@ -417,6 +417,11 @@ function buildSuggestions(T, plan, entries, mine, alias, mem){
   if (n>=2 && T.launch.yes < Math.ceil(n/2)) add("party", "Most of the party can't confirm launch night", `Only ${T.launch.yes} of ${n} said yes for Nov 4. Plan the first real group session for the best weekly slot instead.`);
   PROFS.filter(p=>p.kind==="gather").forEach(g=>{ const crafters = g.pairs.split(", ").reduce((s,c)=>s+T.prof[c],0); if (crafters && !T.prof[g.id]) add("party", `Crafters without a ${g.name.toLowerCase()} supplier`, `${g.pairs.split(", ").map(c=>PROF[c].name).join(" and ")} use materials that come from ${g.name}. A crafter could take ${g.name} as their second profession, or someone could switch one of theirs to it.`); });
 
+  let twins = 0;
+  for (let i=0;i<entries.length;i++) for (let j=i+1;j<entries.length;j++){ const a=entries[i][1], b=entries[j][1];
+    if (a.classes.length>=3 && a.classes.join()===b.classes.join() && a.race===b.race && a.profs.join()===b.profs.join()) twins++; }
+  if (twins) add("party", twins===1 ? "Two ballots look nearly identical" : `${twins} pairs of ballots look nearly identical`, "They rank the same classes in the same order with the same race and professions. If one is yours from a second device, open your vote link on that device and withdraw the extra, so you're only counted once.");
+
   // Personal
   if (mine){
     const myIdx = entries.findIndex(([k])=>k===Store.myKey), my = plan.pick[myIdx];
@@ -489,7 +494,7 @@ function bestFifth(plan, mem){
   return {needRole, top: scored.filter(x=>x.s===scored[0].s).slice(0,2), missingU};
 }
 function impactOf(title){
-  if (/^Find a|leads, but|Faction is split|full-party night|No night works|No crowd|No resurrection|No dispel/.test(title)) return "high";
+  if (/^Find a|leads, but|Faction is split|full-party night|No night works|No crowd|No resurrection|No dispel|nearly identical/.test(title)) return "high";
   if (/Most of the party can't confirm/.test(title)) return "low";
   return "medium";
 }
@@ -504,7 +509,7 @@ function render(){
   const mine = Store.myKey ? Store.ballots.get(Store.myKey) : null;
   if (!mine){
     el.innerHTML = `<div class="locked"><div class="mono" style="font-size:2.4rem;color:var(--gold)">${entries.length}</div><h2>${entries.length===1?"ballot is in":"ballots are in"}</h2>
-      <p class="muted" style="max-width:50ch">The game plan opens once you've voted, the same as the party board. Vote from this browser and come back.</p>
+      <p class="muted" style="max-width:50ch">The game plan opens once you've voted, the same as the party board. Vote from this browser, or open your vote link here first.</p>
       <a class="btn" href="index.html#ballot">Fill out my ballot</a></div>`;
     return;
   }
