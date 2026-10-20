@@ -32,26 +32,37 @@
 }}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:17px;line-height:1.55;
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.5;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 80px}
-.wrap{max-width:860px;margin:0 auto}
+.wrap{max-width:1080px;margin:0 auto}
 h1,h2,h3{font-family:var(--f-display);font-weight:400;text-wrap:balance;margin:0}
-h1{font-size:clamp(2rem,5vw,3rem);line-height:1.05}
-h2{font-size:1.5rem;line-height:1.2}
-h3{font-size:1.12rem}
+h1{font-size:clamp(2.1rem,5vw,3.3rem);line-height:1.05;letter-spacing:.01em}
+h2{font-size:1.55rem;line-height:1.15}
+h3{font-size:1.15rem;line-height:1.2}
 p{margin:0}
 a{color:var(--gold)}
 .eyebrow{font-family:var(--f-mono);font-size:.74rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
 .muted{color:var(--muted)} .small{font-size:.9rem}
 .mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
-.top{display:flex;gap:16px;flex-wrap:wrap;align-items:center;padding-block:18px 0;font-size:.95rem}
-.top a{text-decoration:none;border-bottom:1px solid transparent}
-.top a:hover{border-bottom-color:var(--gold)}
-.top .live{margin-left:auto;font-family:var(--f-mono);font-size:.74rem;color:var(--faint);display:flex;gap:6px;align-items:center}
-.top .live i{width:7px;height:7px;border-radius:50%;background:var(--faint)}
-.top .live.on i{background:var(--good)}
-.hero{padding-block:28px 22px;display:grid;gap:12px;border-bottom:1px solid var(--line)}
-.hero .lede{color:var(--muted);max-width:60ch}
+/* Header and tabs: the same on every page */
+.hero{padding-block:40px 18px;display:grid;gap:14px}
+.hero .lede{max-width:62ch;color:var(--muted);font-size:1.08rem}
+.dates{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.date{display:flex;gap:10px;align-items:baseline;padding:7px 12px;border:1px solid var(--line);border-radius:999px;background:var(--surface)}
+.date b{font-family:var(--f-mono);font-weight:500;color:var(--gold);font-size:.92rem}
+.date span{font-size:.92rem}
+.date.past{opacity:.55}
+.date.next{border-color:var(--gold)}
+.invite{justify-self:start;border:1px solid var(--line);background:none;border-radius:999px;padding:6px 14px;font:inherit;font-size:.9rem;color:var(--fg);cursor:pointer}
+.invite:hover{border-color:var(--gold)}
+.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:26px;overflow-x:auto}
+.tab{background:none;border:0;padding:14px 14px 12px;font-family:var(--f-display);font-size:1.05rem;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap;display:flex;gap:8px;align-items:center;text-decoration:none}
+.tab:hover{color:var(--fg)}
+.tab[aria-selected="true"],.tab[aria-current="page"]{color:var(--fg);border-bottom-color:var(--gold)}
+.tab .count{font-family:var(--f-mono);font-size:.75rem;background:var(--surface-2);border-radius:999px;padding:1px 7px;color:var(--muted)}
+.conn{margin-left:auto;align-self:center;font-family:var(--f-mono);font-size:.72rem;color:var(--faint);white-space:nowrap;padding-left:12px;display:flex;align-items:center;gap:6px}
+.conn i{width:7px;height:7px;border-radius:50%;background:var(--faint);display:inline-block}
+.conn.live i{background:var(--good)}
 section{padding-block:28px;border-bottom:1px solid var(--line-soft);display:grid;gap:14px}
 section:last-of-type{border-bottom:0}
 .sec-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
@@ -149,18 +160,21 @@ ul.lst.ok li::marker{color:var(--good)} ul.lst.no li::marker{color:var(--bad)} u
 </head>
 <body>
 <div class="wrap">
-  <nav class="top" aria-label="Pages">
-    <a href="index.html#ballot">My ballot</a>
-    <a href="index.html#results">Party board</a>
-    <b>Game plan</b>
-    <a href="launch.html">Launch guide</a>
-    <span class="live" id="live"><i></i><span>Loading…</span></span>
-  </nav>
   <header class="hero">
-    <div class="eyebrow">Forever Party Draft · Game plan</div>
-    <h1>Forever Game Plan</h1>
+    <div class="eyebrow">World of Warcraft: Forever · Level 60 · 9 classes</div>
+    <h1>Game Plan</h1>
     <p class="lede">The plain-English read of everyone's ballots: what's decided, what still needs a call, and what to change. It updates as people vote and only opens once you've voted yourself.</p>
+    <div class="dates" id="dates"></div>
+    <button class="invite" id="btn-invite" type="button">Invite your party</button>
   </header>
+  <nav class="tabs" aria-label="Pages">
+    <a class="tab" href="index.html#ballot">My ballot</a>
+    <a class="tab" href="index.html#results">Party board <span class="count" id="vote-count">…</span></a>
+    <a class="tab" href="index.html#guide">Field guide</a>
+    <a class="tab" href="brief.html" aria-current="page">Game plan</a>
+    <a class="tab" href="launch.html">Launch guide</a>
+    <span class="conn" id="conn"><i></i><span>Connecting…</span></span>
+  </nav>
   <main id="brief"><div class="locked"><h2>Reading the ballots…</h2></div></main>
 </div>
 <script src="forever-data.js"></script>
@@ -724,9 +738,10 @@ function impactOf(title){
 
 function render(){
   const el = $("#brief");
-  const live = $("#live");
-  live.classList.toggle("on", Store.ready && !Store.error);
-  live.querySelector("span").textContent = Store.error ? "Can't reach the board" : Store.mode==="demo" ? "Demo data" : "Live · updated " + new Date().toLocaleTimeString([], {hour:"numeric", minute:"2-digit"});
+  const live = $("#conn");
+  live.classList.toggle("live", Store.ready && !Store.error);
+  live.querySelector("span").textContent = Store.error ? "Board offline, retrying" : Store.mode==="demo" ? "Demo data" : "Live board";
+  $("#vote-count").textContent = Store.count ?? [...Store.ballots.values()].filter(b=>b.classes.length).length;
   if (Store.error){ el.innerHTML = `<div class="locked"><h2>The vote board isn't responding</h2><p class="muted">If nobody has visited in about a week, the free database pauses. The organizer can resume it from the Supabase dashboard with one click.</p></div>`; return; }
   const entries = [...Store.ballots.entries()].filter(([,b])=>b.classes.length);
   const mine = Store.myKey ? Store.ballots.get(Store.myKey) : null;
@@ -978,7 +993,10 @@ function render(){
   };
 }
 let toastT; function toast(msg){ let t = document.querySelector(".toast"); if (!t){ t = document.createElement("div"); t.className = "toast"; t.setAttribute("role","status"); document.body.appendChild(t); } t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(()=>t.hidden = true, 4000); }
-(async()=>{ await loadBallots(); render(); setInterval(async()=>{ if (!document.hidden && Store.mode!=="demo"){ await loadBallots(); render(); } }, 30000); })();
+fdDates($("#dates")); $("#btn-invite").addEventListener("click", fdInvite);
+(async()=>{ await loadBallots(); render();
+  fdNav({current:"plan", root:$("#brief"), sticky:".tabs", items:()=>[...document.querySelectorAll("#brief section")].map(sec=>({el:sec, label:(sec.querySelector(".sec-head h2")||{}).textContent||"", level:1}))});
+  setInterval(async()=>{ if (!document.hidden && Store.mode!=="demo"){ await loadBallots(); render(); } }, 30000); })();
 </script>
 </body>
 </html>
