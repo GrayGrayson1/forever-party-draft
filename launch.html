@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Forever Launch Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus&family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column (max 920px). Countdown, checklist and roster first, then reference sections, each personalized once you've voted. Same palette as the draft. */
+:root{
+  color-scheme: dark;
+  --bg:#0e1120; --surface:#161a2c; --surface-2:#1e2340; --line:#2b3157; --line-soft:#232846;
+  --fg:#ebe7da; --muted:#9ba1c0; --faint:#6d7396;
+  --gold:#e3b94f; --gold-ink:#1b1606; --gold-soft:rgba(227,185,79,.14);
+  --horde:#d9483c; --alliance:#4a87e8; --good:#5fc68d; --warn:#e9a53e; --bad:#e2655b;
+  --c-warrior:#C69B6D; --c-paladin:#F48CBA; --c-hunter:#AAD372; --c-rogue:#FFF468; --c-priest:#EDEDED;
+  --c-shaman:#3a95ff; --c-mage:#3FC7EB; --c-warlock:#8f90f0; --c-druid:#FF7C0A;
+  --f-display:"Marcellus", "Trajan Pro", Georgia, serif;
+  --f-body:"Alegreya Sans", "Gill Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: light){ :root{
+  color-scheme: light;
+  --bg:#eceef5; --surface:#ffffff; --surface-2:#e3e6f0; --line:#c9cee0; --line-soft:#dde1ec;
+  --fg:#191c2c; --muted:#555b7a; --faint:#7d829c;
+  --gold:#97700f; --gold-ink:#ffffff; --gold-soft:rgba(151,112,15,.12);
+  --horde:#b5332a; --alliance:#2b62bf; --good:#25875a; --warn:#a96a09; --bad:#b8392f;
+  --c-warrior:#93672f; --c-paladin:#c44683; --c-hunter:#4f8418; --c-rogue:#8f8200; --c-priest:#666b80;
+  --c-shaman:#0061c2; --c-mage:#0b84a6; --c-warlock:#5556c4; --c-druid:#c95f00;
+}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:17px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 80px}
+.wrap{max-width:920px;margin:0 auto}
+h1,h2,h3{font-family:var(--f-display);font-weight:400;text-wrap:balance;margin:0}
+h1{font-size:clamp(2rem,5vw,3rem);line-height:1.05}
+h2{font-size:1.5rem;line-height:1.2}
+h3{font-size:1.12rem}
+p{margin:0}
+a{color:var(--gold)}
+.eyebrow{font-family:var(--f-mono);font-size:.74rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.muted{color:var(--muted)} .small{font-size:.9rem} .faint{color:var(--faint)}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.top{display:flex;gap:16px;flex-wrap:wrap;align-items:center;padding-block:18px 0;font-size:.95rem}
+.top a{text-decoration:none;border-bottom:1px solid transparent}
+.top a:hover{border-bottom-color:var(--gold)}
+.top .live{margin-left:auto;font-family:var(--f-mono);font-size:.74rem;color:var(--faint);display:flex;gap:6px;align-items:center}
+.top .live i{width:7px;height:7px;border-radius:50%;background:var(--faint)}
+.top .live.on i{background:var(--good)}
+.hero{padding-block:28px 18px;display:grid;gap:12px}
+.hero .lede{color:var(--muted);max-width:62ch}
+.count{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.cd{background:var(--surface);border:1px solid var(--line-soft);border-radius:10px;padding:10px 14px;display:grid;gap:2px}
+.cd.next{border-color:var(--gold);background:linear-gradient(180deg,var(--gold-soft),transparent),var(--surface)}
+.cd.done{opacity:.55}
+.cd .k{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.cd .v{font-family:var(--f-display);font-size:1.25rem}
+.jump{display:flex;gap:6px;flex-wrap:wrap;position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0;border-bottom:1px solid var(--line)}
+.jump a{font-size:.85rem;text-decoration:none;color:var(--fg);border:1px solid var(--line);border-radius:999px;padding:3px 11px;white-space:nowrap}
+.jump a:hover{border-color:var(--gold)}
+section{padding-block:26px;border-bottom:1px solid var(--line-soft);display:grid;gap:14px;scroll-margin-top:60px}
+section:last-of-type{border-bottom:0}
+.sec-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.card{background:var(--surface);border:1px solid var(--line-soft);border-radius:10px;padding:14px 16px;display:grid;gap:8px;min-width:0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.check{display:grid;gap:0;margin:0;padding:0;list-style:none;border:1px solid var(--line-soft);border-radius:10px;overflow:hidden;background:var(--surface)}
+.check li{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line-soft);align-items:start}
+.check li:last-child{border-bottom:0}
+.check .ic{width:20px;height:20px;border-radius:50%;border:2px solid var(--line);margin-top:2px;display:grid;place-items:center;font-size:.75rem}
+.check li.ok .ic{background:var(--good);border-color:var(--good);color:var(--bg)}
+.check li.warn .ic{border-color:var(--warn)}
+.check li.bad .ic{border-color:var(--bad)}
+.check .w{font-size:.92rem;color:var(--muted)}
+.check .st{font-family:var(--f-mono);font-size:.75rem;color:var(--muted);white-space:nowrap;padding-top:3px}
+.tbl-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.92rem}
+th{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:500;text-align:left;padding:7px 9px;border-bottom:1px solid var(--line)}
+td{padding:7px 9px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+tr.me td{background:var(--gold-soft)}
+tr.fit td{background:color-mix(in srgb,var(--good) 10%,transparent)}
+.tag{display:inline-block;font-family:var(--f-mono);font-size:.64rem;letter-spacing:.06em;text-transform:uppercase;padding:1px 6px;border-radius:999px;border:1px solid var(--gold);color:var(--gold);margin-left:6px;vertical-align:1px}
+.tag.h{border-color:var(--horde);color:var(--horde)} .tag.a{border-color:var(--alliance);color:var(--alliance)} .tag.n{border-color:var(--line);color:var(--muted)}
+.ok{color:var(--good)} .warn{color:var(--warn)} .bad{color:var(--bad)}
+.mem{border-top:3px solid var(--cc,var(--line))}
+.mem .c{font-family:var(--f-display);font-size:1.2rem;color:var(--cc,var(--fg))}
+.mem ul,.cls ul{margin:0;padding-left:18px;display:grid;gap:4px;font-size:.92rem}
+details.cls{background:var(--surface);border:1px solid var(--line-soft);border-left:3px solid var(--cc);border-radius:10px;padding:10px 14px}
+details.cls summary{cursor:pointer;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;list-style:none}
+details.cls summary::-webkit-details-marker{display:none}
+details.cls summary b{font-family:var(--f-display);font-weight:400;font-size:1.15rem;color:var(--cc)}
+details.cls[open] summary{margin-bottom:8px}
+.cls .spec{display:grid;gap:2px;padding:6px 0;border-top:1px solid var(--line-soft)}
+.levels{display:grid;gap:8px}
+.lv{display:grid;grid-template-columns:minmax(90px,150px) 1fr 54px;gap:10px;align-items:center;font-size:.93rem}
+.lv .track{height:10px;background:var(--surface-2);border-radius:3px;overflow:hidden}
+.lv .fill{height:100%;background:var(--cc,var(--gold));border-radius:3px}
+.lvform{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.lvform input{width:90px;font:inherit;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface-2);color:var(--fg)}
+.btn{border:1px solid var(--gold);background:var(--gold);color:var(--gold-ink);border-radius:8px;padding:8px 14px;font:inherit;font-weight:500;cursor:pointer;text-decoration:none;display:inline-block}
+.btn.ghost{background:none;color:var(--fg);border-color:var(--line)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{border:0;background:none;color:var(--muted);font:inherit;font-size:.85rem;padding:4px 12px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--gold-soft);color:var(--fg)}
+.callout{padding:10px 12px;border-radius:8px;font-size:.93rem;background:var(--surface-2);border:1px solid var(--line-soft)}
+.lockmsg{border:1px dashed var(--line);border-radius:10px;padding:14px;color:var(--muted);font-size:.95rem}
+.zone{display:grid;gap:4px}
+.zone b{font-family:var(--f-display);font-weight:400;font-size:1.1rem}
+ul.plain{margin:0;padding-left:18px;display:grid;gap:6px}
+.sources{display:grid;gap:4px;font-size:.88rem}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:10px 16px;font-size:.92rem;z-index:20;max-width:calc(100% - 32px)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="top" aria-label="Pages">
+    <a href="index.html#ballot">My ballot</a>
+    <a href="index.html#results">Party board</a>
+    <a href="brief.html">Game plan</a>
+    <b>Launch guide</b>
+    <span class="live" id="live"><i></i><span>Loading…</span></span>
+  </nav>
+  <header class="hero">
+    <div class="eyebrow">Forever Party Draft · Launch guide</div>
+    <h1>Forever Launch Guide</h1>
+    <p class="lede">Everything new in World of Warcraft: Forever that changes your plans, tied to your party's ballots: what's new for your classes, where you'll start, which dungeon fits your levels, what your professions bring, and what to do before each date.</p>
+    <div class="count" id="count"></div>
+  </header>
+  <nav class="jump" aria-label="Sections">
+    <a href="#before">Before Oct 27</a><a href="#party">The party</a><a href="#names">Names</a><a href="#start">Starting zones</a>
+    <a href="#classes">Class changes</a><a href="#levels">Levels and dungeons</a><a href="#profs">Professions</a><a href="#money">Costs</a><a href="#raids">Raids and PvP</a><a href="#rules">Rulesets</a><a href="#sources">Sources</a>
+  </nav>
+  <main id="main"><p class="muted" style="padding:30px 0">Loading…</p></main>
+</div>
+<script src="forever-data.js"></script>
+<script>
+const SUPABASE = { url: "https://bqplgeyjzxgfvlwsazqx.supabase.co", anonKey: "sb_publishable_o6FNGR5AVRXm9fJE_uq6VQ_F0nu5nFH" };
+
+/* ---------- Minimal game data for this page (full details live in forever-data.js) ---------- */
+const CLASSES = [
+  {id:"warrior", name:"Warrior", armor:"Plate", roles:["tank","melee"]}, {id:"paladin", name:"Paladin", armor:"Plate", roles:["tank","healer","melee"]},
+  {id:"hunter", name:"Hunter", armor:"Mail", roles:["ranged","melee"]}, {id:"rogue", name:"Rogue", armor:"Leather", roles:["melee"]},
+  {id:"priest", name:"Priest", armor:"Cloth", roles:["healer","ranged"]}, {id:"shaman", name:"Shaman", armor:"Mail", roles:["healer","melee","ranged"]},
+  {id:"mage", name:"Mage", armor:"Cloth", roles:["ranged"]}, {id:"warlock", name:"Warlock", armor:"Cloth", roles:["ranged"]},
+  {id:"druid", name:"Druid", armor:"Leather", roles:["tank","healer","melee","ranged"]},
+];
+const CLS = Object.fromEntries(CLASSES.map(c=>[c.id,c]));
+const RACES = [["orc","Orc","H"],["tauren","Tauren","H"],["troll","Troll","H"],["undead","Undead","H"],["sky-h","Skyborne (Windshaper)","H"],
+  ["dwarf","Dwarf","A"],["gnome","Gnome","A"],["human","Human","A"],["nelf","Night Elf","A"],["sky-a","Skyborne (High Order)","A"]].map(([id,name,f])=>({id,name,f}));
+const RACE = Object.fromEntries(RACES.map(r=>[r.id,r]));
+const PROFS = [["herbalism","Herbalism"],["mining","Mining"],["skinning","Skinning"],["alchemy","Alchemy"],["blacksmithing","Blacksmithing"],["enchanting","Enchanting"],["engineering","Engineering"],["leatherworking","Leatherworking"],["tailoring","Tailoring"]].map(([id,name])=>({id,name}));
+const PROF = Object.fromEntries(PROFS.map(p=>[p.id,p]));
+const RULESET_NAMES = {normal:"Normal", pvp:"PvP", rp:"Roleplay", hardcore:"Hardcore"};
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const listJoin = a => a.length<=1 ? (a[0]||"") : a.slice(0,-1).join(", ") + " and " + a[a.length-1];
+const plural = (n,w,ws) => n + " " + (n===1 ? w : (ws||w+"s"));
+const roleWord = r => r==="dps" ? "damage" : r;
+const lsGet = k => { try { return localStorage.getItem(k); } catch(e){ return null; } };
+async function sha256hex(s){ const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)); return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join(""); }
+function partyRoles(c){ const r = new Set(); CLS[c].roles.forEach(x => r.add(x==="melee"||x==="ranged" ? "dps" : x)); return [...r]; }
+
+function normBallot(b){
+  const n = {name:"", classes:[], faction:null, rulesets:{}, favRuleset:null, roles:{tank:null,healer:null,dps:null}, race:null, skyborne:null, profs:[], profMode:"first", profsBy:{}, launch:null};
+  if (!b || typeof b!=="object") return normExtra(null, n);
+  n.name = typeof b.name==="string" ? b.name.trim().slice(0,40) : "";
+  n.classes = Array.isArray(b.classes) ? b.classes.filter(c=>CLS[c]).slice(0,5) : [];
+  n.faction = typeof b.faction==="number" && b.faction>=-2 && b.faction<=2 ? b.faction : null;
+  if (b.rulesets && typeof b.rulesets==="object") Object.keys(RULESET_NAMES).forEach(r=>{ if (b.rulesets[r]) n.rulesets[r]=true; });
+  n.favRuleset = RULESET_NAMES[b.favRuleset] ? b.favRuleset : null;
+  if (b.roles) ["tank","healer","dps"].forEach(k=>{ const v=b.roles[k]; n.roles[k] = typeof v==="number" && v>=0 && v<=2 ? v : null; });
+  n.race = RACE[b.race] ? b.race : null;
+  n.skyborne = ["yes","maybe","no"].includes(b.skyborne) ? b.skyborne : null;
+  n.launch = ["yes","maybe","no"].includes(b.launch) ? b.launch : null;
+  n.profs = Array.isArray(b.profs) ? b.profs.filter(p=>PROF[p]).slice(0,2) : [];
+  n.profMode = b.profMode==="each" ? "each" : "first";
+  if (b.profsBy && typeof b.profsBy==="object") Object.keys(b.profsBy).forEach(c=>{ if (CLS[c] && n.classes.includes(c) && Array.isArray(b.profsBy[c])) n.profsBy[c] = b.profsBy[c].filter(p=>PROF[p]).slice(0,2); });
+  if (n.profMode==="each" && n.classes[0] && n.profsBy[n.classes[0]]) n.profs = n.profsBy[n.classes[0]].slice();
+  return normExtra(b, n);
+}
+function profsFor(b, c){ const p = b.profMode==="each" && c && b.profsBy && b.profsBy[c] && b.profsBy[c].length ? b.profsBy[c] : b.profs; return p || []; }
+
+/* Same party planner as the board and game plan: tanks and healers first, then rank, dibs and specs respected. */
+function planParty(entries){
+  const n = entries.length; if (!n) return null;
+  const opts = entries.map(([k,b])=>{
+    const anyRole = ["tank","healer","dps"].some(r=>b.roles[r]!==null); const list = []; const dib = claimOf(b);
+    b.classes.forEach((c,i)=>{ if (dib && c!==dib) return; rolesFor(b,c).forEach(role=>{ const pref = anyRole ? (b.roles[role] ?? 0) : 1; if (pref>0) list.push({c, role, rank:i, score:(5-i)*2 + pref*3}); }); });
+    if (!list.length) b.classes.forEach((c,i)=>{ if (dib && c!==dib) return; rolesFor(b,c).forEach(role=>list.push({c, role, rank:i, score:(5-i)*2 - 2})); });
+    return list.sort((a,b)=>b.score-a.score);
+  });
+  const groups = Math.max(1, Math.ceil(n/5)), needT = n>=3 ? groups : 0, needH = n>=2 ? groups : 0;
+  const objective = pick => { let s=0, t=0, h=0; const seen={};
+    pick.forEach(o=>{ if (!o) return; s+=o.score; if (o.role==="tank") t++; if (o.role==="healer") h++; seen[o.c]=(seen[o.c]||0)+1; });
+    Object.values(seen).forEach(v=>{ if (v>1) s -= 4*(v-1); });
+    return s + 14*Math.min(t,needT) + 14*Math.min(h,needH) - 6*Math.max(0,t-needT) - 3*Math.max(0,h-needH); };
+  let pick = opts.map(l=>l[0]||null), cur = objective(pick);
+  for (let loop=0; loop<60; loop++){ let improved=false;
+    for (let i=0;i<n;i++) for (const o of opts[i]){ const trial = pick.slice(); trial[i]=o; const v=objective(trial); if (v>cur+1e-9){ pick=trial; cur=v; improved=true; } }
+    if (!improved) break; }
+  return {pick};
+}
+
+/* ---------- Data ---------- */
+const Store = { ballots:new Map(), raw:new Map(), myKey:null, count:0, ready:false, error:null };
+async function load(){
+  const t = lsGet("fpd-voter-token");
+  Store.myKey = t ? await sha256hex(t) : null;
+  try {
+    const r = await fetch(SUPABASE.url + "/rest/v1/rpc/get_ballots", {method:"POST", headers:{apikey:SUPABASE.anonKey, Authorization:"Bearer "+SUPABASE.anonKey, "Content-Type":"application/json"}, body:JSON.stringify({p_token:t||""})});
+    if (!r.ok) throw new Error("HTTP "+r.status);
+    const data = await r.json();
+    Store.ballots = new Map((data.ballots||[]).map(row=>[row.voter, normBallot(row.ballot)]));
+    Store.raw = new Map((data.ballots||[]).map(row=>[row.voter, row.ballot]));
+    Store.count = data.count||0; Store.ready = true; Store.error = null;
+  } catch(e){ Store.error = "offline"; }
+}
+let dungeonSide = null, levelDraft = null;
+
+function tzAbbr(z){ try { return new Intl.DateTimeFormat("en-US",{timeZone:z, timeZoneName:"short"}).formatToParts(new Date()).find(p=>p.type==="timeZoneName").value; } catch(e){ return ""; } }
+function ago(iso){ if (!iso) return ""; const m = Math.round((Date.now()-new Date(iso).getTime())/60000); if (isNaN(m)) return ""; if (m<60) return m<=1?"just now":m+" min ago"; const h=Math.round(m/60); if (h<48) return h+" h ago"; return Math.round(h/24)+" days ago"; }
+
+function renderCount(){
+  const now = Date.now(); let nextSet = false;
+  $("#count").innerHTML = FD.timeline.slice(0,4).map(x=>{ const t = new Date(x.d).getTime(); let cls="cd", when;
+    if (t<now){ cls+=" done"; when="Done"; } else { if (!nextSet){ cls+=" next"; nextSet=true; } const d = (t-now)/86400000; when = d<1 ? Math.max(1,Math.round(d*24))+" hours" : Math.ceil(d)+" days"; }
+    return `<div class="${cls}" title="${esc(x.s)}"><span class="k">${esc(x.w)} · ${esc(x.t)}</span><span class="v">${when}</span></div>`; }).join("");
+}
+
+function render(){
+  const live = $("#live"); live.classList.toggle("on", Store.ready && !Store.error);
+  live.querySelector("span").textContent = Store.error ? "Can't reach the board" : "Live · " + new Date().toLocaleTimeString([], {hour:"numeric", minute:"2-digit"});
+  renderCount();
+  const entries = [...Store.ballots.entries()].filter(([,b])=>b.classes.length);
+  const mine = Store.myKey ? Store.ballots.get(Store.myKey) : null;
+  const voted = !!mine;
+  const n = entries.length;
+  const plan = voted ? planParty(entries) : null;
+  const nameOf = k => k===Store.myKey ? "You" : (Store.ballots.get(k).name || "Someone");
+  const mem = plan ? entries.map(([k,b],i)=>({k, b, o:plan.pick[i], me:k===Store.myKey, name:nameOf(k)})).filter(m=>m.o) : [];
+  const lockMsg = what => `<p class="lockmsg">${what} shows here once you've voted, so nobody gets swayed. <a href="index.html#ballot">Fill out my ballot</a>${Store.count?` · ${plural(Store.count,"ballot")} in so far`:""}.</p>`;
+
+  /* Consensus bits */
+  const fMean = n ? entries.reduce((s,[,b])=>s+(b.faction??0),0)/Math.max(1,entries.filter(([,b])=>b.faction!==null).length) : 0;
+  const side = !voted ? null : fMean<-0.3 ? "H" : fMean>0.3 ? "A" : null;
+  const rsOk = {}; entries.forEach(([,b])=>Object.keys(b.rulesets).forEach(r=>rsOk[r]=(rsOk[r]||0)+1));
+  const rsAns = entries.filter(([,b])=>Object.keys(b.rulesets).length).length;
+  const topRs = Object.keys(rsOk).sort((a,b)=>rsOk[b]-rsOk[a])[0];
+  const packs = entries.filter(([,b])=>b.skyborne==="yes").length;
+  const withNames = entries.filter(([,b])=>b.chars.length).length, reserved = entries.filter(([,b])=>b.chars.some(x=>x.r)).length;
+  const lkey = plan ? entries.map(([k],i)=>{ const o = plan.pick[i]; return k.slice(0,10)+":"+(o ? o.c+"/"+o.role : "-"); }).join(",") : "";
+  const confirmedN = entries.filter(([,b])=>b.confirm===lkey).length;
+  const launchYes = entries.filter(([,b])=>b.launch==="yes").length;
+
+  /* ---- Checklist ---- */
+  const C = [];
+  const item = (state, title, why, st) => C.push({state, title, why, st});
+  const now = Date.now();
+  if (voted){
+    const facs = entries.filter(([,b])=>b.faction!==null); const H = facs.filter(([,b])=>b.faction<0).length, A = facs.filter(([,b])=>b.faction>0).length;
+    item(H&&A ? "bad" : side ? "ok" : "warn", "Agree on a faction", "Horde and Alliance can never group, on any ruleset.", H&&A ? `${H} Horde · ${A} Alliance` : side ? (side==="H"?"Horde":"Alliance") : "Undecided");
+    item(topRs && rsOk[topRs]===rsAns && rsAns===n ? "ok" : topRs ? "warn" : "bad", "Agree on a ruleset", "Characters can't move between rulesets, so pick before reserving names.", topRs ? `${RULESET_NAMES[topRs]} ${rsOk[topRs]}/${n}` : "Not answered");
+    item(packs ? (packs>=n ? "ok" : "warn") : "bad", "Decide who buys the Heroic Pack", "$29.99. Needed for early name reservation and the Skyborne race, and each one comes with an Invite-A-Friend code.", `${packs} of ${n} buying`);
+    item(reserved===n ? "ok" : withNames ? "warn" : "bad", "Pick and reserve names", "Oct 27 – Nov 3, up to 3 characters, first come, first served. Two-part names: first name plus surname.", `${withNames} with ideas · ${reserved} reserved`);
+    item(confirmedN===n && n>=2 ? "ok" : "warn", "Lock the lineup", "Everyone confirms the suggested party on the game plan.", `${confirmedN} of ${n} confirmed`);
+    item(launchYes>=n-1 ? "ok" : "warn", "Plan launch night", "Nov 4 at 3 PM PST. See where everyone starts below.", `${launchYes} of ${n} in`);
+  } else {
+    item("warn", "Agree on a faction and ruleset", "Horde and Alliance can't group, and characters can't move between rulesets.", "");
+    item("warn", "Decide who buys the Heroic Pack", "$29.99. Needed for early names and Skyborne.", "");
+    item("warn", "Pick and reserve names", "Oct 27 – Nov 3, up to 3 characters.", "");
+  }
+  item(now > new Date("2026-10-22T06:00:00Z").getTime() ? "ok" : "warn", "Try the stress test (optional)", "Oct 21 at 2 PM PDT. Any account can join from Battle.net under Game Version › In Development. Everything is wiped afterward, so it's just for trying classes.", now > new Date("2026-10-22T06:00:00Z").getTime() ? "Over" : "Oct 21");
+
+  /* ---- Roster ---- */
+  const rosterHTML = !voted ? lockMsg("The party roster") : `<div class="tbl-wrap"><table>
+    <thead><tr><th>Name</th><th>Slotted as</th><th>Race · starts in</th><th>Heroic Pack</th><th>Names</th><th>Level</th><th>Time zone</th><th>Updated</th></tr></thead>
+    <tbody>${entries.map(([k,b],i)=>{ const o = plan.pick[i]; const st = b.race && FD.starts[b.race];
+      return `<tr class="${k===Store.myKey?"me":""}"><td><b>${esc(nameOf(k))}</b>${b.confirm===lkey?' <span class="ok" title="Confirmed the lineup">✓</span>':""}</td>
+        <td>${o?`<span style="color:var(--c-${o.c})">${esc(specLabel(b,o.c,o.role))}${CLS[o.c].name}</span> <span class="muted">${roleWord(o.role)}</span>`:"—"}</td>
+        <td>${b.race?`${esc(RACE[b.race].name)}${st?`<div class="small muted">${esc(st.zone)}</div>`:""}`:"—"}</td>
+        <td>${b.skyborne==="yes"?'<span class="ok">Buying</span>':b.skyborne==="maybe"?'<span class="warn">Maybe</span>':b.skyborne==="no"?"No":"—"}</td>
+        <td>${b.chars.length?b.chars.map(x=>`${esc(x.n)}${x.r?' <span class="ok">✓</span>':""}`).join("<br>"):"—"}</td>
+        <td class="mono">${b.lvl||"—"}</td><td>${b.tz?esc(tzAbbr(b.tz)||b.tz):"—"}</td><td class="small muted">${esc(ago(b.upd))||"—"}</td></tr>`; }).join("")}</tbody></table></div>
+    <p class="small muted">✓ next to a name means they confirmed the lineup on the <a href="brief.html">game plan</a>. Time zone and update time fill in the next time someone saves their ballot.</p>`;
+
+  /* ---- Names ---- */
+  const namesHTML = `<div class="grid">
+    <div class="card"><h3>How reservation works</h3><ul class="plain small">${FD.names.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>
+    <div class="card"><h3>Your party's names</h3>${!voted ? lockMsg("Everyone's name ideas") : withNames ? `<ul class="plain small">${entries.filter(([,b])=>b.chars.length).map(([k,b])=>`<li><b>${esc(nameOf(k))}:</b> ${b.chars.map(x=>`${esc(x.n)}${x.c?` <span class="muted">(${CLS[x.c].name})</span>`:""}${x.r?' <span class="ok">reserved</span>':""}`).join(", ")}</li>`).join("")}</ul>` : `<p class="small muted">Nobody has added name ideas yet. Add up to 3 on your <a href="index.html#ballot">ballot</a>, under Race.</p>`}
+    <p class="small muted">Have a backup in mind: names are first come, first served across the whole region.</p></div></div>`;
+
+  /* ---- Starting zones ---- */
+  let startHTML;
+  if (voted){
+    const raced = entries.filter(([,b])=>b.race);
+    const groups = startGroups(raced.map(([,b])=>b.race));
+    const fac = raced.some(([,b])=>RACE[b.race].f==="H") ? "H" : "A";
+    startHTML = raced.length ? `<div class="grid">${groups.map(g=>`<div class="card zone"><span class="eyebrow">${esc(g.area)}</span><b>${esc(g.zone)}</b><span class="small">${listJoin(raced.filter(([,b])=>g.races.has(b.race)).map(([k,b])=>`${esc(nameOf(k))} <span class="muted">(${esc(RACE[b.race].name)})</span>`))}</span></div>`).join("")}</div>
+      ${groups.length>1 ? `<p class="callout">You'll start in ${groups.length} places. To play together from level 1, pick races that share a start (Orc and Troll share Durotar, Dwarf and Gnome share Dun Morogh). Otherwise: ${esc(FD.meet[fac])}${groups.some(g=>g.zone==="Zephras Isle")?" "+esc(FD.meet.sky):""}</p>` : `<p class="callout">Everyone starts in the same zone, so you can group from level 1.</p>`}`
+      : `<p class="small muted">Nobody has picked a race yet.</p>`;
+  } else startHTML = lockMsg("Where your party starts");
+  startHTML += `<div class="tbl-wrap"><table><thead><tr><th>Race</th><th>Starts in</th></tr></thead><tbody>${RACES.map(r=>`<tr><td>${esc(r.name)}<span class="tag ${r.f==="H"?"h":"a"}">${r.f==="H"?"Horde":"Alliance"}</span></td><td>${esc(FD.starts[r.id].zone)} <span class="muted">(${esc(FD.starts[r.id].area)})</span></td></tr>`).join("")}</tbody></table></div>
+    <p class="small muted">Zephras Isle is official. The others are the Classic starting zones, which beta players report are unchanged.</p>`;
+
+  /* ---- Classes ---- */
+  const classCard = (c, extra) => { const d = FD.classes[c];
+    return `<details class="cls" style="--cc:var(--c-${c})" ${extra?"open":""}><summary><b>${CLS[c].name}</b><span class="small muted">${esc(d.headline)}</span></summary>
+      ${d.specs.map(s=>`<div class="spec"><span><b>${s.name}</b> <span class="small muted">${s.roles.map(roleWord).join(" or ")}</span></span><span class="small">${esc(s.new)}</span></div>`).join("")}
+      <div class="spec"><b class="small">For the group</b><ul>${d.group.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>
+      <p class="small muted">New race combos: ${esc(d.newRaces.join(", "))}</p></details>`; };
+  const partyClasses = mem.length ? `<div class="grid">${mem.map(m=>{ const d = FD.classes[m.o.c]; const sp = specFor(m.b, m.o.c, m.o.role);
+      return `<div class="card mem" style="--cc:var(--c-${m.o.c})"><span class="eyebrow">${esc(m.name)} · ${roleWord(m.o.role)}</span><span class="c">${esc(specLabel(m.b,m.o.c,m.o.role))}${CLS[m.o.c].name}</span>
+        <p class="small">${esc(d.headline)}</p>
+        ${sp ? `<p class="small"><b>${sp.name}:</b> ${esc(sp.new)}</p>` : `<ul>${d.specs.filter(s=>s.roles.includes(m.o.role)).map(s=>`<li><b>${s.name}:</b> ${esc(s.new)}</li>`).join("")}</ul>`}
+        <p class="small muted">${esc(d.group[0])}</p></div>`; }).join("")}</div>` : (voted ? "" : lockMsg("What's new for your party's classes"));
+
+  /* ---- Levels and dungeons ---- */
+  const lvls = entries.map(([k,b])=>({k, b, lvl:b.lvl}));
+  const anyLvl = lvls.some(x=>x.lvl);
+  const fits = anyLvl ? dungeonsFor(lvls.map(x=>x.lvl), side) : [];
+  const sideNow = dungeonSide ?? side;
+  const firstUps = FD.dungeons.filter(d=>d.lo<=20 && (!sideNow || d.side===sideNow || d.side==="N"));
+  const myLvl = mine && mine.lvl;
+  const levelsHTML = `${voted ? `<div class="card"><div class="lvform"><label for="lv-in"><b>My level</b></label><input id="lv-in" type="number" min="1" max="60" inputmode="numeric" value="${levelDraft ?? (myLvl||"")}" placeholder="1–60"><button type="button" class="btn" id="lv-save">Save</button><span class="small muted">${mine.lvlAt?`Last updated ${esc(ago(mine.lvlAt))}.`:"Update it after each session so the party can see who's ahead."}</span></div>
+      ${anyLvl ? `<div class="levels">${lvls.sort((a,b)=>(b.lvl||0)-(a.lvl||0)).map(x=>{ const i = entries.findIndex(([k])=>k===x.k); const o = plan.pick[i];
+        return `<div class="lv" style="--cc:var(--c-${o?o.c:"priest"})"><span>${esc(nameOf(x.k))}</span><span class="track"><span class="fill" style="width:${(x.lvl||0)/60*100}%;display:block"></span></span><span class="mono">${x.lvl||"—"}</span></div>`; }).join("")}</div>
+      ${(()=>{ const v = lvls.filter(x=>x.lvl).map(x=>x.lvl); const gap = Math.max(...v)-Math.min(...v); return gap>=4 ? `<p class="callout"><b>${gap} levels apart.</b> Party XP uses each person's own level, and a big gap makes dungeons too easy or too hard for someone. The leaders could switch to an alt or professions until the others catch up.</p>` : ""; })()}` : `<p class="small muted">Levels show here once people start saving them after launch.</p>`}</div>` : lockMsg("The party's level tracker")}
+    <div class="card"><h3>${anyLvl ? "Dungeons that fit the party right now" : "First dungeons"}</h3>
+      ${anyLvl ? (fits.length ? `<ul class="plain">${fits.slice(0,4).map(d=>`<li><b>${esc(d.n)}</b> <span class="muted">${d.lo}–${d.hi} · ${esc(d.zone)}</span>${d.isNew?'<span class="tag">New</span>':""}</li>`).join("")}</ul>` : `<p class="small muted">${Math.min(...lvls.filter(x=>x.lvl).map(x=>x.lvl))<12 ? "Not yet: the first dungeons start around level 13." : "Nothing fits everyone's levels at once. Close the gap first, or run something for the lowest-level players."}</p>`)
+        : `<ul class="plain">${firstUps.map(d=>`<li><b>${esc(d.n)}</b> <span class="muted">${d.lo}–${d.hi} · ${esc(d.zone)}</span>${d.isNew?'<span class="tag">New</span>':""}</li>`).join("")}</ul>`}
+      <p class="small muted">There's no dungeon teleport: the Group Finder lists groups, but everyone has to travel there. Warlocks can summon at the entrance. Blizzard designed each dungeon to be run about once while leveling.</p></div>
+    <div class="sec-head"><h3>All dungeons</h3><div class="seg" role="group" aria-label="Filter by faction">${[[null,"All"],["H","Horde-friendly"],["A","Alliance-friendly"]].map(([v,l])=>`<button type="button" data-side="${v??""}" aria-pressed="${(sideNow||null)===v}">${l}</button>`).join("")}</div></div>
+    <div class="tbl-wrap"><table><thead><tr><th>Dungeon</th><th>Levels</th><th>Where</th></tr></thead><tbody>${FD.dungeons.filter(d=>!sideNow || d.side===sideNow || d.side==="N").map(d=>`<tr class="${fits.includes(d)?"fit":""}"><td>${esc(d.n)}${d.isNew?'<span class="tag">New</span>':""}${d.size?`<span class="tag n">${d.size} players</span>`:""}${d.note?`<div class="small muted">${esc(d.note)}</div>`:""}</td><td class="mono">${d.lo}–${d.hi}</td><td>${esc(d.zone)}<span class="tag ${d.side==="H"?"h":d.side==="A"?"a":"n"}">${d.side==="H"?"Horde":d.side==="A"?"Alliance":"Contested"}</span></td></tr>`).join("")}</tbody></table></div>
+    <p class="small muted">Level ranges are from the current beta and have moved before. Faction tags are our read of who reaches each dungeon easily. Rested XP doubles kill XP, and Cooking's Well Fed buff adds 5%.</p>`;
+
+  /* ---- Professions ---- */
+  const holders = {}; mem.forEach(m=>profsFor(m.b, m.o.c).forEach(p=>(holders[p] = holders[p] || []).push(m.name)));
+  const campRows = [...PROFS.map(p=>[p.id,p.name]), ["firstaid","First Aid"], ["fishing","Fishing"]];
+  const profHTML = `<div class="tbl-wrap"><table><thead><tr><th>Profession</th><th>Campfire buff</th><th>${voted?"In your party":"Who has it"}</th></tr></thead><tbody>
+    ${campRows.map(([id,name])=>{ const who = id==="firstaid"||id==="fishing" ? null : holders[id]; return `<tr><td>${name}</td><td>${esc(FD.camp[id]||"")}</td><td>${!voted ? '<span class="muted">Vote to see</span>' : who===null ? '<span class="muted">Anyone can learn it</span>' : who && who.length ? esc(listJoin(who)) : '<span class="bad">Nobody</span>'}</td></tr>`; }).join("")}
+    </tbody></table></div>
+    <p class="small muted">At a campfire, each player can place one crafted object once their profession reaches skill 20, up to 3 per basic fire. These buffs don't stack with matching class buffs.</p>
+    <div class="card"><h3>What changed</h3><ul class="plain small">${FD.profNotes.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`;
+
+  /* ---- Costs ---- */
+  const moneyHTML = `<div class="tbl-wrap"><table><thead><tr><th>What</th><th>Level</th><th>Cost</th></tr></thead><tbody>${FD.costs.map(c=>`<tr><td><b>${esc(c.what)}</b></td><td class="mono">${c.lvl||"—"}</td><td>${esc(c.cost)}</td></tr>`).join("")}</tbody></table></div>
+    <p class="small muted">Gold costs come from beta data and a fan guide. Blizzard says riding training now includes the mount, which may lower the total.${voted?` ${packs} of ${n} in your party ${packs===1?"is":"are"} buying the Heroic Pack.`:""}</p>`;
+
+  /* ---- Raids and PvP ---- */
+  const raidHTML = `<div class="tbl-wrap"><table><thead><tr><th>Raid</th><th>Players</th><th>Bosses</th><th>Where</th>${voted?"<th>You'd need</th>":""}</tr></thead><tbody>${FD.raids.map(r=>`<tr><td><b>${esc(r.n)}</b>${r.isNew?'<span class="tag">New</span>':""}</td><td class="mono">${r.size}</td><td class="mono">${r.bosses}</td><td>${esc(r.zone)}</td>${voted?`<td>${n>=r.size?'<span class="ok">Enough</span>':`${r.size-n} more`}</td>`:""}</tr>`).join("")}</tbody></table></div>
+    <p class="small muted">All three open Dec 9. Each new raid has its own tier set. Lockouts and attunements haven't been announced. World buffs only work in the open world, not in dungeons or raids.</p>
+    <div class="tbl-wrap"><table><thead><tr><th>Battleground</th><th>Size</th><th>Levels</th></tr></thead><tbody>${FD.bgs.map(b=>`<tr><td>${esc(b.n)}${b.isNew?'<span class="tag">New</span>':""}</td><td class="mono">${b.size}</td><td class="mono">${b.lv}</td></tr>`).join("")}</tbody></table></div>
+    <p class="small muted">Honor buys blue PvP gear, and the classic ranks return up to High Warlord and Grand Marshal, with the PvP mount at rank 11. No arenas. Battleground launch timing isn't confirmed.</p>`;
+
+  $("#main").innerHTML = `
+  <section id="before"><div class="sec-head"><h2>Before Oct 27</h2><span class="small muted">${voted?"From your party's ballots":"General checklist"}</span></div>
+    <ul class="check">${C.map(c=>`<li class="${c.state}"><span class="ic">${c.state==="ok"?"✓":""}</span><div><b>${esc(c.title)}</b><p class="w">${esc(c.why)}</p></div><span class="st">${esc(c.st)}</span></li>`).join("")}</ul></section>
+  <section id="party"><div class="sec-head"><h2>The party</h2><span class="small muted">${voted?plural(n,"ballot"):""}</span></div>${rosterHTML}</section>
+  <section id="names"><div class="sec-head"><h2>Names</h2><span class="small muted">Reservation Oct 27 – Nov 3</span></div>${namesHTML}</section>
+  <section id="start"><div class="sec-head"><h2>Where you'll start</h2></div>${startHTML}</section>
+  <section id="classes"><div class="sec-head"><h2>What's new for your classes</h2><span class="small muted">Oct 15 beta build</span></div>
+    ${partyClasses}
+    <div class="sec-head"><h3>Every class</h3><span class="small muted">Tap a class to open it</span></div>
+    <div style="display:grid;gap:8px">${CLASSES.map(c=>classCard(c.id, false)).join("")}</div>
+    <div class="card"><h3>Game-wide changes</h3><ul class="plain small">${FD.systems.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div></section>
+  <section id="levels"><div class="sec-head"><h2>Levels and dungeons</h2><span class="small muted">Level cap 60 · no level scaling · no flying</span></div>${levelsHTML}</section>
+  <section id="profs"><div class="sec-head"><h2>Professions and campfires</h2></div>${profHTML}</section>
+  <section id="money"><div class="sec-head"><h2>Costs and milestones</h2></div>${moneyHTML}</section>
+  <section id="raids"><div class="sec-head"><h2>Raids and PvP</h2></div>${raidHTML}</section>
+  <section id="rules"><div class="sec-head"><h2>Rulesets, explained</h2></div><ul class="plain">${FD.rulesets.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>
+    <p class="small muted">Discord voice is built into the game: pick it in Audio settings, and the party follows the leader's setting.</p></section>
+  <section id="sources"><div class="sec-head"><h2>Sources</h2><span class="small muted">Researched ${esc(FD.updated)}</span></div>
+    <div class="sources">${FD.sources.map(s=>`<a href="${esc(s.u)}" target="_blank" rel="noopener">${esc(s.t)}</a>`).join("")}<span class="muted">Where sources disagreed, the newest official beta notes win. Beta details can still change before launch.</span></div></section>`;
+
+  /* ---- Actions ---- */
+  document.querySelectorAll("[data-side]").forEach(b=>b.onclick = ()=>{ dungeonSide = b.dataset.side || null; if (dungeonSide===null && side) dungeonSide = ""; render(); });
+  const lvIn = $("#lv-in"); if (lvIn) lvIn.oninput = ()=>{ levelDraft = lvIn.value; };
+  const lvSave = $("#lv-save");
+  if (lvSave) lvSave.onclick = async ()=>{
+    const v = parseInt(lvIn.value, 10); if (!(v>=1 && v<=60)){ toast("Enter a level from 1 to 60."); return; }
+    try { const saved = await fdSaveMine(Store.raw.get(Store.myKey), {lvl:v, lvlAt:new Date().toISOString()}); Store.raw.set(Store.myKey, saved); Store.ballots.set(Store.myKey, normBallot(saved)); levelDraft = null; toast("Level saved."); render(); }
+    catch(e){ toast("Couldn't save. Open this page in the browser you voted from and try again."); }
+  };
+}
+let toastT; function toast(msg){ let t = document.querySelector(".toast"); if (!t){ t = document.createElement("div"); t.className = "toast"; t.setAttribute("role","status"); document.body.appendChild(t); } t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(()=>t.hidden = true, 4000); }
+
+(async()=>{ await load(); render(); if (location.hash){ const el = document.getElementById(location.hash.slice(1)); if (el) el.scrollIntoView(); }
+  setInterval(async()=>{ if (!document.hidden && document.activeElement && document.activeElement.id!=="lv-in"){ await load(); render(); } }, 30000); })();
+</script>
+</body>
+</html>
