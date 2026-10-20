@@ -324,3 +324,119 @@ function downloadText(name, text, type){
   const blob = new Blob([text], {type: type||"text/plain"}); const a = document.createElement("a");
   a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 500);
 }
+
+/* ---------- Legend: left-side navigation on every page ----------
+   Desktop: a fixed sidebar listing every page, with the current page's sections underneath.
+   Phone: a "Legend" button in the bottom-left corner opens the same list as a drawer. */
+const FD_PAGES = [
+  {id:"ballot", label:"My ballot", href:"index.html#ballot", hint:"Vote or update your picks"},
+  {id:"results", label:"Party board", href:"index.html#results", hint:"Everyone's picks and the suggested party"},
+  {id:"guide", label:"Field guide", href:"index.html#guide", hint:"Classes, races and key dates"},
+  {id:"plan", label:"Game plan", href:"brief.html", hint:"Decisions, sample parties, lineup lock"},
+  {id:"launch", label:"Launch guide", href:"launch.html", hint:"Checklist, names, dungeons, costs"},
+];
+function fdNav(opts){
+  if (document.getElementById("fd-nav")) return;
+  const e = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const st = document.createElement("style");
+  st.textContent = `
+#fd-nav{position:fixed;left:0;top:0;bottom:0;width:240px;overflow-y:auto;z-index:30;background:var(--surface);border-right:1px solid var(--line);padding:18px 12px 28px;display:none;font-family:var(--f-body)}
+#fd-nav .fd-h{display:flex;align-items:center;justify-content:space-between;margin:0 6px 12px}
+#fd-nav .fd-h b{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:500}
+#fd-nav .fd-x{display:none;border:0;background:none;color:var(--fg);font-size:1.5rem;line-height:1;cursor:pointer;padding:2px 6px}
+#fd-nav ul{list-style:none;margin:0;padding:0}
+#fd-nav .fd-pages>li{margin-bottom:3px}
+#fd-nav .fd-pages>li>a{display:grid;gap:1px;padding:7px 10px;border-radius:8px;text-decoration:none;color:var(--fg)}
+#fd-nav .fd-pages>li>a span{font-weight:600;font-size:.95rem}
+#fd-nav .fd-pages>li>a small{font-size:.75rem;color:var(--muted);line-height:1.3}
+#fd-nav .fd-pages>li>a:hover{background:var(--surface-2)}
+#fd-nav .fd-pages>li.on>a{background:var(--gold-soft);box-shadow:inset 3px 0 0 var(--gold)}
+#fd-nav .fd-secs{margin:4px 0 10px 14px;border-left:1px solid var(--line);padding-left:4px}
+#fd-nav .fd-secs a{display:block;padding:4px 8px;font-size:.86rem;color:var(--muted);text-decoration:none;border-radius:6px;line-height:1.3}
+#fd-nav .fd-secs li.l2 a{padding-left:20px;font-size:.82rem}
+#fd-nav .fd-secs a:hover{color:var(--fg);background:var(--surface-2)}
+#fd-nav .fd-secs a.act{color:var(--gold);font-weight:600}
+#fd-fab{position:fixed;left:16px;bottom:16px;z-index:28;border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:999px;padding:9px 15px;font:inherit;font-size:.92rem;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.25);cursor:pointer;display:flex;gap:8px;align-items:center}
+#fd-scrim{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:29;display:none}
+@media (min-width:1100px){
+  body.fd-has-nav{padding-left:264px !important}
+  #fd-nav{display:block}
+  #fd-fab{display:none}
+  body.fd-has-nav .savebar{left:240px}
+  body.fd-has-nav .jump{display:none !important}
+}
+@media (max-width:1099.98px){
+  body.fd-open #fd-nav{display:block;width:min(300px,86vw);box-shadow:4px 0 24px rgba(0,0,0,.3)}
+  body.fd-open #fd-scrim{display:block}
+  #fd-nav .fd-x{display:block}
+}`;
+  document.head.appendChild(st);
+  const nav = document.createElement("nav"); nav.id = "fd-nav"; nav.setAttribute("aria-label", "Legend");
+  const fab = document.createElement("button"); fab.id = "fd-fab"; fab.type = "button"; fab.setAttribute("aria-label", "Open the legend");
+  fab.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>Legend';
+  const scrim = document.createElement("div"); scrim.id = "fd-scrim";
+  document.body.append(nav, scrim, fab); document.body.classList.add("fd-has-nav");
+  const close = () => document.body.classList.remove("fd-open");
+  fab.onclick = () => { document.body.classList.add("fd-open"); spy(); };
+  scrim.onclick = close;
+  document.addEventListener("keydown", ev => { if (ev.key==="Escape") close(); });
+  const offset = () => { const s = opts.sticky && document.querySelector(opts.sticky); return s && getComputedStyle(s).display!=="none" ? s.getBoundingClientRect().height : 0; };
+  let items = [], lastSig = "";
+  function build(){
+    const cur = typeof opts.current==="function" ? opts.current() : opts.current;
+    items = (opts.items() || []).filter(x => x && x.el && x.label);
+    const used = new Set();
+    items.forEach(x => { if (!x.el.id){ let base = "s-" + x.label.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40), id = base, k = 2; while (used.has(id) || (document.getElementById(id) && document.getElementById(id)!==x.el)) id = base + "-" + (k++); x.el.id = id; } used.add(x.el.id); });
+    const sig = cur + "|" + items.map(x=>x.label+x.level).join("|");
+    if (sig === lastSig) { spy(); return; }
+    lastSig = sig;
+    const tabs = document.querySelector(".tabs"), curTab = tabs && tabs.querySelector('.tab[aria-current="page"], .tab[aria-selected="true"]');
+    if (curTab && tabs.scrollWidth > tabs.clientWidth) tabs.scrollLeft = Math.max(0, curTab.offsetLeft - tabs.offsetLeft - (tabs.clientWidth - curTab.offsetWidth)/2);
+    nav.innerHTML = `<div class="fd-h"><b>Legend</b><button type="button" class="fd-x" aria-label="Close the legend">×</button></div>
+      <ul class="fd-pages">${FD_PAGES.map(p=>`<li class="${p.id===cur?"on":""}"><a href="${p.href}" data-page="${p.id}" ${p.id===cur?'aria-current="page"':""}><span>${e(p.label)}</span><small>${e(p.hint)}</small></a>${p.id===cur && items.length ? `<ul class="fd-secs">${items.map((x,i)=>`<li class="l${x.level||1}"><a href="#${e(x.el.id)}" data-i="${i}">${e(x.label)}</a></li>`).join("")}</ul>` : ""}</li>`).join("")}</ul>`;
+    spy();
+  }
+  nav.onclick = ev => {
+    if (ev.target.closest(".fd-x")) { close(); return; }
+    const a = ev.target.closest("a"); if (!a) return;
+    if (a.dataset.i !== undefined){ ev.preventDefault(); const x = items[+a.dataset.i]; if (!x) return; close();
+      const y = x.el.getBoundingClientRect().top + window.scrollY - offset() - 12; window.scrollTo({top:Math.max(0,y), behavior:"smooth"}); return; }
+    if (a.dataset.page && opts.onPage && opts.onPage(a.dataset.page)) { ev.preventDefault(); close(); lastSig = ""; setTimeout(build, 30); }
+  };
+  function spy(){
+    const sb = document.getElementById("savebar");
+    fab.style.bottom = (sb && !sb.hidden ? sb.offsetHeight + 12 : 16) + "px";
+    const off = offset() + 70; let act = -1;
+    items.forEach((x,i) => { if (x.el.offsetParent !== null && x.el.getBoundingClientRect().top - off <= 0) act = i; });
+    if (act < 0 && items.length) act = 0;
+    const links = nav.querySelectorAll(".fd-secs a");
+    links.forEach((a,i) => a.classList.toggle("act", i===act));
+    const a = links[act];
+    if (a && (a.offsetTop < nav.scrollTop + 40 || a.offsetTop > nav.scrollTop + nav.clientHeight - 60)) nav.scrollTop = a.offsetTop - nav.clientHeight/2;
+  }
+  let raf = 0; window.addEventListener("scroll", () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; spy(); }); }, {passive:true});
+  window.addEventListener("resize", spy);
+  let t = 0; if (opts.root) new MutationObserver(() => { clearTimeout(t); t = setTimeout(build, 150); }).observe(opts.root, {childList:true, subtree:true, attributes:true, attributeFilter:["hidden"]});
+  window.fdNavRefresh = () => { lastSig = ""; build(); };
+  build();
+}
+
+/* ---------- Shared header bits: date chips and the invite button ---------- */
+function fdDates(el){
+  if (!el) return;
+  const e = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const now = Date.now(); let nextSet = false;
+  el.innerHTML = FD.timeline.slice(0,4).map(x=>{
+    const t = new Date(x.d).getTime(), days = Math.ceil((t-now)/86400000);
+    let cls = "date", when;
+    if (t < now){ cls += " past"; when = "done"; }
+    else { if (!nextSet){ cls += " next"; nextSet = true; } when = days<=1 ? (t-now<86400000 ? "today" : "1 day") : days+" days"; }
+    return `<div class="${cls}" title="${e(x.s)}"><b>${e(when)}</b><span>${e(x.t)}</span></div>`;
+  }).join("");
+}
+async function fdInvite(){
+  const url = location.href.replace(/[#?].*$/, "").replace(/[^/]*$/, "");
+  const say = m => { if (typeof toast==="function") toast(m); };
+  try { if (navigator.share){ await navigator.share({title:"Forever Party Draft", text:"Vote on our WoW Forever party: classes, faction, ruleset, schedule and names.", url}); return; } } catch(e){ if (e && e.name==="AbortError") return; }
+  try { await navigator.clipboard.writeText(url); say("Invite link copied."); } catch(e){ say("Share this link: " + url); }
+}
