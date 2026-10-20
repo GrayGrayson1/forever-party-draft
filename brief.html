@@ -1,0 +1,683 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Forever Game Plan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus&family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a single reading column (max 860px). Summary first, then decisions, adjustments, lineup, schedule, personal plan, timeline. Same palette as the draft. */
+:root{
+  color-scheme: dark;
+  --bg:#0e1120; --surface:#161a2c; --surface-2:#1e2340; --line:#2b3157; --line-soft:#232846;
+  --fg:#ebe7da; --muted:#9ba1c0; --faint:#6d7396;
+  --gold:#e3b94f; --gold-ink:#1b1606; --gold-soft:rgba(227,185,79,.14);
+  --horde:#d9483c; --alliance:#4a87e8; --good:#5fc68d; --warn:#e9a53e; --bad:#e2655b;
+  --c-warrior:#C69B6D; --c-paladin:#F48CBA; --c-hunter:#AAD372; --c-rogue:#FFF468; --c-priest:#EDEDED;
+  --c-shaman:#3a95ff; --c-mage:#3FC7EB; --c-warlock:#8f90f0; --c-druid:#FF7C0A;
+  --f-display:"Marcellus", "Trajan Pro", Georgia, serif;
+  --f-body:"Alegreya Sans", "Gill Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: light){ :root{
+  color-scheme: light;
+  --bg:#eceef5; --surface:#ffffff; --surface-2:#e3e6f0; --line:#c9cee0; --line-soft:#dde1ec;
+  --fg:#191c2c; --muted:#555b7a; --faint:#7d829c;
+  --gold:#97700f; --gold-ink:#ffffff; --gold-soft:rgba(151,112,15,.12);
+  --horde:#b5332a; --alliance:#2b62bf; --good:#25875a; --warn:#a96a09; --bad:#b8392f;
+  --c-warrior:#93672f; --c-paladin:#c44683; --c-hunter:#4f8418; --c-rogue:#8f8200; --c-priest:#666b80;
+  --c-shaman:#0061c2; --c-mage:#0b84a6; --c-warlock:#5556c4; --c-druid:#c95f00;
+}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:17px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 80px}
+.wrap{max-width:860px;margin:0 auto}
+h1,h2,h3{font-family:var(--f-display);font-weight:400;text-wrap:balance;margin:0}
+h1{font-size:clamp(2rem,5vw,3rem);line-height:1.05}
+h2{font-size:1.5rem;line-height:1.2}
+h3{font-size:1.12rem}
+p{margin:0}
+a{color:var(--gold)}
+.eyebrow{font-family:var(--f-mono);font-size:.74rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.muted{color:var(--muted)} .small{font-size:.9rem}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.top{display:flex;gap:16px;flex-wrap:wrap;align-items:center;padding-block:18px 0;font-size:.95rem}
+.top a{text-decoration:none;border-bottom:1px solid transparent}
+.top a:hover{border-bottom-color:var(--gold)}
+.top .live{margin-left:auto;font-family:var(--f-mono);font-size:.74rem;color:var(--faint);display:flex;gap:6px;align-items:center}
+.top .live i{width:7px;height:7px;border-radius:50%;background:var(--faint)}
+.top .live.on i{background:var(--good)}
+.hero{padding-block:28px 22px;display:grid;gap:12px;border-bottom:1px solid var(--line)}
+.hero .lede{color:var(--muted);max-width:60ch}
+section{padding-block:28px;border-bottom:1px solid var(--line-soft);display:grid;gap:14px}
+section:last-of-type{border-bottom:0}
+.sec-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.short{display:grid;gap:10px;margin:0;padding:0;list-style:none}
+.short li{display:grid;grid-template-columns:22px 1fr;gap:10px;font-size:1.08rem}
+.short li::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--gold);margin-top:.5em}
+.short li.warn::before{background:var(--warn)}
+.pill{display:inline-block;font-family:var(--f-mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;border-radius:999px;border:1px solid;white-space:nowrap}
+.pill.settled{color:var(--good);border-color:color-mix(in srgb,var(--good) 50%,transparent);background:color-mix(in srgb,var(--good) 10%,transparent)}
+.pill.leaning{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 50%,transparent);background:color-mix(in srgb,var(--warn) 10%,transparent)}
+.pill.open{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 50%,transparent);background:color-mix(in srgb,var(--bad) 10%,transparent)}
+.pill.high{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 50%,transparent)}
+.pill.medium{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 50%,transparent)}
+.pill.low{color:var(--muted);border-color:var(--line)}
+.decisions{display:grid;gap:0;border:1px solid var(--line-soft);border-radius:10px;overflow:hidden;background:var(--surface)}
+.drow{display:grid;grid-template-columns:130px minmax(0,1fr) 92px;gap:6px 16px;padding:14px 16px;border-bottom:1px solid var(--line-soft);align-items:start}
+.drow:last-child{border-bottom:0}
+.drow .topic{font-family:var(--f-mono);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding-top:3px}
+.drow .call{font-family:var(--f-display);font-size:1.2rem;line-height:1.25}
+.drow .why{grid-column:2 / 4;font-size:.95rem;color:var(--muted)}
+.drow .st{text-align:right}
+@media (max-width:560px){ .drow{grid-template-columns:1fr auto} .drow .topic{grid-column:1 / 3} .drow .why{grid-column:1 / 3} }
+.adj{counter-reset:adj;display:grid;gap:10px;margin:0;padding:0;list-style:none}
+.adj li{counter-increment:adj;display:grid;grid-template-columns:34px minmax(0,1fr);gap:12px;background:var(--surface);border:1px solid var(--line-soft);border-radius:10px;padding:14px 16px}
+.adj li::before{content:counter(adj);font-family:var(--f-mono);color:var(--gold);font-size:1.05rem;padding-top:1px}
+.adj .t{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-weight:700}
+.adj .w{color:var(--muted);font-size:.95rem;margin-top:4px}
+.adj .who{font-family:var(--f-mono);font-size:.72rem;color:var(--faint);margin-top:6px}
+.lineup{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}
+.mem{background:var(--surface);border:1px solid var(--line-soft);border-top:3px solid var(--cc,var(--line));border-radius:10px;padding:12px 14px;display:grid;gap:4px;align-content:start}
+.mem.me{outline:1px solid var(--gold);outline-offset:-1px}
+.mem.empty{border-style:dashed;border-top-style:dashed;background:none}
+.mem .a{font-family:var(--f-mono);font-size:.74rem;color:var(--muted)}
+.mem .c{font-family:var(--f-display);font-size:1.25rem;color:var(--cc,var(--fg))}
+.mem .r{font-size:.9rem}
+.mem .b{font-size:.85rem;color:var(--muted)}
+.nights{display:flex;gap:10px;flex-wrap:wrap}
+.night{background:var(--surface);border:1px solid var(--line-soft);border-radius:10px;padding:10px 14px;display:grid;gap:2px;min-width:150px}
+.night.main{border-color:var(--gold);background:linear-gradient(180deg,var(--gold-soft),transparent),var(--surface)}
+.night .k{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.night .v{font-family:var(--f-display);font-size:1.15rem}
+.bars{display:grid;gap:8px}
+.bar{display:grid;grid-template-columns:minmax(80px,140px) minmax(40px,1fr) auto;gap:10px;align-items:center;font-size:.93rem}
+.bar .lab{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar .track{height:10px;background:var(--surface-2);border-radius:3px;overflow:hidden}
+.bar .fill{height:100%;background:var(--bc,var(--gold));border-radius:3px}
+.bar .val{font-family:var(--f-mono);font-size:.82rem;color:var(--muted);white-space:nowrap}
+.bar.me .lab::after{content:" • you";font-family:var(--f-mono);font-size:.7rem;color:var(--gold)}
+.you{background:var(--surface);border:1px solid var(--gold);border-radius:12px;padding:18px;display:grid;gap:12px}
+.you dl{display:grid;grid-template-columns:140px minmax(0,1fr);gap:8px 14px;margin:0}
+.you dt{font-family:var(--f-mono);font-size:.76rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding-top:3px}
+.you dd{margin:0}
+@media (max-width:520px){ .you dl{grid-template-columns:1fr} .you dt{padding-top:6px} }
+.todo{display:grid;gap:0;margin:0;padding:0;list-style:none;border-left:2px solid var(--line);margin-left:6px}
+.todo li{position:relative;padding:0 0 16px 22px;display:grid;gap:2px}
+.todo li::before{content:"";position:absolute;left:-7px;top:6px;width:12px;height:12px;border-radius:50%;background:var(--bg);border:2px solid var(--line)}
+.todo li.done::before{background:var(--line)}
+.todo li.next::before{background:var(--gold);border-color:var(--gold)}
+.todo .when{font-family:var(--f-mono);font-size:.8rem;color:var(--gold)}
+.locked{border:1px dashed var(--line);border-radius:12px;padding:40px 20px;text-align:center;display:grid;gap:12px;justify-items:center;margin-top:28px}
+.btn{display:inline-block;background:var(--gold);color:var(--gold-ink);border-radius:8px;padding:10px 16px;font-weight:500;text-decoration:none}
+.callout{padding:10px 12px;border-radius:8px;font-size:.93rem;background:var(--surface-2);border:1px solid var(--line-soft)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="top" aria-label="Pages">
+    <a href="index.html#ballot">My ballot</a>
+    <a href="index.html#results">Party board</a>
+    <b>Game plan</b>
+    <span class="live" id="live"><i></i><span>Loading…</span></span>
+  </nav>
+  <header class="hero">
+    <div class="eyebrow">Forever Party Draft · Game plan</div>
+    <h1>Forever Game Plan</h1>
+    <p class="lede">The plain-English read of everyone's ballots: what's decided, what still needs a call, and what to change. It updates as people vote, and everyone stays anonymous.</p>
+  </header>
+  <main id="brief"><div class="locked"><h2>Reading the ballots…</h2></div></main>
+</div>
+<script>
+const SUPABASE = { url: "https://bqplgeyjzxgfvlwsazqx.supabase.co", anonKey: "sb_publishable_o6FNGR5AVRXm9fJE_uq6VQ_F0nu5nFH" };
+
+
+/* ---------- Game data (WoW Forever, launch build; sources in the Field guide) ---------- */
+const CLASSES = [
+  {id:"warrior", name:"Warrior", armor:"Plate", roles:["tank","melee"], specs:["Arms","Fury","Protection"]},
+  {id:"paladin", name:"Paladin", armor:"Plate", roles:["tank","healer","melee"], specs:["Holy","Protection","Retribution"]},
+  {id:"hunter", name:"Hunter", armor:"Mail", roles:["ranged","melee"], specs:["Beast Mastery","Marksmanship","Survival"]},
+  {id:"rogue", name:"Rogue", armor:"Leather", roles:["melee"], specs:["Assassination","Combat","Subtlety"]},
+  {id:"priest", name:"Priest", armor:"Cloth", roles:["healer","ranged"], specs:["Discipline","Holy","Shadow"]},
+  {id:"shaman", name:"Shaman", armor:"Mail", roles:["healer","melee","ranged"], specs:["Elemental","Enhancement","Restoration"]},
+  {id:"mage", name:"Mage", armor:"Cloth", roles:["ranged"], specs:["Arcane","Fire","Frost"]},
+  {id:"warlock", name:"Warlock", armor:"Cloth", roles:["ranged"], specs:["Affliction","Demonology","Destruction"]},
+  {id:"druid", name:"Druid", armor:"Leather", roles:["tank","healer","melee","ranged"], specs:["Balance","Feral","Restoration"]},
+];
+const CLS = Object.fromEntries(CLASSES.map(c=>[c.id,c]));
+const ROLE_LABEL = {tank:"Tank",healer:"Healer",melee:"Melee",ranged:"Ranged"};
+
+const RACES = [
+  {id:"orc", name:"Orc", f:"H", classes:["hunter","mage","rogue","shaman","warlock","warrior"], newc:["mage"], racials:"Blood Fury, Shatter Curse · Axe Specialization, Hardiness"},
+  {id:"tauren", name:"Tauren", f:"H", classes:["druid","hunter","shaman","warrior"], newc:[], racials:"War Stomp, Cultivation · Plainsrunning, Endurance"},
+  {id:"troll", name:"Troll", f:"H", classes:["hunter","mage","priest","rogue","shaman","warlock","warrior"], newc:["warlock"], racials:"Berserking, Rapid Regeneration · Beast Slaying, Regeneration"},
+  {id:"undead", name:"Undead", f:"H", classes:["mage","paladin","priest","rogue","warlock","warrior"], newc:["paladin"], racials:"Will of the Forsaken, Cannibalize · Underwater Breathing, Touch of the Grave"},
+  {id:"sky-h", name:"Skyborne (Windshaper)", short:"Skyborne", f:"H", pack:true, classes:["druid","hunter","rogue","shaman","warrior"], newc:["druid","hunter","rogue","shaman","warrior"], racials:"Walk on Air, Skysight · Wind Blessed, Elemental Insight"},
+  {id:"dwarf", name:"Dwarf", f:"A", classes:["hunter","paladin","priest","rogue","shaman","warrior"], newc:["shaman"], racials:"Stoneform, Find Treasure · Mace Specialization, Big Game Hunter"},
+  {id:"gnome", name:"Gnome", f:"A", classes:["mage","priest","rogue","warlock","warrior"], newc:["priest"], racials:"Escape Artist, Eureka! · Expansive Mind, Engineering Specialization"},
+  {id:"human", name:"Human", f:"A", classes:["hunter","mage","paladin","priest","rogue","warlock","warrior"], newc:["hunter"], racials:"Will to Survive, Perception · Sword Specialization, The Human Spirit"},
+  {id:"nelf", name:"Night Elf", f:"A", classes:["druid","hunter","priest","rogue","warrior"], newc:[], racials:"Elune's Light, Shadowmeld · Quickness, Wisp Spirit"},
+  {id:"sky-a", name:"Skyborne (High Order)", short:"Skyborne", f:"A", pack:true, classes:["druid","hunter","mage","rogue","warrior"], newc:["druid","hunter","mage","rogue","warrior"], racials:"Walk on Air, Read Ley Line · Wind Blessed, Elemental Insight"},
+];
+const RACE = Object.fromEntries(RACES.map(r=>[r.id,r]));
+
+const RULESETS = [
+  {id:"normal", name:"Normal", desc:"Questing and exploring. PvP is opt-in. Both factions allowed on one account."},
+  {id:"pvp", name:"PvP", desc:"Open-world PvP in contested zones. Only one faction per account."},
+  {id:"rp", name:"Roleplay", desc:"For people who want to play in character. Both factions allowed."},
+  {id:"hardcore", name:"Hardcore", desc:"Death is permanent. Opens some time after launch.", later:true},
+];
+const PROFS = [
+  {id:"herbalism", name:"Herbalism", kind:"gather", pairs:"alchemy"},
+  {id:"mining", name:"Mining", kind:"gather", pairs:"blacksmithing, engineering"},
+  {id:"skinning", name:"Skinning", kind:"gather", pairs:"leatherworking"},
+  {id:"alchemy", name:"Alchemy", kind:"craft"},
+  {id:"blacksmithing", name:"Blacksmithing", kind:"craft"},
+  {id:"enchanting", name:"Enchanting", kind:"craft"},
+  {id:"engineering", name:"Engineering", kind:"craft"},
+  {id:"leatherworking", name:"Leatherworking", kind:"craft"},
+  {id:"tailoring", name:"Tailoring", kind:"craft"},
+];
+const PROF = Object.fromEntries(PROFS.map(p=>[p.id,p]));
+const FACTION_OPTS = [[-2,"Horde, for sure"],[-1,"Lean Horde"],[0,"Either"],[1,"Lean Alliance"],[2,"Alliance, for sure"]];
+const STYLE_OPTS = [[-2,"All PvE"],[-1,"Mostly PvE"],[0,"Both"],[1,"Mostly PvP"],[2,"All PvP"]];
+const ROLE_PREF = [[0,"No"],[1,"Can flex"],[2,"Main"]];
+const DAYS = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+const TIMES = [["morning","Mornings"],["afternoon","Afternoons"],["evening","Evenings"],["late","Late night"]];
+const HOURS = [["lt5","Under 5"],["5-10","5–10"],["10-20","10–20"],["20+","20+"]];
+const PACE = [["chill","Chill, smell the roses"],["steady","Steady"],["race","Race to 60"]];
+const HC = [["no","No thanks"],["curious","Curious"],["yes","Yes, a run"]];
+const LAUNCH = [["yes","Yes"],["maybe","Maybe"],["no","No"]];
+const SKY = [["yes","Buying it"],["maybe","Maybe"],["no","No"]];
+
+
+
+/* ---------- Helpers ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const lsGet = k => { try { return localStorage.getItem(k); } catch(e) { return null; } };
+const lsSet = (k,v) => { try { localStorage.setItem(k,v); } catch(e) {} };
+const lsDel = k => { try { localStorage.removeItem(k); } catch(e) {} };
+const pct = (a,b) => b ? Math.round(100*a/b) : 0;
+const plural = (n,w,ws) => n + " " + (n===1 ? w : (ws||w+"s"));
+function hash(str){ let h=2166136261; for (let i=0;i<str.length;i++){ h^=str.charCodeAt(i); h=Math.imul(h,16777619); } return h>>>0; }
+async function sha256hex(s){ const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)); return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join(""); }
+
+
+function blankBallot(){
+  return {v:1, classes:[], faction:null, style:null, rulesets:{}, favRuleset:null,
+    roles:{tank:null,healer:null,dps:null}, race:null, skyborne:null, profs:[],
+    days:[], times:[], hours:null, pace:null, hardcore:null, launch:null};
+}
+function normBallot(b){
+  const n = blankBallot();
+  if (!b || typeof b!=="object") return n;
+  n.classes = Array.isArray(b.classes) ? b.classes.filter(c=>CLS[c]).slice(0,5) : [];
+  const num = (x,lo,hi) => (typeof x==="number" && x>=lo && x<=hi) ? x : null;
+  n.faction = num(b.faction,-2,2); n.style = num(b.style,-2,2);
+  if (b.rulesets && typeof b.rulesets==="object") RULESETS.forEach(r=>{ if (b.rulesets[r.id]) n.rulesets[r.id]=true; });
+  n.favRuleset = RULESETS.some(r=>r.id===b.favRuleset) ? b.favRuleset : null;
+  if (b.roles) ["tank","healer","dps"].forEach(k=>{ n.roles[k] = num(b.roles[k],0,2); });
+  n.race = RACE[b.race] ? b.race : null;
+  const pick = (x,opts) => opts.some(o=>o[0]===x) ? x : null;
+  n.skyborne = pick(b.skyborne,SKY); n.hours = pick(b.hours,HOURS); n.pace = pick(b.pace,PACE);
+  n.hardcore = pick(b.hardcore,HC); n.launch = pick(b.launch,LAUNCH);
+  n.profs = Array.isArray(b.profs) ? b.profs.filter(p=>PROF[p]).slice(0,2) : [];
+  n.days = Array.isArray(b.days) ? b.days.filter(d=>Number.isInteger(d)&&d>=0&&d<7) : [];
+  n.times = Array.isArray(b.times) ? b.times.filter(t=>TIMES.some(o=>o[0]===t)) : [];
+  return n;
+}
+
+/* Example ballots shown only in preview mode, when no shared store is connected. */
+const EXAMPLES = [
+  {classes:["priest","mage","warlock"], faction:-1, style:-1, rulesets:{normal:true,pvp:true}, favRuleset:"normal", roles:{tank:0,healer:2,dps:1}, race:"undead", skyborne:"no", profs:["tailoring","enchanting"], days:[1,3,5], times:["evening"], hours:"10-20", pace:"steady", hardcore:"curious", launch:"yes"},
+  {classes:["warrior","paladin","rogue","hunter"], faction:-2, style:1, rulesets:{pvp:true,normal:true}, favRuleset:"pvp", roles:{tank:2,healer:0,dps:1}, race:"orc", skyborne:"maybe", profs:["mining","blacksmithing"], days:[1,3,4,5], times:["evening","late"], hours:"20+", pace:"race", hardcore:"yes", launch:"yes"},
+  {classes:["druid","shaman"], faction:0, style:-2, rulesets:{normal:true,rp:true}, favRuleset:"normal", roles:{tank:1,healer:1,dps:2}, race:"sky-h", skyborne:"yes", profs:["herbalism","alchemy"], days:[2,3,5,6], times:["afternoon","evening"], hours:"5-10", pace:"chill", hardcore:"no", launch:"maybe"},
+  {classes:["hunter","rogue","mage","warlock","druid"], faction:-1, style:0, rulesets:{normal:true,pvp:true,hardcore:true}, favRuleset:"normal", roles:{tank:0,healer:0,dps:2}, race:"troll", skyborne:"no", profs:["skinning","leatherworking"], days:[3,5,6], times:["evening"], hours:"10-20", pace:"steady", hardcore:"curious", launch:"yes"},
+];
+
+/* ---------- Anonymous names ---------- */
+const CREATURES = ["Murloc","Kobold","Gnoll","Wisp","Raptor","Furbolg","Harpy","Owlbeast","Kodo","Gryphon","Strider","Quilboar","Treant","Imp","Naga","Basilisk","Wyvern","Satyr","Centaur","Moonkin"];
+function aliasMap(keys){
+  const sorted = [...keys].sort((a,b)=>hash(a)-hash(b) || (a<b?-1:1));
+  const used = new Set(); const out = {};
+  sorted.forEach(k=>{
+    let i = hash(k) % CREATURES.length, tries=0, name;
+    while (used.has(CREATURES[i]) && tries < CREATURES.length){ i=(i+1)%CREATURES.length; tries++; }
+    name = used.has(CREATURES[i]) ? CREATURES[i]+" "+(used.size+1) : CREATURES[i];
+    used.add(CREATURES[i]); out[k] = "Anonymous " + name;
+  });
+  return out;
+}
+
+/* ---------- Consensus math ---------- */
+function partyRoles(c){ const r = new Set(); CLS[c].roles.forEach(x => r.add(x==="melee"||x==="ranged" ? "dps" : x)); return [...r]; }
+function tally(entries){
+  const n = entries.length;
+  const classPts = {}, firsts = {}, mentions = {};
+  CLASSES.forEach(c=>{ classPts[c.id]=0; firsts[c.id]=0; mentions[c.id]=0; });
+  entries.forEach(([,b]) => b.classes.forEach((c,i)=>{ classPts[c] += 5-i; mentions[c]++; if (i===0) firsts[c]++; }));
+  const classRank = CLASSES.map(c=>c.id).sort((a,b)=>classPts[b]-classPts[a] || firsts[b]-firsts[a] || mentions[b]-mentions[a]);
+
+  const dist = (field) => { const d={"-2":0,"-1":0,"0":0,"1":0,"2":0}; let sum=0, cnt=0;
+    entries.forEach(([,b])=>{ if (b[field]!==null){ d[b[field]]++; sum+=b[field]; cnt++; } });
+    return {d, mean: cnt? sum/cnt : 0, cnt}; };
+  const faction = dist("faction"), style = dist("style");
+
+  const rs = {}; RULESETS.forEach(r=>rs[r.id]={ok:0,fav:0});
+  let rsVoters = 0;
+  entries.forEach(([,b])=>{ let any=false; RULESETS.forEach(r=>{ if (b.rulesets[r.id]){ rs[r.id].ok++; any=true; } }); if (b.favRuleset){ rs[b.favRuleset].fav++; any=true; } if (any) rsVoters++; });
+  const rsRank = RULESETS.map(r=>r.id).sort((a,b)=>rs[b].ok-rs[a].ok || rs[b].fav-rs[a].fav);
+
+  const roles = {tank:{main:0,flex:0},healer:{main:0,flex:0},dps:{main:0,flex:0}};
+  entries.forEach(([,b])=>["tank","healer","dps"].forEach(k=>{ if (b.roles[k]===2) roles[k].main++; else if (b.roles[k]===1) roles[k].flex++; }));
+
+  const race = {}; entries.forEach(([,b])=>{ if (b.race) race[b.race]=(race[b.race]||0)+1; });
+  const sky = {yes:0,maybe:0,no:0}; entries.forEach(([,b])=>{ if (b.skyborne) sky[b.skyborne]++; });
+  const prof = {}; PROFS.forEach(p=>prof[p.id]=0); entries.forEach(([,b])=>b.profs.forEach(p=>prof[p]++));
+
+  const heat = TIMES.map(()=>DAYS.map(()=>0));
+  entries.forEach(([,b])=>b.times.forEach(t=>{ const ti = TIMES.findIndex(o=>o[0]===t); b.days.forEach(d=>heat[ti][d]++); }));
+  let best = null; heat.forEach((row,ti)=>row.forEach((v,di)=>{ if (v>0 && (!best || v>best.v)) best={ti,di,v}; }));
+  const schedVoters = entries.filter(([,b])=>b.days.length && b.times.length).length;
+
+  const count = (field, opts) => { const o={}; opts.forEach(x=>o[x[0]]=0); entries.forEach(([,b])=>{ if (b[field]) o[b[field]]++; }); return o; };
+  return {n, classPts, firsts, mentions, classRank, faction, style, rs, rsRank, rsVoters, roles, race, sky, prof, heat, best, schedVoters,
+    hours:count("hours",HOURS), pace:count("pace",PACE), hardcore:count("hardcore",HC), launch:count("launch",LAUNCH)};
+}
+
+/* Party planner: give each voter one of their ranked classes in a role they'll play,
+   covering tanks and healers first, then rank, with a small penalty for duplicate classes. */
+function planParty(entries){
+  const n = entries.length; if (!n) return null;
+  const opts = entries.map(([k,b])=>{
+    const anyRole = ["tank","healer","dps"].some(r=>b.roles[r]!==null);
+    const list = [];
+    b.classes.forEach((c,i)=>partyRoles(c).forEach(role=>{
+      const pref = anyRole ? (b.roles[role] ?? 0) : 1;
+      if (pref>0) list.push({c, role, rank:i, score:(5-i)*2 + pref*3});
+    }));
+    if (!list.length) b.classes.forEach((c,i)=>partyRoles(c).forEach(role=>list.push({c, role, rank:i, score:(5-i)*2 - 2})));
+    return list.sort((a,b)=>b.score-a.score);
+  });
+  const groups = Math.max(1, Math.ceil(n/5));
+  const needT = n>=3 ? groups : 0, needH = n>=2 ? groups : 0;
+  const objective = pick => {
+    let s=0, t=0, h=0; const seen={};
+    pick.forEach((o,i)=>{ if (!o) return; s+=o.score; if (o.role==="tank") t++; if (o.role==="healer") h++; seen[o.c]=(seen[o.c]||0)+1; });
+    Object.values(seen).forEach(v=>{ if (v>1) s -= 4*(v-1); });
+    s += 14*Math.min(t,needT) + 14*Math.min(h,needH);
+    s -= 6*Math.max(0,t-needT) + 3*Math.max(0,h-needH);
+    return s;
+  };
+  let pick = opts.map(l=>l[0]||null), cur = objective(pick);
+  for (let loop=0; loop<60; loop++){
+    let improved=false;
+    for (let i=0;i<n;i++){
+      for (const o of opts[i]){ const trial = pick.slice(); trial[i]=o; const v=objective(trial); if (v>cur+1e-9){ pick=trial; cur=v; improved=true; } }
+    }
+    if (!improved) break;
+  }
+  const t = pick.filter(o=>o&&o.role==="tank").length, h = pick.filter(o=>o&&o.role==="healer").length;
+  return {pick, tanks:t, healers:h, dps:pick.filter(o=>o&&o.role==="dps").length, needT, needH, groups};
+}
+
+
+/* ---------- Fit analysis: what each class brings, gear overlap, schedule overlap ---------- */
+const UTILS = [
+  {id:"cc", name:"Crowd control", why:"Forever's dungeons have no level scaling, and Blizzard says crowd control matters again. Locking down one or two mobs per pull prevents most wipes.",
+   by:{mage:"Polymorph", rogue:"Sap", hunter:"Freezing Trap", warlock:"Banish, Fear", priest:"Shackle Undead", druid:"Hibernate, Entangling Roots", paladin:"Turn Undead"}},
+  {id:"res", name:"Resurrection", why:"Without it, every death means a corpse run.",
+   by:{priest:"Resurrection", paladin:"Redemption", shaman:"Ancestral Spirit", druid:"Revive (new in Forever)"}},
+  {id:"bres", name:"Combat rez", why:"Bringing a dead healer or tank back mid-fight can save a raid attempt.",
+   by:{druid:"Rebirth", warlock:"Soulstone (cast before the pull)"}},
+  {id:"dispel", name:"Dispel and cleanse", why:"Poisons, diseases, curses and magic debuffs stack up in later dungeons.",
+   by:{priest:"Dispel Magic, Cure Disease", paladin:"Cleanse", shaman:"Cure Poison and Disease, Purge", druid:"Remove Curse, Cure Poison", mage:"Remove Lesser Curse"}},
+  {id:"buff", name:"Group buffs", why:"Buffs from different classes stack, so a varied party is stronger than five of one class.",
+   by:{priest:"Power Word: Fortitude", mage:"Arcane Intellect", druid:"Mark of the Wild", paladin:"Blessings (Kings is now baseline)", warrior:"Battle Shout", shaman:"Totems", hunter:"Aspect of the Pack"}},
+  {id:"supply", name:"Free supplies", why:"Saves gold and bag space on food, water and healing.",
+   by:{mage:"Conjured food and water", warlock:"Healthstones"}},
+  {id:"travel", name:"Group travel", why:"Gets late arrivals to the dungeon, which matters more with no flying.",
+   by:{mage:"Portals", warlock:"Ritual of Summoning"}},
+  {id:"scout", name:"Pulling and scouting", why:"Safer pulls and a way out of bad ones.",
+   by:{hunter:"Feign Death, tracking", rogue:"Stealth, Lockpicking", druid:"Prowl, tracking"}},
+];
+function gearOf(c, role){
+  if (c==="paladin") return role==="healer" ? {armor:"Plate", stat:"Intellect"} : {armor:"Plate", stat:"Strength"};
+  if (c==="warrior") return {armor:"Plate", stat:"Strength"};
+  if (c==="hunter") return {armor:"Mail", stat:"Agility"};
+  if (c==="shaman") return role==="healer" ? {armor:"Mail", stat:"Intellect"} : {armor:"Mail", stat:"Agility or Intellect"};
+  if (c==="rogue") return {armor:"Leather", stat:"Agility"};
+  if (c==="druid") return role==="healer" ? {armor:"Leather", stat:"Intellect"} : {armor:"Leather", stat:"Agility"};
+  return {armor:"Cloth", stat:"Intellect"};
+}
+const ARMORS = ["Cloth","Leather","Mail","Plate"];
+function slotsOf(b){ const s=new Set(); b.days.forEach(d=>b.times.forEach(t=>s.add(d+":"+t))); return s; }
+function shortAlias(a){ return a.replace(/^Anonymous /,""); }
+
+function members(entries, plan, alias){
+  return entries.map(([k],i)=>({k, o:plan&&plan.pick[i], me:k===Store.myKey, name: k===Store.myKey ? "You" : shortAlias(alias[k])})).filter(m=>m.o);
+}
+
+/* Suggestions: concrete changes, each with the reason and who it affects. */
+function buildSuggestions(T, plan, entries, mine, alias, mem){
+  const out = []; const n = T.n;
+  const add = (who, title, why) => out.push({who, title, why});
+  const canDo = (c, role) => partyRoles(c).includes(role);
+  ["healer","tank"].forEach(role=>{
+    const need = role==="healer" ? plan.needH : plan.needT, have = role==="healer" ? plan.healers : plan.tanks;
+    if (!need || have>=need) return;
+    const willingNoClass = entries.filter(([,b])=>b.roles[role]>=1 && !b.classes.some(c=>canDo(c,role))).length;
+    const classNoWill = entries.filter(([,b])=>b.roles[role]===0 && b.classes.some(c=>canDo(c,role))).length;
+    const list = role==="healer" ? "Priest, Druid, Paladin or Shaman" : "Warrior, Paladin or Druid";
+    let why = `A dungeon group needs ${role==="healer"?"a healer":"a tank"}, and right now the suggested party is short by ${need-have}.`;
+    if (willingNoClass) why += ` ${plural(willingNoClass,"person")} said they'd ${role==="healer"?"heal":"tank"} but didn't rank a class that can. Adding ${list} to their list would fix it.`;
+    if (classNoWill) why += ` ${plural(classNoWill,"person")} ranked a class that can ${role==="healer"?"heal":"tank"} but said No to it. Switching to "Can flex" would let the planner use them.`;
+    if (!willingNoClass && !classNoWill) why += ` Nobody's ballot can fill it yet, so someone would need to rank ${list}.`;
+    add("party", `Find ${role==="healer"?"a healer":"a tank"}`, why);
+  });
+  const dup = {}; mem.forEach(m=>{ (dup[m.o.c]=dup[m.o.c]||[]).push(m); });
+  const missingU = UTILS.filter(u=>!mem.some(m=>u.by[m.o.c]));
+  Object.entries(dup).forEach(([c,ms])=>{ if (ms.length<2) return;
+    const swaps = [];
+    ms.forEach(m=>{ const b = Store.ballots.get(m.k); if (!b) return;
+      b.classes.forEach((alt,i)=>{ if (alt===c || dup[alt]) return; const gains = missingU.filter(u=>u.by[alt]).map(u=>u.name.toLowerCase());
+        if (gains.length && partyRoles(alt).some(r=>(b.roles[r]??1)>0) && swaps.length<2) swaps.push(`${m.name} could play ${CLS[alt].name} (their #${i+1}), which adds ${gains.join(" and ")}`); }); });
+    add("party", `${ms.length} people are slotted as ${CLS[c].name}`, `Doubling up is fine for damage, but a different class brings new buffs and utility.${swaps.length?" "+swaps.join(". ")+".":""}`);
+  });
+  missingU.filter(u=>["cc","res","dispel"].includes(u.id)).forEach(u=>{
+    const could = entries.filter(([k,b])=>b.classes.some(c=>u.by[c])).map(([k])=>k===Store.myKey?"you":shortAlias(alias[k]));
+    add("party", `No ${u.name.toLowerCase()} in the suggested party`, `${u.why} ${could.length?`${could.slice(0,4).join(", ")} ranked a class that has it, so moving it higher would help.`:`Nobody has ranked a class that has it (${Object.keys(u.by).map(c=>CLS[c].name).join(", ")}).`}`);
+  });
+  if (T.best && T.schedVoters>=2){
+    const S = T.schedVoters;
+    if (T.best.v < S){
+      const near = []; T.heat.forEach((row,ti)=>row.forEach((v,di)=>{ if (v===S-1) near.push(`${DAYS[di]} ${TIMES[ti][1].toLowerCase()}`); }));
+      if (near.length) add("party", `One person away from a full-party night`, `${near.slice(0,3).join(", ")} ${near.length===1?"has":"have"} everyone but one free. If one more person can make ${near.length===1?"it":"one of them"}, all ${S} can play together.`);
+      else add("party", `No night works for everyone yet`, `The best slot, ${DAYS[T.best.di]} ${TIMES[T.best.ti][1].toLowerCase()}, has ${T.best.v} of ${S}. Adding a weekend afternoon or another evening is usually the easiest change.`);
+    }
+    const people = entries.filter(([,b])=>b.days.length&&b.times.length); let zero=0;
+    for (let i=0;i<people.length;i++) for (let j=i+1;j<people.length;j++){ const a=slotsOf(people[i][1]), b=slotsOf(people[j][1]); if (![...a].some(s=>b.has(s))) zero++; }
+    if (zero) add("party", `${plural(zero,"pair")} of players never overlap`, "They'll only see each other in raids or through mail. Marking one more shared evening fixes most of these.");
+  }
+  if (T.faction.cnt>=2 && T.faction.d["-2"]+T.faction.d["-1"]>0 && T.faction.d["2"]+T.faction.d["1"]>0){
+    const h=T.faction.d["-2"]+T.faction.d["-1"], a=T.faction.d["2"]+T.faction.d["1"];
+    add("party", `Faction is split ${h} Horde to ${a} Alliance`, `The two factions can't group. Since every class is now on both sides, nobody has to give up their class to switch. On Normal or Roleplay, anyone who wants the other side can keep an alt there. On PvP an account is locked to one faction.`);
+  }
+  const RV = T.rsVoters;
+  const universal = RULESETS.filter(r=>T.rs[r.id].ok===RV && RV>1);
+  const top = RULESETS.find(r=>r.id===T.rsRank[0]);
+  if (RV>1 && top && T.rs[top.id].ok<RV){
+    add("party", `${top.name} leads, but ${RV-T.rs[top.id].ok} of ${RV} didn't mark it`, universal.length ? `${universal.map(r=>r.name).join(" and ")} is acceptable to everyone. Picking a ruleset nobody objects to keeps the whole party together.` : `No ruleset is acceptable to everyone yet. Characters can't switch rulesets later, so this needs a decision before name reservation opens on Oct 27.`);
+  }
+  if (T.pace.race && T.pace.chill) add("party", "Racers and chill players are in the same party", `${T.pace.race} ${T.pace.race===1?"wants":"want"} to race to 60 and ${T.pace.chill} ${T.pace.chill===1?"wants":"want"} to take it slow. A common fix is to level the party characters only when you're together, and have the racers race on an alt.`);
+  if (n>=2 && T.launch.yes < Math.ceil(n/2)) add("party", "Most of the party can't confirm launch night", `Only ${T.launch.yes} of ${n} said yes for Nov 4. Plan the first real group session for the best weekly slot instead.`);
+  PROFS.filter(p=>p.kind==="gather").forEach(g=>{ const crafters = g.pairs.split(", ").reduce((s,c)=>s+T.prof[c],0); if (crafters && !T.prof[g.id]) add("party", `Crafters without a ${g.name.toLowerCase()} supplier`, `${g.pairs.split(", ").map(c=>PROF[c].name).join(" and ")} use materials that come from ${g.name}. A crafter could take ${g.name} as their second profession, or someone could switch one of theirs to it.`); });
+
+  // Personal
+  if (mine){
+    const myIdx = entries.findIndex(([k])=>k===Store.myKey), my = plan.pick[myIdx];
+    if (mine.race && RACE[mine.race].pack && mine.skyborne!=="yes") add("you", `${RACE[mine.race].name} needs the Skyborne pack`, `You picked a Skyborne race but said "${(SKY.find(o=>o[0]===mine.skyborne)||[0,"no answer"])[1]}" to the pack. Either plan to buy the Heroic Pack or pick another race.`);
+    if (my && my.rank>0) add("you", `You're slotted as your #${my.rank+1}, ${CLS[my.c].name}`, `That fills a gap: your #1, ${CLS[mine.classes[0]].name}, is ${dup[mine.classes[0]]?"already taken in the suggested party":"weaker for the group right now"}. You can still play your #1. The planner just shows the most complete group.`);
+    if (T.best && mine.days.length && mine.times.length && !(mine.days.includes(T.best.di) && mine.times.includes(TIMES[T.best.ti][0]))) add("you", `You're not free in the party's best slot`, `Most people can do ${DAYS[T.best.di]} ${TIMES[T.best.ti][1].toLowerCase()}. If you can make that work, add it to your ballot.`);
+    if (mine.faction!==null && Math.abs(mine.faction)===2 && Math.sign(mine.faction)!==Math.sign(T.faction.mean) && Math.abs(T.faction.mean)>0.3) add("you", `You're set on ${mine.faction<0?"Horde":"Alliance"}, and the party leans the other way`, "Every class and most class roles exist on both sides now. Check whether your race or a friend's is the real reason, since that's easier to trade.");
+    if (!mine.days.length || !mine.times.length) add("you", "Add your schedule", "The overlap charts and best-night pick don't include you until you choose days and times.");
+    if (mine.roles.tank===null && mine.roles.healer===null && mine.roles.dps===null) add("you", "Mark which roles you'd play", "Without roles the planner treats you as willing to flex anything your classes can do.");
+  }
+  return out;
+}
+
+
+/* ---------- Game plan page ---------- */
+const Store = { mode:"supabase", ballots:new Map(), myKey:null, ready:false, error:null };
+const DEMO = /[?&]demo\b/.test(location.search);
+async function loadBallots(){
+  if (DEMO || !(SUPABASE.url && SUPABASE.anonKey)){
+    Store.mode = "demo"; Store.myKey = "you-local";
+    EXAMPLES.forEach((b,i)=>Store.ballots.set("example-"+i, normBallot(b)));
+    Store.ballots.set("you-local", normBallot({classes:["shaman","hunter","druid","warlock","mage"], faction:-1, style:1, rulesets:{normal:true,pvp:true,rp:true}, favRuleset:"normal", roles:{tank:1,healer:1,dps:1}, race:"troll", skyborne:"no", profs:["mining","blacksmithing"], days:[0,1,3,4,5,6], times:["afternoon","evening","late"], hours:"20+", pace:"steady", hardcore:"curious", launch:"yes"}));
+    Store.ready = true; return;
+  }
+  const t = lsGet("fpd-voter-token");
+  Store.myKey = t ? await sha256hex(t) : null;
+  try {
+    const H = {apikey:SUPABASE.anonKey, Authorization:"Bearer "+SUPABASE.anonKey};
+    const r = await fetch(SUPABASE.url.replace(/\/$/,"") + "/rest/v1/ballots_public?select=voter,ballot", {headers:H});
+    if (!r.ok) throw new Error("HTTP "+r.status);
+    const m = new Map(); (await r.json()).forEach(row=>m.set(row.voter, normBallot(row.ballot)));
+    Store.ballots = m; Store.ready = true; Store.error = null;
+  } catch(e){ Store.error = "offline"; }
+}
+function barsHTML(rows, max){
+  return `<div class="bars">${rows.map(r=>`<div class="bar ${r.me?"me":""}"><span class="lab" ${r.color?`style="color:${r.color}"`:""}>${esc(r.label)}</span>
+    <span class="track"><span class="fill" style="width:${max?(100*r.value/max):0}%;--bc:${r.color||"var(--gold)"};display:block"></span></span>
+    <span class="val">${esc(r.text ?? r.value)}</span></div>`).join("")}</div>`;
+}
+const pill = (k, label) => `<span class="pill ${k}">${esc(label || k)}</span>`;
+const slotName = (di,ti) => `${DAYS[di]} ${TIMES[ti][1].toLowerCase()}`;
+const listJoin = a => a.length<=1 ? (a[0]||"") : a.slice(0,-1).join(", ") + " and " + a[a.length-1];
+const vb = (n, one, many) => n + " " + (n===1 ? one : many);
+const roleWord = r => r==="dps" ? "damage" : r;
+
+/* Two group nights: the best full-party slot, then the best one at least two days away. */
+function pickNights(T){
+  const all = []; T.heat.forEach((row,ti)=>row.forEach((v,di)=>{ if (v) all.push({ti,di,v}); }));
+  const pref = {evening:3, late:2, afternoon:1, morning:0};
+  all.sort((a,b)=>b.v-a.v || pref[TIMES[b.ti][0]]-pref[TIMES[a.ti][0]] || a.di-b.di);
+  if (!all.length) return null;
+  const first = all[0];
+  const gap = (a,b)=>{ const d=Math.abs(a-b); return Math.min(d,7-d); };
+  const second = all.find(s=>s!==first && gap(s.di,first.di)>=2 && s.v===first.v) || all.find(s=>s!==first && gap(s.di,first.di)>=2);
+  const backups = all.filter(s=>s!==first && s!==second && s.v===first.v && s.ti===first.ti).slice(0,3);
+  const full = all.filter(s=>s.v===T.schedVoters).length;
+  return {first, second, backups, full};
+}
+/* The class that would help most as one more player. */
+function bestFifth(plan, mem){
+  const missingU = UTILS.filter(u=>!mem.some(m=>u.by[m.o.c]));
+  const have = new Set(mem.map(m=>m.o.c));
+  const needRole = plan.healers<Math.max(1,plan.needH) ? "healer" : plan.tanks<Math.max(1,plan.needT) ? "tank" : null;
+  const scored = CLASSES.map(c=>{
+    let s = 0; const adds = missingU.filter(u=>u.by[c.id]).map(u=>u.name.toLowerCase());
+    s += adds.length*2; if (needRole && partyRoles(c.id).includes(needRole)) s += 6; if (have.has(c.id)) s -= 3;
+    return {c, s, adds};
+  }).sort((a,b)=>b.s-a.s);
+  return {needRole, top: scored.filter(x=>x.s===scored[0].s).slice(0,2), missingU};
+}
+function impactOf(title){
+  if (/^Find a|leads, but|Faction is split|full-party night|No night works|No crowd|No resurrection|No dispel/.test(title)) return "high";
+  if (/Most of the party can't confirm/.test(title)) return "low";
+  return "medium";
+}
+
+function render(){
+  const el = $("#brief");
+  const live = $("#live");
+  live.classList.toggle("on", Store.ready && !Store.error);
+  live.querySelector("span").textContent = Store.error ? "Can't reach the board" : Store.mode==="demo" ? "Demo data" : "Live · updated " + new Date().toLocaleTimeString([], {hour:"numeric", minute:"2-digit"});
+  if (Store.error){ el.innerHTML = `<div class="locked"><h2>The vote board isn't responding</h2><p class="muted">If nobody has visited in about a week, the free database pauses. The organizer can resume it from the Supabase dashboard with one click.</p></div>`; return; }
+  const entries = [...Store.ballots.entries()].filter(([,b])=>b.classes.length);
+  const mine = Store.myKey ? Store.ballots.get(Store.myKey) : null;
+  if (!mine){
+    el.innerHTML = `<div class="locked"><div class="mono" style="font-size:2.4rem;color:var(--gold)">${entries.length}</div><h2>${entries.length===1?"ballot is in":"ballots are in"}</h2>
+      <p class="muted" style="max-width:50ch">The game plan opens once you've voted, the same as the party board. Vote from this browser and come back.</p>
+      <a class="btn" href="index.html#ballot">Fill out my ballot</a></div>`;
+    return;
+  }
+  const T = tally(entries), n = T.n;
+  const alias = aliasMap(entries.map(([k])=>k));
+  const plan = planParty(entries);
+  const mem = members(entries, plan, alias);
+  const sugg = buildSuggestions(T, plan, entries, mine, alias, mem);
+  const nights = pickNights(T);
+  const fifth = bestFifth(plan, mem);
+  const H = T.faction.d["-2"]+T.faction.d["-1"], A = T.faction.d["2"]+T.faction.d["1"], E = T.faction.d["0"];
+  const RV = T.rsVoters, topRs = RV ? RULESETS.find(r=>r.id===T.rsRank[0]) : null;
+
+  /* ---- Decisions ---- */
+  const D = [];
+  let facCall, facSt, facWhy;
+  if (!T.faction.cnt){ facCall="Not answered"; facSt="open"; facWhy="Nobody has picked a side yet."; }
+  else if (H && !A){ facCall="Horde"; facSt="settled"; facWhy=`${vb(H,"wants","want")} Horde${E?` and ${vb(E,"doesn't","don't")} mind`:""}. Nobody asked for Alliance.`; }
+  else if (A && !H){ facCall="Alliance"; facSt="settled"; facWhy=`${vb(A,"wants","want")} Alliance${E?` and ${vb(E,"doesn't","don't")} mind`:""}. Nobody asked for Horde.`; }
+  else if (!H && !A){ facCall="Either works"; facSt="open"; facWhy="Everyone said either. Someone just needs to pick."; }
+  else { const lean = T.faction.mean<-0.3?"Horde":T.faction.mean>0.3?"Alliance":null; facCall = lean ? lean+" (leaning)" : "Split"; facSt = lean?"leaning":"open"; facWhy = `${vb(H,"leans","lean")} Horde, ${vb(A,"leans","lean")} Alliance, ${vb(E,"doesn't","don't")} mind. Every class exists on both sides now, so this is about races and story, not class access.`; }
+  D.push({topic:"Faction", call:facCall, st:facSt, why:facWhy});
+
+  if (topRs){
+    const ok = T.rs[topRs.id].ok, st = ok===RV ? "settled" : ok/RV>=0.75 ? "leaning" : "open";
+    const others = RULESETS.filter(r=>r.id!==topRs.id && T.rs[r.id].ok).map(r=>`${r.name} ${T.rs[r.id].ok}/${RV}`);
+    D.push({topic:"Ruleset", call:topRs.name, st, why:`${ok} of ${RV} would play it${others.length?` (also: ${others.join(", ")})`:""}. Characters can't change ruleset later, so lock this in before names open Oct 27.`});
+  } else D.push({topic:"Ruleset", call:"Not answered", st:"open", why:"Nobody has marked a ruleset yet."});
+
+  const sd = T.style.d, pve = sd["-2"]+sd["-1"], pvp = sd["2"]+sd["1"], both = sd["0"];
+  const normalWins = topRs && topRs.id==="normal";
+  D.push({topic:"Playstyle", call: !T.style.cnt ? "Not answered" : pve&&pvp ? "Mostly PvE, PvP optional" : pvp ? "PvP-focused" : "PvE",
+    st: !T.style.cnt ? "open" : (pve&&pvp&&!normalWins) ? "leaning" : "settled",
+    why: !T.style.cnt ? "" : `${vb(pve,"leans","lean")} PvE, ${vb(both,"wants","want")} both, ${vb(pvp,"leans","lean")} PvP. ${normalWins ? "On Normal, PvP is opt-in, so the PvP fans can flag up and queue battlegrounds without dragging the others in." : "If the party picks PvP, everyone is flagged in contested zones."}`});
+
+  if (nights){
+    const S = T.schedVoters, f = nights.first, s2 = nights.second;
+    D.push({topic:"Group nights", call: s2 ? `${slotName(f.di,f.ti)} + ${slotName(s2.di,s2.ti)}` : slotName(f.di,f.ti),
+      st: f.v===S && s2 && s2.v===S ? "settled" : f.v===S ? "leaning" : "open",
+      why: `${f.v} of ${S} free${s2?` on both`:""}. There are ${nights.full} slots a week when everyone is free.${nights.backups.length?` Backups: ${nights.backups.map(b=>slotName(b.di,b.ti)).join(", ")}.`:""}`});
+  } else D.push({topic:"Group nights", call:"Not answered", st:"open", why:"Nobody has added a schedule yet."});
+
+  if (plan){
+    const allTop2 = mem.every(m=>m.o.rank<=1), covered = plan.tanks>=1 && plan.healers>=1;
+    D.push({topic:"Lineup", call: mem.map(m=>CLS[m.o.c].name+" "+roleWord(m.o.role)).join(", "), st: covered && allTop2 ? "settled" : covered ? "leaning" : "open",
+      why: `${covered ? "Tank and healer are covered." : "Missing a tank or healer."} ${mem.filter(m=>m.o.rank===0).length} of ${mem.length} got their #1 pick. See the lineup below for what each person brings.`});
+  }
+  D.push({topic:"Launch night", call:`${T.launch.yes} of ${n} in`, st: T.launch.yes>=n-1 ? "settled" : T.launch.yes>=Math.ceil(n/2) ? "leaning" : "open",
+    why:`Nov 4 at ${new Date("2026-11-04T23:00:00Z").toLocaleTimeString([], {hour:"numeric", minute:"2-digit", timeZoneName:"short"})} your time. ${T.launch.maybe} maybe, ${T.launch.no} out.`});
+  const hcY = T.hardcore.yes, hcC = T.hardcore.curious;
+  D.push({topic:"Hardcore", call: hcY>=Math.ceil(n/2) ? "Plan a run" : hcY||hcC ? "Side project later" : "Skip it", st: hcY>=Math.ceil(n/2) || (!hcY && !hcC) ? "settled" : "leaning",
+    why:`${vb(hcY,"wants","want")} a run, ${vb(hcC,"is","are")} curious, ${T.hardcore.no} said no. Hardcore opens some time after launch and uses its own characters, so it never blocks the main plan.`});
+
+  /* ---- Adjustments ---- */
+  const adj = [];
+  const add = (impact, who, title, why) => adj.push({impact, who, title, why});
+  if (n<5){
+    const fits = fifth.top.map(x=>CLS[x.c.id].name);
+    const why = fifth.needRole ? `Dungeons take 5, and the party still needs a ${fifth.needRole}. ${listJoin(fits)} would fill it.` :
+      `Dungeons take 5. ${listJoin(fits)} would help most${fifth.top[0].adds.length?`, adding ${listJoin(fifth.top[0].adds)}, which nobody in the lineup brings`:""}.`;
+    add("high", "Everyone", n===4 ? "Recruit a 5th player for dungeons" : `Recruit ${5-n} more players for dungeons`, why);
+  }
+  sugg.filter(s=>s.who==="party").forEach(s=>add(impactOf(s.title), "Party", s.title, s.why));
+  const hi = HOURS.map(h=>h[0]);
+  const used = hi.filter(h=>T.hours[h]>0);
+  if (used.length>=2 && hi.indexOf(used[used.length-1]) - hi.indexOf(used[0]) >= 2){
+    const lo = HOURS.find(h=>h[0]===used[0]), top = HOURS.find(h=>h[0]===used[used.length-1]);
+    add("high", "Everyone", "Big gap in weekly play time", `${vb(T.hours[lo[0]],"plays","play")} ${lo[1]} hours a week and ${vb(T.hours[top[0]],"plays","play")} ${top[1]}. The faster group will level two to four times as quickly and outlevel the dungeons the others need. The usual fix is a party character you only level together on group nights, with extra hours going to alts, professions or gathering.`);
+  }
+  PROFS.filter(p=>p.kind==="craft" && T.prof[p.id]>=2).forEach(p=>{
+    const alt = p.id==="blacksmithing" ? "Engineering (it also uses Mining ore)" : p.id==="leatherworking" ? "Tailoring or Enchanting" : "Alchemy or Engineering, which nobody has";
+    add("medium", "2 people", `${T.prof[p.id]} people chose ${p.name}`, `Two crafters of the same kind compete for the same materials and make the same items. One could switch to ${alt}.`);
+  });
+  if (n>=2 && !T.prof.alchemy && entries.some(([,b])=>b.profs.length)) add("medium", "Anyone", "Nobody makes potions", `Alchemy, fed by Herbalism, makes healing and mana potions and raid flasks. It matters most once raids open on Dec 9. ${T.prof.herbalism?"Someone already gathers herbs, so it's an easy add.":"Herbalism and Alchemy together are a natural pair for one person."}`);
+  if (n<10) add("medium", "Everyone", "Raids need more people", `Barrow Deeps (10 players) and Hyjal Summit (20) open Dec 9. With ${n} you'd need ${10-n} more for the smaller raid, either friends or another group. Dungeons and leveling don't need anyone else.`);
+  const worstDay = DAYS.map((d,di)=>({d, v:Math.max(...T.heat.map(r=>r[di]))})).sort((a,b)=>a.v-b.v)[0];
+  if (T.schedVoters>=3 && worstDay.v<=Math.floor(T.schedVoters/2)) add("low", "Everyone", `Skip ${worstDay.d}days`, `At most ${worstDay.v} of ${T.schedVoters} are ever free on ${worstDay.d}. Keep group plans off it.`);
+  const order = {high:0, medium:1, low:2};
+  adj.sort((a,b)=>order[a.impact]-order[b.impact]);
+
+  /* ---- Lineup ---- */
+  const lineupHTML = mem.map(m=>{
+    const brings = UTILS.filter(u=>u.by[m.o.c]).map(u=>u.name.toLowerCase());
+    return `<div class="mem ${m.me?"me":""}" style="--cc:var(--c-${m.o.c})"><span class="a">${m.me?"You":esc(m.name)}</span>
+      <span class="c">${CLS[m.o.c].name}</span><span class="r">${roleWord(m.o.role)[0].toUpperCase()+roleWord(m.o.role).slice(1)} · ${m.me?"your":"their"} #${m.o.rank+1} pick</span>
+      <span class="b">Brings ${listJoin(brings) || "damage"}.</span></div>`; }).join("") +
+    (n<5 ? `<div class="mem empty"><span class="a">Open slot</span><span class="c">${listJoin(fifth.top.map(x=>CLS[x.c.id].name).slice(0,2)).replace(" and "," or ")}</span><span class="r">${fifth.needRole ? fifth.needRole[0].toUpperCase()+fifth.needRole.slice(1) : "Damage"}</span><span class="b">${fifth.top[0].adds.length?`Would add ${listJoin(fifth.top[0].adds)}.`:"Best fit for a 5th."}</span></div>` : "");
+  const missingNow = UTILS.filter(u=>!mem.some(m=>u.by[m.o.c]));
+
+  /* ---- Personal ---- */
+  const myIdx = entries.findIndex(([k])=>k===Store.myKey), my = plan && plan.pick[myIdx];
+  let partner = null;
+  if (mine.days.length && mine.times.length){
+    const ms = slotsOf(mine);
+    entries.forEach(([k,b])=>{ if (k===Store.myKey) return; const s = slotsOf(b); let c=0; ms.forEach(x=>{ if (s.has(x)) c++; }); if (!partner || c>partner.c) partner = {k, c}; });
+  }
+  const youSugg = sugg.filter(s=>s.who==="you");
+  const myRace = mine.race ? RACE[mine.race] : null;
+  const myHoursRank = HOURS.findIndex(h=>h[0]===mine.hours);
+
+  /* ---- Short version ---- */
+  const shortList = [];
+  const fx = D.find(d=>d.topic==="Faction"), rx = D.find(d=>d.topic==="Ruleset"), nx = D.find(d=>d.topic==="Group nights");
+  if (fx.st!=="open" && rx.st!=="open") shortList.push({t:`Play <b>${esc(fx.call.replace(" (leaning)",""))}</b> on the <b>${esc(rx.call)}</b> ruleset.${fx.st==="settled"&&rx.st==="settled"?" Everyone agrees.":" Most of you agree."}`});
+  else shortList.push({warn:true, t:`Faction and ruleset still need a call before names open on Oct 27.`});
+  if (nights) shortList.push({t:`Meet on <b>${esc(nx.call.replace(" + "," and "))}</b>. ${nights.first.v===T.schedVoters?"Everyone who answered is free then.":`${nights.first.v} of ${T.schedVoters} are free.`}`});
+  if (plan) shortList.push({t:`Proposed lineup: ${mem.map(m=>`<b style="color:var(--c-${m.o.c})">${CLS[m.o.c].name}</b> ${roleWord(m.o.role)}`).join(", ")}.`});
+  const topAdj = adj.filter(a=>a.impact==="high").slice(0,2);
+  topAdj.forEach(a=>shortList.push({warn:true, t:`To fix: ${esc(a.title.charAt(0).toLowerCase()+a.title.slice(1))}.`}));
+
+  /* ---- Timeline ---- */
+  const now = Date.now();
+  const steps = [
+    {d:"2026-10-21T21:00:00Z", w:"Oct 21", t:"Stress test", s:"Optional. Any account can log in and try a class before committing. Characters are wiped afterward."},
+    {d:"2026-10-27T17:00:00Z", w:"Oct 27", t:"Name reservation opens", s:`Pick the ruleset first${topRs?` (${topRs.name})`:""}, then reserve names. Runs through Nov 3.`},
+    {d:"2026-11-04T23:00:00Z", w:"Nov 4", t:"Launch", s:`${new Date("2026-11-04T23:00:00Z").toLocaleString([], {weekday:"short", hour:"numeric", minute:"2-digit", timeZoneName:"short"})} your time. No early access.`},
+    {d:"2026-11-05T00:00:00Z", w:"First week", t:"Level together", s:nights?`Stick to ${nx.call.replace(" + "," and ")}. Dual spec unlocks at level 40.`:"Agree on group nights first."},
+    {d:"2026-12-09T16:00:00Z", w:"Dec 9", t:"Raids open", s:`Barrow Deeps needs 10 players and Hyjal Summit needs 20.${!T.prof.alchemy?" Have someone on Alchemy by then for potions.":""}`},
+  ];
+  let nextDone = false;
+  const todoHTML = steps.map(s=>{ const t=new Date(s.d).getTime(); let c=""; if (t<now) c="done"; else if (!nextDone){ c="next"; nextDone=true; }
+    return `<li class="${c}"><span class="when">${esc(s.w)}</span><b>${esc(s.t)}</b><span class="small muted">${esc(s.s)}</span></li>`; }).join("");
+
+  el.innerHTML = `
+  <section aria-labelledby="h-short">
+    <div class="sec-head"><h2 id="h-short">The short version</h2><span class="small muted">${plural(n,"ballot")}${Store.mode==="demo"?" · demo data":""}</span></div>
+    <ul class="short">${shortList.map(s=>`<li class="${s.warn?"warn":""}"><span>${s.t}</span></li>`).join("")}</ul>
+  </section>
+
+  <section aria-labelledby="h-dec">
+    <div class="sec-head"><h2 id="h-dec">Decisions</h2><span class="small muted">${pill("settled","Settled")} ${pill("leaning","Leaning")} ${pill("open","Open")}</span></div>
+    <div class="decisions">${D.map(d=>`<div class="drow"><span class="topic">${esc(d.topic)}</span><span class="call">${esc(d.call)}</span><span class="st">${pill(d.st, d.st==="settled"?"Settled":d.st==="leaning"?"Leaning":"Open")}</span><p class="why">${esc(d.why)}</p></div>`).join("")}</div>
+  </section>
+
+  <section aria-labelledby="h-adj">
+    <div class="sec-head"><h2 id="h-adj">Adjustments, most important first</h2><span class="small muted">${adj.length} to consider</span></div>
+    ${adj.length ? `<ol class="adj">${adj.map(a=>`<li><div><div class="t">${esc(a.title)} ${pill(a.impact, a.impact+" impact")}</div><p class="w">${esc(a.why)}</p><p class="who">Who: ${esc(a.who)}</p></div></li>`).join("")}</ol>` : `<p class="callout">Nothing to adjust. The party lines up.</p>`}
+  </section>
+
+  <section aria-labelledby="h-line">
+    <div class="sec-head"><h2 id="h-line">Proposed lineup</h2><span class="small muted">${plan.tanks} tank · ${plan.healers} healer · ${plan.dps} damage</span></div>
+    <div class="lineup">${lineupHTML}</div>
+    <p class="small muted">${missingNow.length ? `Nobody in the lineup brings ${listJoin(missingNow.map(u=>u.name.toLowerCase()))}. ${listJoin([...new Set(missingNow.flatMap(u=>Object.keys(u.by)))].map(c=>CLS[c].name))} can.` : "Between you, the lineup covers every kind of group utility."} Anyone can still play a different class. This is just the most complete group from your rankings.</p>
+  </section>
+
+  <section aria-labelledby="h-time">
+    <div class="sec-head"><h2 id="h-time">When to play</h2><span class="small muted">${T.schedVoters} of ${n} added a schedule</span></div>
+    ${nights ? `<div class="nights">
+      <div class="night main"><span class="k">Main night</span><span class="v">${slotName(nights.first.di,nights.first.ti)}</span><span class="small muted">${nights.first.v} of ${T.schedVoters} free</span></div>
+      ${nights.second?`<div class="night main"><span class="k">Second night</span><span class="v">${slotName(nights.second.di,nights.second.ti)}</span><span class="small muted">${nights.second.v} of ${T.schedVoters} free</span></div>`:""}
+      ${nights.backups.map(b=>`<div class="night"><span class="k">Backup</span><span class="v">${slotName(b.di,b.ti)}</span><span class="small muted">${b.v} of ${T.schedVoters} free</span></div>`).join("")}
+    </div>` : `<p class="callout">No schedules yet.</p>`}
+    <div><div class="eyebrow" style="margin-bottom:8px">Weekly play time</div>${barsHTML(HOURS.map(([v,l])=>({label:l+" h", value:T.hours[v], me:mine.hours===v})), n)}</div>
+  </section>
+
+  <section aria-labelledby="h-you">
+    <div class="sec-head"><h2 id="h-you">Your plan</h2><span class="small muted">Only you see this part</span></div>
+    <div class="you"><dl>
+      <dt>Your slot</dt><dd>${my ? `<b style="color:var(--c-${my.c})">${CLS[my.c].name}</b>, ${roleWord(my.role)} (your #${my.rank+1} pick)` : "Not placed yet"}</dd>
+      <dt>Race</dt><dd>${myRace ? `${esc(myRace.name)}${myRace.pack?" · needs the Skyborne pack":""}` : "Not picked. Choose one on your ballot."}</dd>
+      <dt>Professions</dt><dd>${mine.profs.length ? mine.profs.map(p=>PROF[p].name).join(" + ") : "Not picked."}${mine.profs.some(p=>T.prof[p]>=2)?" · someone else picked the same, see adjustments":""}</dd>
+      <dt>Best partner</dt><dd>${partner ? `You share the most time with <b>${esc(shortAlias(alias[partner.k]))}</b> (${partner.c} slots a week).` : "Add your schedule to see this."}</dd>
+      <dt>Pace</dt><dd>${myHoursRank>=0 ? `${HOURS[myHoursRank][1]} hours a week. ${myHoursRank>=2 && used.length>=2 && hi.indexOf(used[0])<=1 ? "You'll out-level the lighter players, so save extra hours for alts or professions." : myHoursRank<=1 && used.some(h=>hi.indexOf(h)>=3) ? "Others play a lot more. Ask them to keep a party character at your level." : "In line with the party."}` : "Not answered."}</dd>
+    </dl>
+    ${youSugg.length ? youSugg.map(s=>`<p class="callout"><b>${esc(s.title)}.</b> ${esc(s.why)}</p>`).join("") : ""}
+    <a href="index.html#ballot" class="small">Change my ballot</a></div>
+  </section>
+
+  <section aria-labelledby="h-todo">
+    <div class="sec-head"><h2 id="h-todo">What happens next</h2></div>
+    <ol class="todo">${todoHTML}</ol>
+  </section>`;
+}
+(async()=>{ await loadBallots(); render(); setInterval(async()=>{ if (!document.hidden && Store.mode!=="demo"){ await loadBallots(); render(); } }, 30000); })();
+</script>
+</body>
+</html>
