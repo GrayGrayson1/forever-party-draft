@@ -1,0 +1,1294 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+</head>
+<body>
+<title>Forever Party Draft</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus&family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one centered column (max 1080px). A tab rail switches between the private ballot, the party board and the field guide. Class colors are the chart palette. */
+:root{
+  color-scheme: dark;
+  --bg:#0e1120; --surface:#161a2c; --surface-2:#1e2340; --line:#2b3157; --line-soft:#232846;
+  --fg:#ebe7da; --muted:#9ba1c0; --faint:#6d7396;
+  --gold:#e3b94f; --gold-ink:#1b1606; --gold-soft:rgba(227,185,79,.14);
+  --horde:#d9483c; --alliance:#4a87e8; --good:#5fc68d; --warn:#e9a53e; --bad:#e2655b;
+  --c-warrior:#C69B6D; --c-paladin:#F48CBA; --c-hunter:#AAD372; --c-rogue:#FFF468; --c-priest:#EDEDED;
+  --c-shaman:#3a95ff; --c-mage:#3FC7EB; --c-warlock:#8f90f0; --c-druid:#FF7C0A;
+  --armor-cloth:#7f6fd0; --armor-leather:#a8713f; --armor-mail:#3f8f8f; --armor-plate:#7c869c;
+  --f-display:"Marcellus", "Trajan Pro", Georgia, serif;
+  --f-body:"Alegreya Sans", "Gill Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: light){ :root:not([data-theme="dark"]){
+  color-scheme: light;
+  --bg:#eceef5; --surface:#ffffff; --surface-2:#e3e6f0; --line:#c9cee0; --line-soft:#dde1ec;
+  --fg:#191c2c; --muted:#555b7a; --faint:#7d829c;
+  --gold:#97700f; --gold-ink:#ffffff; --gold-soft:rgba(151,112,15,.12);
+  --horde:#b5332a; --alliance:#2b62bf; --good:#25875a; --warn:#a96a09; --bad:#b8392f;
+  --c-warrior:#93672f; --c-paladin:#c44683; --c-hunter:#4f8418; --c-rogue:#8f8200; --c-priest:#666b80;
+  --c-shaman:#0061c2; --c-mage:#0b84a6; --c-warlock:#5556c4; --c-druid:#c95f00;
+  --armor-cloth:#6a58c0; --armor-leather:#8e5a2c; --armor-mail:#2f7a7a; --armor-plate:#5f6a80;
+}}
+:root[data-theme="light"]{
+  color-scheme: light;
+  --bg:#eceef5; --surface:#ffffff; --surface-2:#e3e6f0; --line:#c9cee0; --line-soft:#dde1ec;
+  --fg:#191c2c; --muted:#555b7a; --faint:#7d829c;
+  --gold:#97700f; --gold-ink:#ffffff; --gold-soft:rgba(151,112,15,.12);
+  --horde:#b5332a; --alliance:#2b62bf; --good:#25875a; --warn:#a96a09; --bad:#b8392f;
+  --c-warrior:#93672f; --c-paladin:#c44683; --c-hunter:#4f8418; --c-rogue:#8f8200; --c-priest:#666b80;
+  --c-shaman:#0061c2; --c-mage:#0b84a6; --c-warlock:#5556c4; --c-druid:#c95f00;
+  --armor-cloth:#6a58c0; --armor-leather:#8e5a2c; --armor-mail:#2f7a7a; --armor-plate:#5f6a80;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 120px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:1080px;margin:0 auto}
+h1,h2,h3{font-family:var(--f-display);font-weight:400;text-wrap:balance;margin:0}
+h1{font-size:clamp(2.1rem,5vw,3.3rem);line-height:1.05;letter-spacing:.01em}
+h2{font-size:1.55rem;line-height:1.15}
+h3{font-size:1.15rem;line-height:1.2}
+p{margin:0}
+a{color:var(--gold)}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.eyebrow{font-family:var(--f-mono);font-size:.74rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.muted{color:var(--muted)}
+.small{font-size:.9rem}
+
+/* Hero */
+.hero{padding-block:40px 18px;display:grid;gap:14px}
+.hero .lede{max-width:62ch;color:var(--muted);font-size:1.08rem}
+.dates{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.date{display:flex;gap:10px;align-items:baseline;padding:7px 12px;border:1px solid var(--line);border-radius:999px;background:var(--surface)}
+.date b{font-family:var(--f-mono);font-weight:500;color:var(--gold);font-size:.92rem}
+.date span{font-size:.92rem}
+.date.past{opacity:.55}
+.date.next{border-color:var(--gold)}
+
+/* Tabs */
+.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:26px;overflow-x:auto}
+.tab{background:none;border:0;padding:14px 14px 12px;font-family:var(--f-display);font-size:1.05rem;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap;display:flex;gap:8px;align-items:center}
+.tab[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--gold)}
+.tab .count{font-family:var(--f-mono);font-size:.75rem;background:var(--surface-2);border-radius:999px;padding:1px 7px;color:var(--muted)}
+.conn{margin-left:auto;align-self:center;font-family:var(--f-mono);font-size:.72rem;color:var(--faint);white-space:nowrap;padding-left:12px;display:flex;align-items:center;gap:6px}
+.conn i{width:7px;height:7px;border-radius:50%;background:var(--faint);display:inline-block}
+.conn.live i{background:var(--good)}
+
+/* Ballot */
+.ballot{display:grid;gap:22px}
+.step{background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--r);padding:22px;display:grid;gap:16px;min-width:0}
+.step-head{display:flex;gap:14px;align-items:baseline;flex-wrap:wrap}
+.step-head .n{font-family:var(--f-mono);color:var(--gold);font-size:.85rem}
+.step-head .hint{color:var(--muted);font-size:.95rem;flex-basis:100%}
+.privacy{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border:1px dashed var(--line);border-radius:var(--r);color:var(--muted);font-size:.95rem}
+.privacy svg{flex:none;margin-top:2px}
+
+.class-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+.ccard{position:relative;text-align:left;background:var(--surface-2);border:1px solid var(--line-soft);border-radius:8px;padding:12px 12px 11px;display:grid;gap:6px;transition:border-color .15s, transform .15s}
+.ccard:hover{border-color:var(--cc)}
+.ccard .nm{font-family:var(--f-display);font-size:1.15rem;color:var(--cc)}
+.ccard .meta{font-size:.82rem;color:var(--muted)}
+.ccard.on{border-color:var(--cc);box-shadow:inset 0 0 0 1px var(--cc)}
+.ccard .rk{position:absolute;top:10px;right:10px;width:24px;height:24px;border-radius:50%;background:var(--cc);color:var(--bg);font-family:var(--f-mono);font-size:.8rem;display:grid;place-items:center;font-weight:500}
+.ccard[disabled]{opacity:.45;cursor:not-allowed}
+.roles{display:flex;gap:4px;flex-wrap:wrap}
+.rp{font-family:var(--f-mono);font-size:.68rem;letter-spacing:.04em;padding:1px 6px;border-radius:4px;border:1px solid var(--line);color:var(--muted)}
+.rp.tank{color:var(--alliance);border-color:color-mix(in srgb,var(--alliance) 45%,transparent)}
+.rp.healer{color:var(--good);border-color:color-mix(in srgb,var(--good) 45%,transparent)}
+.rp.melee,.rp.ranged{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 40%,transparent)}
+
+.ranking{display:grid;gap:6px}
+.slot{display:grid;grid-template-columns:34px 1fr auto;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;background:var(--surface-2);min-height:46px}
+.slot.empty{background:none;border:1px dashed var(--line);color:var(--faint)}
+.slot .pos{font-family:var(--f-mono);color:var(--gold);font-size:.9rem}
+.slot .who{font-family:var(--f-display);font-size:1.08rem;color:var(--cc,var(--fg))}
+.slot .who small{font-family:var(--f-mono);font-size:.72rem;color:var(--muted);margin-left:8px}
+.slot .acts{display:flex;gap:4px}
+.ib{width:32px;height:32px;border-radius:6px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;color:var(--muted)}
+.ib:hover:not([disabled]){color:var(--fg);border-color:var(--muted)}
+.ib[disabled]{opacity:.35;cursor:default}
+.two{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:20px}
+@media (max-width:760px){.two{grid-template-columns:1fr}}
+
+.seg{display:flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface-2)}
+.seg button{flex:1 1 0;min-width:88px;border:0;background:none;padding:10px 8px;font-size:.92rem;color:var(--muted);border-right:1px solid var(--line-soft)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--sel,var(--gold));color:var(--sel-ink,var(--gold-ink));font-weight:500}
+.seg.faction button[data-v="-2"],.seg.faction button[data-v="-1"]{--sel:var(--horde);--sel-ink:#fff}
+.seg.faction button[data-v="1"],.seg.faction button[data-v="2"]{--sel:var(--alliance);--sel-ink:#fff}
+.field{display:grid;gap:8px;min-width:0}
+.field > label, .field .lbl{font-weight:500}
+.field .sub{font-size:.88rem;color:var(--muted)}
+
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);background:var(--surface-2);border-radius:999px;padding:7px 13px;font-size:.93rem;display:inline-flex;gap:7px;align-items:center;color:var(--fg)}
+.chip[aria-pressed="true"]{border-color:var(--gold);background:var(--gold-soft)}
+.chip .tag{font-family:var(--f-mono);font-size:.66rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.chip[disabled]{opacity:.4;cursor:not-allowed}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px}
+.rule{border:1px solid var(--line-soft);background:var(--surface-2);border-radius:8px;padding:12px;display:grid;gap:8px;align-content:start}
+.rule.on{border-color:var(--gold)}
+.rule .top{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.rule .top b{font-family:var(--f-display);font-weight:400;font-size:1.1rem}
+.rule p{font-size:.86rem;color:var(--muted)}
+.rule .row{display:flex;gap:6px}
+.mini{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:5px 10px;font-size:.84rem;color:var(--muted)}
+.mini[aria-pressed="true"]{border-color:var(--gold);color:var(--fg);background:var(--gold-soft)}
+.role-rows{display:grid;gap:10px}
+.role-row{display:grid;grid-template-columns:120px 1fr;gap:12px;align-items:center}
+@media (max-width:520px){.role-row{grid-template-columns:1fr}}
+.race-cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:620px){.race-cols{grid-template-columns:1fr}}
+.race-col h4{margin:0 0 8px;font-family:var(--f-mono);font-weight:500;font-size:.74rem;letter-spacing:.12em;text-transform:uppercase}
+.race-col.H h4{color:var(--horde)} .race-col.A h4{color:var(--alliance)}
+.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.week .chip{justify-content:center;padding:8px 0;border-radius:8px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px}
+
+.savebar{position:fixed;left:0;right:0;bottom:0;z-index:6;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-top:1px solid var(--line);
+  padding:12px max(16px,env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.savebar .in{max-width:1080px;margin:0 auto;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.savebar .st{flex:1 1 220px;font-size:.93rem;color:var(--muted);min-width:0}
+.savebar .st b{color:var(--fg);font-weight:500}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:10px 16px;font-weight:500}
+.btn.primary{background:var(--gold);color:var(--gold-ink);border-color:var(--gold)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.btn.ghost{background:none}
+
+/* Results */
+.locked{border:1px dashed var(--line);border-radius:var(--r);padding:42px 22px;text-align:center;display:grid;gap:12px;justify-items:center}
+.locked .big{font-family:var(--f-display);font-size:3rem;color:var(--gold);line-height:1}
+.verdict{border:1px solid var(--gold);border-radius:var(--r);background:linear-gradient(180deg,var(--gold-soft),transparent 70%),var(--surface);padding:24px;display:grid;gap:18px}
+.vgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:16px}
+.vcell{display:grid;gap:4px;align-content:start}
+.vcell .v{font-family:var(--f-display);font-size:1.45rem;line-height:1.1}
+.vcell .s{font-size:.86rem;color:var(--muted)}
+.board{display:grid;gap:22px;margin-top:22px}
+.panel{background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--r);padding:20px;display:grid;gap:14px;min-width:0;align-content:start}
+.panel-head{display:flex;justify-content:space-between;gap:10px;align-items:baseline;flex-wrap:wrap}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:22px}
+.bars{display:grid;gap:9px}
+.bar{display:grid;grid-template-columns:minmax(80px,130px) minmax(40px,1fr) auto;gap:10px;align-items:center;font-size:.93rem}
+.bar .lab{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar .track{height:12px;background:var(--surface-2);border-radius:3px;overflow:hidden}
+.bar .fill{height:100%;background:var(--bc,var(--gold));border-radius:3px}
+.bar .val{text-align:right;font-family:var(--f-mono);font-size:.82rem;color:var(--muted);white-space:nowrap;min-width:44px}
+.bar.me .lab::after{content:" • you";font-family:var(--f-mono);font-size:.7rem;color:var(--gold)}
+.stack{display:flex;height:30px;border-radius:6px;overflow:hidden;background:var(--surface-2)}
+.stack div{display:grid;place-items:center;font-family:var(--f-mono);font-size:.78rem;color:#fff;min-width:0;overflow:hidden}
+.stack-legend{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);gap:8px}
+.you-mark{font-family:var(--f-mono);font-size:.74rem;color:var(--gold)}
+.callout{display:flex;gap:10px;padding:10px 12px;border-radius:8px;font-size:.92rem;align-items:flex-start}
+.callout.warn{background:color-mix(in srgb,var(--warn) 14%,transparent);border:1px solid color-mix(in srgb,var(--warn) 40%,transparent)}
+.callout.good{background:color-mix(in srgb,var(--good) 12%,transparent);border:1px solid color-mix(in srgb,var(--good) 35%,transparent)}
+.callout.info{background:var(--surface-2);border:1px solid var(--line-soft)}
+.callout b{font-weight:700}
+.party{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.member{border:1px solid var(--line-soft);border-left:3px solid var(--cc);background:var(--surface-2);border-radius:6px;padding:10px 12px;display:grid;gap:2px}
+.member.me{outline:1px solid var(--gold);outline-offset:-1px}
+.member .alias{font-family:var(--f-mono);font-size:.74rem;color:var(--muted)}
+.member .cls{font-family:var(--f-display);font-size:1.12rem;color:var(--cc)}
+.member .why{font-size:.82rem;color:var(--muted)}
+.comp{display:flex;gap:16px;flex-wrap:wrap;font-size:.93rem}
+.comp b{font-family:var(--f-mono);font-weight:500}
+.heat-wrap{overflow-x:auto}
+.heat{display:grid;grid-template-columns:86px repeat(7,minmax(40px,1fr));gap:4px;min-width:420px;font-size:.82rem}
+.heat .h{font-family:var(--f-mono);color:var(--muted);text-align:center;font-size:.74rem}
+.heat .rl{color:var(--muted);align-self:center}
+.heat .cell{height:38px;border-radius:5px;display:grid;place-items:center;font-family:var(--f-mono);font-size:.8rem;background:var(--surface-2);position:relative}
+.heat .cell.best{outline:2px solid var(--gold);outline-offset:-2px}
+.heat .cell.mine::after{content:"";position:absolute;top:4px;right:4px;width:5px;height:5px;border-radius:50%;background:var(--gold)}
+.prof-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.prof{border:1px solid var(--line-soft);border-radius:8px;padding:10px;display:grid;gap:2px;background:var(--surface-2)}
+.prof.gap{border-style:dashed;background:none}
+.prof .pn{font-weight:500}
+.prof .pc{font-family:var(--f-mono);font-size:.8rem;color:var(--muted)}
+.prof.mine .pn::after{content:" •";color:var(--gold)}
+
+.meter{height:10px;border-radius:5px;background:var(--surface-2);overflow:hidden}
+.meter-fill{height:100%;background:var(--good);border-radius:5px}
+.util{display:grid;gap:6px}
+.urow{display:grid;grid-template-columns:150px minmax(0,1fr);gap:10px;align-items:start;padding:8px 0;border-bottom:1px solid var(--line-soft)}
+.urow:last-child{border-bottom:0}
+@media (max-width:520px){.urow{grid-template-columns:1fr;gap:4px}}
+.uname{font-weight:500}
+.urow.miss .uname{color:var(--bad)}
+.uprov{display:flex;flex-wrap:wrap;gap:6px;min-width:0}
+.uchip{font-size:.84rem;padding:3px 8px;border-radius:6px;background:var(--surface-2);border-left:3px solid var(--cc)}
+.uchip b{color:var(--cc);font-weight:500}
+.ugap{font-size:.86rem;color:var(--muted)}
+.stack.tall{height:36px}
+.ovl{display:grid;gap:4px;min-width:360px;font-size:.8rem}
+.ovl .h{font-family:var(--f-mono);color:var(--muted);text-align:center;font-size:.7rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ovl .rl{color:var(--muted);align-self:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ovl .you{color:var(--gold)}
+.ovl .cell{height:34px;border-radius:5px;display:grid;place-items:center;font-family:var(--f-mono);font-size:.8rem}
+.ovl .cell.self{outline:1px dashed var(--line);outline-offset:-1px;color:var(--muted)}
+.ovl .cell.zero{color:var(--bad);font-weight:500}
+.chains{display:grid;gap:8px}
+.chain{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.node{border:1px solid var(--line);background:var(--surface-2);border-radius:6px;padding:4px 9px;font-size:.86rem}
+.node b{color:var(--gold);font-weight:500;margin-left:4px}
+.node.gap{border-style:dashed;background:none;color:var(--muted)}
+.node.gap b{color:var(--bad)}
+.node.src{border-style:dotted;background:none;color:var(--muted)}
+.arrow{color:var(--faint)}
+.targets{display:flex;gap:6px;flex-wrap:wrap}
+.sugg{display:grid;gap:8px}
+.sg{border:1px solid var(--line-soft);border-radius:8px;padding:12px 14px;display:grid;gap:4px;background:var(--surface-2)}
+.sg.sg-you{border-color:var(--gold);background:linear-gradient(90deg,var(--gold-soft),transparent 60%),var(--surface-2)}
+.sg b{font-weight:700}
+.sg p{font-size:.92rem;color:var(--muted)}
+.sg-tag{font-family:var(--f-mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--faint)}
+.sg.sg-you .sg-tag{color:var(--gold)}
+/* Guide */
+.guide{display:grid;gap:26px;grid-template-columns:minmax(0,1fr)}
+.guide > *, .board > *, .ballot > *, .cols > *{min-width:0}
+.timeline{display:grid;gap:0;border-left:2px solid var(--line);margin-left:6px}
+.tl{position:relative;padding:0 0 18px 22px;display:grid;gap:2px}
+.tl::before{content:"";position:absolute;left:-7px;top:6px;width:12px;height:12px;border-radius:50%;background:var(--bg);border:2px solid var(--line)}
+.tl.done::before{background:var(--line)}
+.tl.next::before{border-color:var(--gold);background:var(--gold)}
+.tl .when{font-family:var(--f-mono);font-size:.8rem;color:var(--gold)}
+.class-guide{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.cg{border:1px solid var(--line-soft);border-top:3px solid var(--cc);background:var(--surface);border-radius:8px;padding:16px;display:grid;gap:10px;align-content:start}
+.cg h3{color:var(--cc)}
+.cg ul{margin:0;padding-left:18px;font-size:.92rem;display:grid;gap:3px}
+.cg .rr{font-size:.86rem;color:var(--muted)}
+.cg .rr b{font-weight:500}
+.cg .rr .H{color:var(--horde)} .cg .rr .A{color:var(--alliance)}
+.matrix-wrap{overflow-x:auto;border:1px solid var(--line-soft);border-radius:var(--r);background:var(--surface)}
+table.matrix{border-collapse:collapse;width:100%;min-width:720px;font-size:.9rem}
+.matrix th,.matrix td{padding:9px 8px;border-bottom:1px solid var(--line-soft);text-align:center}
+.matrix th:first-child,.matrix td:first-child{text-align:left;white-space:nowrap;padding-left:14px}
+.matrix thead th{font-family:var(--f-display);font-weight:400;color:var(--cc,var(--fg))}
+.matrix .fac{font-family:var(--f-mono);font-size:.7rem;margin-left:6px}
+.matrix .fac.H{color:var(--horde)} .matrix .fac.A{color:var(--alliance)}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--muted)}
+.dot.new{background:var(--gold);box-shadow:0 0 0 3px var(--gold-soft)}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.86rem;color:var(--muted);align-items:center}
+.sources{font-size:.88rem;color:var(--muted);display:grid;gap:4px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(86px + env(safe-area-inset-bottom,0px));z-index:9;background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:8px;font-size:.93rem;display:flex;gap:12px;align-items:center;max-width:calc(100vw - 32px)}
+.toast button{background:none;border:0;color:var(--gold);font-weight:700;padding:0;text-decoration:underline}
+:root:not([data-theme="dark"]) .toast button{color:var(--gold)}
+.example-note{font-family:var(--f-mono);font-size:.74rem;color:var(--warn);letter-spacing:.06em;text-transform:uppercase}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header class="hero">
+    <div class="eyebrow">World of Warcraft: Forever · Level 60 · 9 classes</div>
+    <h1>Forever Party Draft</h1>
+    <p class="lede">Rank the classes you'd play and say how you like to play. Once you've voted, you'll see where the whole party lands. Your ballot stays private, and the board only shows group totals under anonymous names.</p>
+    <div class="dates" id="dates"></div>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Sections">
+    <button class="tab" role="tab" id="tab-ballot" data-tab="ballot" aria-selected="true">My ballot</button>
+    <button class="tab" role="tab" id="tab-results" data-tab="results" aria-selected="false">Party board <span class="count" id="vote-count">0</span></button>
+    <button class="tab" role="tab" id="tab-guide" data-tab="guide" aria-selected="false">Field guide</button>
+    <span class="conn" id="conn"><i></i><span>Connecting…</span></span>
+  </nav>
+
+  <main>
+    <section id="view-ballot" class="ballot" aria-labelledby="tab-ballot"></section>
+    <section id="view-results" aria-labelledby="tab-results" hidden></section>
+    <section id="view-guide" class="guide" aria-labelledby="tab-guide" hidden></section>
+  </main>
+</div>
+
+<div class="savebar" id="savebar">
+  <div class="in">
+    <div class="st" id="save-status">Pick at least one class to save your ballot.</div>
+    <button class="btn ghost" id="btn-clear" type="button" hidden>Withdraw ballot</button>
+    <button class="btn primary" id="btn-save" type="button" disabled>Save my ballot</button>
+  </div>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+/* ---------- Config for hosting outside Claude (GitHub Pages) ----------
+   Leave blank inside Claude. For GitHub Pages, paste your Supabase project URL
+   and anon public key, after running supabase-setup.sql. */
+const SUPABASE = { url: "https://bqplgeyjzxgfvlwsazqx.supabase.co", anonKey: "sb_publishable_o6FNGR5AVRXm9fJE_uq6VQ_F0nu5nFH" };
+
+/* ---------- Game data (WoW Forever, launch build; sources in the Field guide) ---------- */
+const CLASSES = [
+  {id:"warrior", name:"Warrior", armor:"Plate", roles:["tank","melee"], specs:["Arms","Fury","Protection"],
+   blurb:"Stances, shouts and Rage. Tanks or hits hard up close.",
+   news:["Victory Rush and Tactical Mastery are baseline; stance swaps keep Rage","Fury's Boundless Rage adds 30 max Rage","Protection gains Rage when blocking (Shield Specialization)","Arms: Weaponmaster merges the weapon talents; Spearing Strike hits Giants, Dragonkin and mounted foes"]},
+  {id:"paladin", name:"Paladin", armor:"Plate", roles:["tank","healer","melee"], specs:["Holy","Protection","Retribution"],
+   blurb:"Plate-wearing holy warrior. Tanks, heals or smites.",
+   news:["Now on Horde too, as Undead Paladin","Blessing of Kings and Consecration are baseline; blessings last an hour","New Holy Strike and Seal of Fury; Seals stay up after Judgement","Protection's Templar's Bulwark absorbs 100% of max health for 8 sec"]},
+  {id:"hunter", name:"Hunter", armor:"Mail", roles:["ranged","melee"], specs:["Beast Mastery","Marksmanship","Survival"],
+   blurb:"Pets, traps and ranged shots. Survival now fights in melee.",
+   news:["Aimed Shot is baseline for every spec","Marksmanship's Lone Wolf: +20% damage with no pet, plus Sniper Shot","Survival reworked for melee: Strider Kick, Lacerating Strikes, Entrapment","Human Hunter is a new combo"]},
+  {id:"rogue", name:"Rogue", armor:"Leather", roles:["melee"], specs:["Assassination","Combat","Subtlety"],
+   blurb:"Stealth, poisons and burst. The opener decides the fight.",
+   news:["Energy regenerates smoothly instead of in ticks","Combo points stay on the target when you switch","Can use one-handed axes","Mutilate is a core Assassination attack; Combat's Restless Blades cuts cooldowns"]},
+  {id:"priest", name:"Priest", armor:"Cloth", roles:["healer","ranged"], specs:["Discipline","Holy","Shadow"],
+   blurb:"Shields, heals and shadow magic.",
+   news:["Discipline gets Penance and Renewed Hope","Holy adds Prayer of Mending, Binding Heal and Litany of Light","Fear Ward and Devouring Plague available to every race","Gnome Priest is a new combo"]},
+  {id:"shaman", name:"Shaman", armor:"Mail", roles:["healer","melee","ranged"], specs:["Elemental","Enhancement","Restoration"],
+   blurb:"Totems, lightning and big group buffs.",
+   tankNote:"Rockbiter Weapon may let Enhancement tank. Not confirmed, so the party planner doesn't count Shaman as a tank.",
+   news:["Now on Alliance too, as Dwarf Shaman","Totem overhaul: drop several at once, Totemic Projection and Recall","Elemental adds Lava Burst; Restoration adds Riptide","Enhancement uses two-handers with no talent; Maelstrom Weapon speeds Lightning Bolt"]},
+  {id:"mage", name:"Mage", armor:"Cloth", roles:["ranged"], specs:["Arcane","Fire","Frost"],
+   blurb:"Crowd control, AoE, portals and food for the group.",
+   news:["Frostfire Bolt is baseline","Arcane Blast stacks damage and mana cost","Fire's Hot Streak speeds Pyroblast; Frost gets Ice Lance and Fingers of Frost","Orc Mage and Alliance Skyborne Mage are new"]},
+  {id:"warlock", name:"Warlock", armor:"Cloth", roles:["ranged"], specs:["Affliction","Demonology","Destruction"],
+   blurb:"Demons, curses and damage over time.",
+   news:["Curses of Agony and Doom become Banes; DoTs can crit","Affliction capstone: Drain Hope","Demonology's Demonic Pact keeps the Sacrifice bonus with a demon out","Destruction adds Incinerate and Bane of Havoc. Troll Warlock is new"]},
+  {id:"druid", name:"Druid", armor:"Leather", roles:["tank","healer","melee","ranged"], specs:["Balance","Feral","Restoration"],
+   blurb:"Shapeshifter that can fill every role.",
+   news:["Omen of Clarity is baseline; Revive brings allies back out of combat","Balance gets Eclipse and Insect Swarm","Feral: Mangle works in Bear Form; Berserk capstone","Restoration adds Wild Growth"]},
+];
+const CLS = Object.fromEntries(CLASSES.map(c=>[c.id,c]));
+const ROLE_LABEL = {tank:"Tank",healer:"Healer",melee:"Melee",ranged:"Ranged"};
+
+const RACES = [
+  {id:"orc", name:"Orc", f:"H", classes:["hunter","mage","rogue","shaman","warlock","warrior"], newc:["mage"], racials:"Blood Fury, Shatter Curse · Axe Specialization, Hardiness"},
+  {id:"tauren", name:"Tauren", f:"H", classes:["druid","hunter","shaman","warrior"], newc:[], racials:"War Stomp, Cultivation · Plainsrunning, Endurance"},
+  {id:"troll", name:"Troll", f:"H", classes:["hunter","mage","priest","rogue","shaman","warlock","warrior"], newc:["warlock"], racials:"Berserking, Rapid Regeneration · Beast Slaying, Regeneration"},
+  {id:"undead", name:"Undead", f:"H", classes:["mage","paladin","priest","rogue","warlock","warrior"], newc:["paladin"], racials:"Will of the Forsaken, Cannibalize · Underwater Breathing, Touch of the Grave"},
+  {id:"sky-h", name:"Skyborne (Windshaper)", short:"Skyborne", f:"H", pack:true, classes:["druid","hunter","rogue","shaman","warrior"], newc:["druid","hunter","rogue","shaman","warrior"], racials:"Walk on Air, Skysight · Wind Blessed, Elemental Insight"},
+  {id:"dwarf", name:"Dwarf", f:"A", classes:["hunter","paladin","priest","rogue","shaman","warrior"], newc:["shaman"], racials:"Stoneform, Find Treasure · Mace Specialization, Big Game Hunter"},
+  {id:"gnome", name:"Gnome", f:"A", classes:["mage","priest","rogue","warlock","warrior"], newc:["priest"], racials:"Escape Artist, Eureka! · Expansive Mind, Engineering Specialization"},
+  {id:"human", name:"Human", f:"A", classes:["hunter","mage","paladin","priest","rogue","warlock","warrior"], newc:["hunter"], racials:"Will to Survive, Perception · Sword Specialization, The Human Spirit"},
+  {id:"nelf", name:"Night Elf", f:"A", classes:["druid","hunter","priest","rogue","warrior"], newc:[], racials:"Elune's Light, Shadowmeld · Quickness, Wisp Spirit"},
+  {id:"sky-a", name:"Skyborne (High Order)", short:"Skyborne", f:"A", pack:true, classes:["druid","hunter","mage","rogue","warrior"], newc:["druid","hunter","mage","rogue","warrior"], racials:"Walk on Air, Read Ley Line · Wind Blessed, Elemental Insight"},
+];
+const RACE = Object.fromEntries(RACES.map(r=>[r.id,r]));
+
+const RULESETS = [
+  {id:"normal", name:"Normal", desc:"Questing and exploring. PvP is opt-in. Both factions allowed on one account."},
+  {id:"pvp", name:"PvP", desc:"Open-world PvP in contested zones. Only one faction per account."},
+  {id:"rp", name:"Roleplay", desc:"For people who want to play in character. Both factions allowed."},
+  {id:"hardcore", name:"Hardcore", desc:"Death is permanent. Opens some time after launch.", later:true},
+];
+const PROFS = [
+  {id:"herbalism", name:"Herbalism", kind:"gather", pairs:"alchemy"},
+  {id:"mining", name:"Mining", kind:"gather", pairs:"blacksmithing, engineering"},
+  {id:"skinning", name:"Skinning", kind:"gather", pairs:"leatherworking"},
+  {id:"alchemy", name:"Alchemy", kind:"craft"},
+  {id:"blacksmithing", name:"Blacksmithing", kind:"craft"},
+  {id:"enchanting", name:"Enchanting", kind:"craft"},
+  {id:"engineering", name:"Engineering", kind:"craft"},
+  {id:"leatherworking", name:"Leatherworking", kind:"craft"},
+  {id:"tailoring", name:"Tailoring", kind:"craft"},
+];
+const PROF = Object.fromEntries(PROFS.map(p=>[p.id,p]));
+const FACTION_OPTS = [[-2,"Horde, for sure"],[-1,"Lean Horde"],[0,"Either"],[1,"Lean Alliance"],[2,"Alliance, for sure"]];
+const STYLE_OPTS = [[-2,"All PvE"],[-1,"Mostly PvE"],[0,"Both"],[1,"Mostly PvP"],[2,"All PvP"]];
+const ROLE_PREF = [[0,"No"],[1,"Can flex"],[2,"Main"]];
+const DAYS = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+const TIMES = [["morning","Mornings"],["afternoon","Afternoons"],["evening","Evenings"],["late","Late night"]];
+const HOURS = [["lt5","Under 5"],["5-10","5–10"],["10-20","10–20"],["20+","20+"]];
+const PACE = [["chill","Chill, smell the roses"],["steady","Steady"],["race","Race to 60"]];
+const HC = [["no","No thanks"],["curious","Curious"],["yes","Yes, a run"]];
+const LAUNCH = [["yes","Yes"],["maybe","Maybe"],["no","No"]];
+const SKY = [["yes","Buying it"],["maybe","Maybe"],["no","No"]];
+
+const DATES = [
+  {d:"2026-10-21T21:00:00Z", label:"Stress test", sub:"Oct 21, 2 PM PDT. Open to any account, wiped afterward."},
+  {d:"2026-10-27T17:00:00Z", label:"Name reservation", sub:"Oct 27 – Nov 3. Pick your ruleset first, then claim names."},
+  {d:"2026-11-04T23:00:00Z", label:"Launch", sub:"Nov 4, 3 PM PST. No early access."},
+  {d:"2026-12-09T16:00:00Z", label:"Raids unlock", sub:"Dec 9. Barrow Deeps (10) and Hyjal Summit (20)."},
+];
+
+/* ---------- Helpers ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const lsGet = k => { try { return localStorage.getItem(k); } catch(e) { return null; } };
+const lsSet = (k,v) => { try { localStorage.setItem(k,v); } catch(e) {} };
+const lsDel = k => { try { localStorage.removeItem(k); } catch(e) {} };
+const pct = (a,b) => b ? Math.round(100*a/b) : 0;
+const plural = (n,w,ws) => n + " " + (n===1 ? w : (ws||w+"s"));
+function hash(str){ let h=2166136261; for (let i=0;i<str.length;i++){ h^=str.charCodeAt(i); h=Math.imul(h,16777619); } return h>>>0; }
+async function sha256hex(s){ const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)); return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join(""); }
+const ICON = {
+  up:'<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M7 3 L12 9 H2 Z" fill="currentColor"/></svg>',
+  down:'<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M7 11 L12 5 H2 Z" fill="currentColor"/></svg>',
+  x:'<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 3 L11 11 M11 3 L3 11" stroke="currentColor" stroke-width="1.8" fill="none"/></svg>',
+  lock:'<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>',
+  star:'<svg width="13" height="13" viewBox="0 0 14 14" aria-hidden="true"><path d="M7 1.2l1.7 3.6 3.9.5-2.9 2.7.8 3.9L7 10l-3.5 1.9.8-3.9L1.4 5.3l3.9-.5z" fill="currentColor"/></svg>',
+};
+
+/* ---------- Ballot state ---------- */
+function blankBallot(){
+  return {v:1, classes:[], faction:null, style:null, rulesets:{}, favRuleset:null,
+    roles:{tank:null,healer:null,dps:null}, race:null, skyborne:null, profs:[],
+    days:[], times:[], hours:null, pace:null, hardcore:null, launch:null};
+}
+function normBallot(b){
+  const n = blankBallot();
+  if (!b || typeof b!=="object") return n;
+  n.classes = Array.isArray(b.classes) ? b.classes.filter(c=>CLS[c]).slice(0,5) : [];
+  const num = (x,lo,hi) => (typeof x==="number" && x>=lo && x<=hi) ? x : null;
+  n.faction = num(b.faction,-2,2); n.style = num(b.style,-2,2);
+  if (b.rulesets && typeof b.rulesets==="object") RULESETS.forEach(r=>{ if (b.rulesets[r.id]) n.rulesets[r.id]=true; });
+  n.favRuleset = RULESETS.some(r=>r.id===b.favRuleset) ? b.favRuleset : null;
+  if (b.roles) ["tank","healer","dps"].forEach(k=>{ n.roles[k] = num(b.roles[k],0,2); });
+  n.race = RACE[b.race] ? b.race : null;
+  const pick = (x,opts) => opts.some(o=>o[0]===x) ? x : null;
+  n.skyborne = pick(b.skyborne,SKY); n.hours = pick(b.hours,HOURS); n.pace = pick(b.pace,PACE);
+  n.hardcore = pick(b.hardcore,HC); n.launch = pick(b.launch,LAUNCH);
+  n.profs = Array.isArray(b.profs) ? b.profs.filter(p=>PROF[p]).slice(0,2) : [];
+  n.days = Array.isArray(b.days) ? b.days.filter(d=>Number.isInteger(d)&&d>=0&&d<7) : [];
+  n.times = Array.isArray(b.times) ? b.times.filter(t=>TIMES.some(o=>o[0]===t)) : [];
+  return n;
+}
+let draft = blankBallot();
+let dirty = false;
+let saving = false;
+let currentTab = "ballot";
+
+function loadDraft(){
+  const raw = lsGet("fpd-draft");
+  if (raw){ try { draft = normBallot(JSON.parse(raw)); dirty = true; } catch(e){} }
+}
+function persistDraft(){ lsSet("fpd-draft", JSON.stringify(draft)); }
+function change(fn){ fn(draft); dirty = true; persistDraft(); renderBallot(); updateSaveBar(); }
+
+/* ---------- Store: Claude db, Supabase, or a local preview ---------- */
+const Store = {
+  mode:"connecting", myKey:null, ballots:new Map(), ready:false, canWrite:true, error:null, listeners:[],
+  on(fn){ this.listeners.push(fn); },
+  emit(){ this.listeners.forEach(f=>{ try{ f(); }catch(e){ console.error(e); } }); },
+  mine(){ return this.myKey ? this.ballots.get(this.myKey) || null : null; },
+  async init(){
+    if (SUPABASE.url && SUPABASE.anonKey) return this.initSupabase();
+    if (window.claude && typeof window.claude.use === "function"){
+      try {
+        const [db, user] = await Promise.all([window.claude.use("db"), window.claude.use("user")]);
+        const id = user ? await user.id() : null;
+        if (db){
+          this.db = db;
+          if (id){ this.mode = "claude"; this.myKey = id; }
+          else { this.mode = "readonly"; this.canWrite = false; }
+          if (user && id){
+            try { const w = await user.can("data.write"); if (w === false){ this.canWrite = false; } } catch(e){}
+          }
+          this.unsub = db.collection("ballots").onSnapshot(snap => {
+            const m = new Map();
+            snap.docs.forEach(d => { if (d.exists) m.set(d.id, normBallot(d.data())); });
+            this.ballots = m; this.ready = true; this.emit();
+          }, err => { this.error = err && err.code; this.emit(); });
+          this.emit();
+          return;
+        }
+      } catch(e){ console.warn(e); }
+    }
+    this.initLocal();
+  },
+  initLocal(){
+    this.mode = "local"; this.myKey = "you-local"; this.ready = true;
+    EXAMPLES.forEach((b,i)=>this.ballots.set("example-"+i, normBallot(b)));
+    const mine = lsGet("fpd-local-ballot");
+    if (mine){ try { this.ballots.set(this.myKey, normBallot(JSON.parse(mine))); } catch(e){} }
+    this.emit();
+  },
+  async initSupabase(){
+    this.mode = "supabase";
+    let t = lsGet("fpd-voter-token");
+    if (!t){ t = (crypto.randomUUID ? crypto.randomUUID()+crypto.randomUUID() : String(Math.random()).slice(2)+Date.now()+String(Math.random()).slice(2)); lsSet("fpd-voter-token", t); }
+    this.token = t; this.myKey = await sha256hex(t);
+    await this.refresh();
+    setInterval(()=>{ if (!document.hidden) this.refresh(); }, 15000);
+    document.addEventListener("visibilitychange", ()=>{ if (!document.hidden) this.refresh(); });
+  },
+  supaHeaders(){ return {apikey:SUPABASE.anonKey, Authorization:"Bearer "+SUPABASE.anonKey, "Content-Type":"application/json"}; },
+  async refresh(){
+    try {
+      const r = await fetch(SUPABASE.url.replace(/\/$/,"") + "/rest/v1/ballots_public?select=voter,ballot", {headers:this.supaHeaders()});
+      if (!r.ok) throw new Error("HTTP "+r.status);
+      const rows = await r.json(); const m = new Map();
+      rows.forEach(row => m.set(row.voter, normBallot(row.ballot)));
+      this.ballots = m; this.ready = true; this.error = null;
+    } catch(e){ this.error = "unavailable"; }
+    this.emit();
+  },
+  async rpc(name, body){
+    const r = await fetch(SUPABASE.url.replace(/\/$/,"") + "/rest/v1/rpc/" + name, {method:"POST", headers:this.supaHeaders(), body:JSON.stringify(body)});
+    if (!r.ok) throw {code:"unavailable", message:"HTTP "+r.status};
+  },
+  async save(b){
+    const clean = normBallot(b);
+    if (this.mode === "claude"){ await this.db.doc("ballots/"+this.myKey).set(clean); }
+    else if (this.mode === "supabase"){ await this.rpc("submit_ballot", {p_token:this.token, p_ballot:clean}); await this.refresh(); }
+    else if (this.mode === "local"){ this.ballots.set(this.myKey, clean); lsSet("fpd-local-ballot", JSON.stringify(clean)); this.emit(); }
+    else throw {code:"invalid_argument"};
+  },
+  async remove(){
+    if (this.mode === "claude"){ await this.db.doc("ballots/"+this.myKey).delete(); }
+    else if (this.mode === "supabase"){ await this.rpc("delete_ballot", {p_token:this.token}); await this.refresh(); }
+    else if (this.mode === "local"){ this.ballots.delete(this.myKey); lsDel("fpd-local-ballot"); this.emit(); }
+  }
+};
+
+/* Example ballots shown only in preview mode, when no shared store is connected. */
+const EXAMPLES = [
+  {classes:["priest","mage","warlock"], faction:-1, style:-1, rulesets:{normal:true,pvp:true}, favRuleset:"normal", roles:{tank:0,healer:2,dps:1}, race:"undead", skyborne:"no", profs:["tailoring","enchanting"], days:[1,3,5], times:["evening"], hours:"10-20", pace:"steady", hardcore:"curious", launch:"yes"},
+  {classes:["warrior","paladin","rogue","hunter"], faction:-2, style:1, rulesets:{pvp:true,normal:true}, favRuleset:"pvp", roles:{tank:2,healer:0,dps:1}, race:"orc", skyborne:"maybe", profs:["mining","blacksmithing"], days:[1,3,4,5], times:["evening","late"], hours:"20+", pace:"race", hardcore:"yes", launch:"yes"},
+  {classes:["druid","shaman"], faction:0, style:-2, rulesets:{normal:true,rp:true}, favRuleset:"normal", roles:{tank:1,healer:1,dps:2}, race:"sky-h", skyborne:"yes", profs:["herbalism","alchemy"], days:[2,3,5,6], times:["afternoon","evening"], hours:"5-10", pace:"chill", hardcore:"no", launch:"maybe"},
+  {classes:["hunter","rogue","mage","warlock","druid"], faction:-1, style:0, rulesets:{normal:true,pvp:true,hardcore:true}, favRuleset:"normal", roles:{tank:0,healer:0,dps:2}, race:"troll", skyborne:"no", profs:["skinning","leatherworking"], days:[3,5,6], times:["evening"], hours:"10-20", pace:"steady", hardcore:"curious", launch:"yes"},
+];
+
+/* ---------- Anonymous names ---------- */
+const CREATURES = ["Murloc","Kobold","Gnoll","Wisp","Raptor","Furbolg","Harpy","Owlbeast","Kodo","Gryphon","Strider","Quilboar","Treant","Imp","Naga","Basilisk","Wyvern","Satyr","Centaur","Moonkin"];
+function aliasMap(keys){
+  const sorted = [...keys].sort((a,b)=>hash(a)-hash(b) || (a<b?-1:1));
+  const used = new Set(); const out = {};
+  sorted.forEach(k=>{
+    let i = hash(k) % CREATURES.length, tries=0, name;
+    while (used.has(CREATURES[i]) && tries < CREATURES.length){ i=(i+1)%CREATURES.length; tries++; }
+    name = used.has(CREATURES[i]) ? CREATURES[i]+" "+(used.size+1) : CREATURES[i];
+    used.add(CREATURES[i]); out[k] = "Anonymous " + name;
+  });
+  return out;
+}
+
+/* ---------- Consensus math ---------- */
+function partyRoles(c){ const r = new Set(); CLS[c].roles.forEach(x => r.add(x==="melee"||x==="ranged" ? "dps" : x)); return [...r]; }
+function tally(entries){
+  const n = entries.length;
+  const classPts = {}, firsts = {}, mentions = {};
+  CLASSES.forEach(c=>{ classPts[c.id]=0; firsts[c.id]=0; mentions[c.id]=0; });
+  entries.forEach(([,b]) => b.classes.forEach((c,i)=>{ classPts[c] += 5-i; mentions[c]++; if (i===0) firsts[c]++; }));
+  const classRank = CLASSES.map(c=>c.id).sort((a,b)=>classPts[b]-classPts[a] || firsts[b]-firsts[a] || mentions[b]-mentions[a]);
+
+  const dist = (field) => { const d={"-2":0,"-1":0,"0":0,"1":0,"2":0}; let sum=0, cnt=0;
+    entries.forEach(([,b])=>{ if (b[field]!==null){ d[b[field]]++; sum+=b[field]; cnt++; } });
+    return {d, mean: cnt? sum/cnt : 0, cnt}; };
+  const faction = dist("faction"), style = dist("style");
+
+  const rs = {}; RULESETS.forEach(r=>rs[r.id]={ok:0,fav:0});
+  let rsVoters = 0;
+  entries.forEach(([,b])=>{ let any=false; RULESETS.forEach(r=>{ if (b.rulesets[r.id]){ rs[r.id].ok++; any=true; } }); if (b.favRuleset){ rs[b.favRuleset].fav++; any=true; } if (any) rsVoters++; });
+  const rsRank = RULESETS.map(r=>r.id).sort((a,b)=>rs[b].ok-rs[a].ok || rs[b].fav-rs[a].fav);
+
+  const roles = {tank:{main:0,flex:0},healer:{main:0,flex:0},dps:{main:0,flex:0}};
+  entries.forEach(([,b])=>["tank","healer","dps"].forEach(k=>{ if (b.roles[k]===2) roles[k].main++; else if (b.roles[k]===1) roles[k].flex++; }));
+
+  const race = {}; entries.forEach(([,b])=>{ if (b.race) race[b.race]=(race[b.race]||0)+1; });
+  const sky = {yes:0,maybe:0,no:0}; entries.forEach(([,b])=>{ if (b.skyborne) sky[b.skyborne]++; });
+  const prof = {}; PROFS.forEach(p=>prof[p.id]=0); entries.forEach(([,b])=>b.profs.forEach(p=>prof[p]++));
+
+  const heat = TIMES.map(()=>DAYS.map(()=>0));
+  entries.forEach(([,b])=>b.times.forEach(t=>{ const ti = TIMES.findIndex(o=>o[0]===t); b.days.forEach(d=>heat[ti][d]++); }));
+  let best = null; heat.forEach((row,ti)=>row.forEach((v,di)=>{ if (v>0 && (!best || v>best.v)) best={ti,di,v}; }));
+  const schedVoters = entries.filter(([,b])=>b.days.length && b.times.length).length;
+
+  const count = (field, opts) => { const o={}; opts.forEach(x=>o[x[0]]=0); entries.forEach(([,b])=>{ if (b[field]) o[b[field]]++; }); return o; };
+  return {n, classPts, firsts, mentions, classRank, faction, style, rs, rsRank, rsVoters, roles, race, sky, prof, heat, best, schedVoters,
+    hours:count("hours",HOURS), pace:count("pace",PACE), hardcore:count("hardcore",HC), launch:count("launch",LAUNCH)};
+}
+
+/* Party planner: give each voter one of their ranked classes in a role they'll play,
+   covering tanks and healers first, then rank, with a small penalty for duplicate classes. */
+function planParty(entries){
+  const n = entries.length; if (!n) return null;
+  const opts = entries.map(([k,b])=>{
+    const anyRole = ["tank","healer","dps"].some(r=>b.roles[r]!==null);
+    const list = [];
+    b.classes.forEach((c,i)=>partyRoles(c).forEach(role=>{
+      const pref = anyRole ? (b.roles[role] ?? 0) : 1;
+      if (pref>0) list.push({c, role, rank:i, score:(5-i)*2 + pref*3});
+    }));
+    if (!list.length) b.classes.forEach((c,i)=>partyRoles(c).forEach(role=>list.push({c, role, rank:i, score:(5-i)*2 - 2})));
+    return list.sort((a,b)=>b.score-a.score);
+  });
+  const groups = Math.max(1, Math.ceil(n/5));
+  const needT = n>=3 ? groups : 0, needH = n>=2 ? groups : 0;
+  const objective = pick => {
+    let s=0, t=0, h=0; const seen={};
+    pick.forEach((o,i)=>{ if (!o) return; s+=o.score; if (o.role==="tank") t++; if (o.role==="healer") h++; seen[o.c]=(seen[o.c]||0)+1; });
+    Object.values(seen).forEach(v=>{ if (v>1) s -= 4*(v-1); });
+    s += 14*Math.min(t,needT) + 14*Math.min(h,needH);
+    s -= 6*Math.max(0,t-needT) + 3*Math.max(0,h-needH);
+    return s;
+  };
+  let pick = opts.map(l=>l[0]||null), cur = objective(pick);
+  for (let loop=0; loop<60; loop++){
+    let improved=false;
+    for (let i=0;i<n;i++){
+      for (const o of opts[i]){ const trial = pick.slice(); trial[i]=o; const v=objective(trial); if (v>cur+1e-9){ pick=trial; cur=v; improved=true; } }
+    }
+    if (!improved) break;
+  }
+  const t = pick.filter(o=>o&&o.role==="tank").length, h = pick.filter(o=>o&&o.role==="healer").length;
+  return {pick, tanks:t, healers:h, dps:pick.filter(o=>o&&o.role==="dps").length, needT, needH, groups};
+}
+
+/* ---------- Render: dates ---------- */
+function renderDates(){
+  const now = Date.now(); let nextSet=false;
+  $("#dates").innerHTML = DATES.map(x=>{
+    const t = new Date(x.d).getTime(); const days = Math.ceil((t-now)/86400000);
+    let cls = "date", when;
+    if (t < now) { cls += " past"; when = "done"; }
+    else { if (!nextSet){ cls += " next"; nextSet = true; } when = days<=1 ? (t-now<86400000 ? "today" : "1 day") : days+" days"; }
+    return `<div class="${cls}" title="${esc(x.sub)}"><b>${esc(when)}</b><span>${esc(x.label)}</span></div>`;
+  }).join("");
+}
+
+/* ---------- Render: ballot ---------- */
+function rolePills(c){ return CLS[c].roles.map(r=>`<span class="rp ${r}">${ROLE_LABEL[r]}</span>`).join(""); }
+function segHTML(id, opts, val, cls){
+  return `<div class="seg ${cls||""}" role="group" id="${id}">` + opts.map(([v,l])=>`<button type="button" data-v="${v}" aria-pressed="${val===v}">${esc(l)}</button>`).join("") + `</div>`;
+}
+function renderBallot(){
+  const b = draft, top = b.classes[0];
+  const isNew = c => RACES.some(r=>r.newc.includes(c) && !r.pack);
+  const mineSaved = Store.mine();
+  const el = $("#view-ballot");
+  el.innerHTML = `
+  <div class="privacy">${ICON.lock}<div>${privacyText()}</div></div>
+
+  <div class="step" id="step-classes">
+    <div class="step-head"><span class="n">Step 1</span><h2>Rank the classes you'd play</h2>
+      <p class="hint">Tap up to five, in order. Your 1st pick gets 5 points, your 5th gets 1. One pick is enough if you already know.</p></div>
+    <div class="two">
+      <div class="class-grid">
+        ${CLASSES.map(c=>{ const rk = b.classes.indexOf(c.id); const full = b.classes.length>=5 && rk<0;
+          return `<button type="button" class="ccard ${rk>=0?"on":""}" style="--cc:var(--c-${c.id})" data-class="${c.id}" ${full?"disabled":""} aria-pressed="${rk>=0}">
+            ${rk>=0?`<span class="rk">${rk+1}</span>`:""}
+            <span class="nm">${c.name}</span>
+            <span class="roles">${rolePills(c.id)}</span>
+            <span class="meta">${c.armor}${c.id==="paladin"?" · now Horde too":c.id==="shaman"?" · now Alliance too":""}</span>
+          </button>`; }).join("")}
+      </div>
+      <div class="ranking" aria-label="Your ranking">
+        ${[0,1,2,3,4].map(i=>{ const c=b.classes[i];
+          if (!c) return `<div class="slot empty"><span class="pos">#${i+1}</span><span>${i===0?"Your first pick":"Optional"}</span><span></span></div>`;
+          return `<div class="slot" style="--cc:var(--c-${c})"><span class="pos">#${i+1}</span>
+            <span class="who">${CLS[c].name}<small>${5-i} pts</small></span>
+            <span class="acts">
+              <button type="button" class="ib" data-move="${i}" data-dir="-1" aria-label="Move ${CLS[c].name} up" ${i===0?"disabled":""}>${ICON.up}</button>
+              <button type="button" class="ib" data-move="${i}" data-dir="1" aria-label="Move ${CLS[c].name} down" ${i===b.classes.length-1?"disabled":""}>${ICON.down}</button>
+              <button type="button" class="ib" data-remove="${i}" aria-label="Remove ${CLS[c].name}">${ICON.x}</button>
+            </span></div>`; }).join("")}
+        <p class="small muted">Dual spec unlocks at level 40, so a hybrid can cover two roles.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-head"><span class="n">Step 2</span><h2>Faction and playstyle</h2></div>
+    <div class="field"><span class="lbl">Horde or Alliance?</span>
+      ${segHTML("seg-faction", FACTION_OPTS, b.faction, "faction")}
+      <span class="sub">Horde and Alliance can't group together on any ruleset, so the party has to pick one side.</span></div>
+    <div class="field"><span class="lbl">PvE or PvP?</span>
+      ${segHTML("seg-style", STYLE_OPTS, b.style)}
+      <span class="sub">PvE means questing, dungeons and raids. PvP means battlegrounds, including the new 15v15 Darkspear Islands, and world PvP.</span></div>
+  </div>
+
+  <div class="step">
+    <div class="step-head"><span class="n">Step 3</span><h2>Ruleset</h2>
+      <p class="hint">Forever has no realms. You pick a ruleset, and you can only group with people on the same one. Mark every ruleset you'd play on, then star your favorite.</p></div>
+    <div class="rules">
+      ${RULESETS.map(r=>`<div class="rule ${b.rulesets[r.id]?"on":""}">
+        <div class="top"><b>${r.name}</b>${r.later?'<span class="rp">After launch</span>':""}</div>
+        <p>${esc(r.desc)}</p>
+        <div class="row">
+          <button type="button" class="mini" data-rs="${r.id}" aria-pressed="${!!b.rulesets[r.id]}">${b.rulesets[r.id]?"I'd play":"I'd play?"}</button>
+          <button type="button" class="mini" data-fav="${r.id}" aria-pressed="${b.favRuleset===r.id}" aria-label="Favorite ruleset: ${r.name}">${ICON.star} Favorite</button>
+        </div></div>`).join("")}
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-head"><span class="n">Step 4</span><h2>Roles you'd fill</h2>
+      <p class="hint">The party planner uses this to cover tanks and healers. "Main" is what you want to play. "Can flex" means you'd do it if the group needs it.</p></div>
+    <div class="role-rows">
+      ${[["tank","Tank"],["healer","Healer"],["dps","Damage"]].map(([k,l])=>`<div class="role-row"><span class="lbl">${l}</span>${segHTML("seg-role-"+k, ROLE_PREF, b.roles[k])}</div>`).join("")}
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-head"><span class="n">Step 5</span><h2>Race</h2>
+      <p class="hint">${top ? `The list shows races that can play your #1 pick, <b style="color:var(--c-${top})">${CLS[top].name}</b>.` : "Rank a class first. The list then shows the races that can play it."}</p></div>
+    <div class="race-cols">
+      ${["H","A"].map(f=>`<div class="race-col ${f}"><h4>${f==="H"?"Horde":"Alliance"}</h4><div class="chips">
+        ${RACES.filter(r=>r.f===f).map(r=>{ const ok = top && r.classes.includes(top); const isNewCombo = top && r.newc.includes(top);
+          return `<button type="button" class="chip" data-race="${r.id}" aria-pressed="${b.race===r.id}" ${ok?"":"disabled"} title="${esc(r.racials)}">${esc(r.name)}${r.pack?'<span class="tag">pack</span>':isNewCombo?'<span class="tag">new</span>':""}</button>`; }).join("")}
+      </div></div>`).join("")}
+    </div>
+    <div class="field"><span class="lbl">Skyborne pack</span>
+      ${segHTML("seg-sky", SKY, b.skyborne)}
+      <span class="sub">The new Skyborne race needs the Skyborne Heroic Pack or higher. The Epic Pack also includes 30 days of game time.</span></div>
+  </div>
+
+  <div class="step">
+    <div class="step-head"><span class="n">Step 6</span><h2>Professions</h2>
+      <p class="hint">Pick up to two primary professions. Cooking, First Aid and Fishing are open to everyone.</p></div>
+    <div class="chips">
+      ${PROFS.map(p=>{ const on=b.profs.includes(p.id); const full=b.profs.length>=2&&!on;
+        return `<button type="button" class="chip" data-prof="${p.id}" aria-pressed="${on}" ${full?"disabled":""}>${p.name}<span class="tag">${p.kind==="gather"?"gather":"craft"}</span></button>`; }).join("")}
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-head"><span class="n">Step 7</span><h2>Schedule and pace</h2>
+      <p class="hint">Used to find the night most of the party can play. Raids open December 9.</p></div>
+    <div class="field"><span class="lbl">Days you can usually play</span>
+      <div class="week">${DAYS.map((d,i)=>`<button type="button" class="chip" data-day="${i}" aria-pressed="${b.days.includes(i)}">${d}</button>`).join("")}</div></div>
+    <div class="field"><span class="lbl">Times of day <span class="sub">(your local time)</span></span>
+      <div class="chips">${TIMES.map(([v,l])=>`<button type="button" class="chip" data-time="${v}" aria-pressed="${b.times.includes(v)}">${l}</button>`).join("")}</div></div>
+    <div class="grid2">
+      <div class="field"><span class="lbl">Hours per week</span>${segHTML("seg-hours", HOURS, b.hours)}</div>
+      <div class="field"><span class="lbl">Leveling pace</span>${segHTML("seg-pace", PACE, b.pace)}</div>
+      <div class="field"><span class="lbl">Hardcore when it opens?</span>${segHTML("seg-hc", HC, b.hardcore)}</div>
+      <div class="field"><span class="lbl">Playing launch night, Nov 4?</span>${segHTML("seg-launch", LAUNCH, b.launch)}</div>
+    </div>
+  </div>`;
+}
+function privacyText(){
+  if (Store.mode==="local") return "<b>Preview mode.</b> This copy isn't connected to a shared board, so your ballot stays in this browser and the board shows four example voters.";
+  if (Store.mode==="readonly" || !Store.canWrite) return "You can look around, but this link doesn't let you vote. Ask whoever shared it to invite you by email as an Editor.";
+  return "Only you can see your picks. The party board shows group totals, and each voter appears under a random creature name, so nobody can tell whose ballot is whose. That includes the person who made this page.";
+}
+
+/* Ballot interactions (one delegated listener) */
+$("#view-ballot").addEventListener("click", e=>{
+  const t = e.target.closest("button"); if (!t || t.disabled) return;
+  const d = t.dataset;
+  if (d.class) return change(b=>{ const i=b.classes.indexOf(d.class); if (i>=0) b.classes.splice(i,1); else if (b.classes.length<5) b.classes.push(d.class); fixRace(b); });
+  if (d.move!==undefined) return change(b=>{ const i=+d.move, j=i+(+d.dir); if (j<0||j>=b.classes.length) return; [b.classes[i],b.classes[j]]=[b.classes[j],b.classes[i]]; fixRace(b); });
+  if (d.remove!==undefined) return change(b=>{ b.classes.splice(+d.remove,1); fixRace(b); });
+  if (d.rs) return change(b=>{ if (b.rulesets[d.rs]) { delete b.rulesets[d.rs]; if (b.favRuleset===d.rs) b.favRuleset=null; } else b.rulesets[d.rs]=true; });
+  if (d.fav) return change(b=>{ if (b.favRuleset===d.fav) b.favRuleset=null; else { b.favRuleset=d.fav; b.rulesets[d.fav]=true; } });
+  if (d.race) return change(b=>{ b.race = b.race===d.race ? null : d.race; });
+  if (d.prof) return change(b=>{ const i=b.profs.indexOf(d.prof); if (i>=0) b.profs.splice(i,1); else if (b.profs.length<2) b.profs.push(d.prof); });
+  if (d.day!==undefined) return change(b=>{ const v=+d.day, i=b.days.indexOf(v); if (i>=0) b.days.splice(i,1); else b.days.push(v); b.days.sort(); });
+  if (d.time) return change(b=>{ const i=b.times.indexOf(d.time); if (i>=0) b.times.splice(i,1); else b.times.push(d.time); });
+  const seg = t.closest(".seg");
+  if (seg && d.v!==undefined){
+    const map = {"seg-faction":["faction",true],"seg-style":["style",true],"seg-sky":["skyborne"],"seg-hours":["hours"],"seg-pace":["pace"],"seg-hc":["hardcore"],"seg-launch":["launch"]};
+    if (seg.id.startsWith("seg-role-")){ const k=seg.id.slice(9); const v=+d.v; return change(b=>{ b.roles[k] = b.roles[k]===v ? null : v; }); }
+    const m = map[seg.id]; if (!m) return;
+    const v = m[1] ? +d.v : d.v;
+    return change(b=>{ b[m[0]] = b[m[0]]===v ? null : v; });
+  }
+});
+function fixRace(b){ if (b.race && !(b.classes[0] && RACE[b.race].classes.includes(b.classes[0]))) b.race = null; }
+
+/* ---------- Save bar ---------- */
+function same(a,b){ return JSON.stringify(normBallot(a))===JSON.stringify(normBallot(b)); }
+function updateSaveBar(){
+  const mine = Store.mine();
+  const st = $("#save-status"), save = $("#btn-save"), clr = $("#btn-clear");
+  const canSave = draft.classes.length>0 && Store.ready && Store.canWrite && Store.mode!=="readonly" && !saving;
+  const changed = !mine || !same(mine, draft);
+  save.disabled = !canSave || !changed;
+  save.textContent = mine ? "Update my ballot" : "Save my ballot";
+  clr.hidden = !mine;
+  if (!Store.ready && Store.mode!=="local") st.innerHTML = "Connecting to the party board…";
+  else if (!Store.canWrite || Store.mode==="readonly") st.innerHTML = "This link is view-only, so you can't vote from it.";
+  else if (!draft.classes.length) st.innerHTML = mine ? "Your ballot needs at least one class." : "Pick at least one class to save your ballot.";
+  else if (mine && !changed) st.innerHTML = `<b>Ballot saved.</b> Only you can see it. Change anything and save again.`;
+  else if (mine) st.innerHTML = `<b>Unsaved changes.</b> The board still has your earlier ballot.`;
+  else st.innerHTML = `Ranked: <b>${draft.classes.map(c=>CLS[c].name).join(" › ")}</b>. Save to see the party board.`;
+}
+$("#btn-save").addEventListener("click", async ()=>{
+  saving = true; updateSaveBar();
+  try { await Store.save(draft); dirty=false; lsDel("fpd-draft"); toast("Ballot saved. The party board is open.", "See the board", ()=>setTab("results")); }
+  catch(e){
+    if (e && e.code==="invalid_argument"){ Store.canWrite=false; toast("This link doesn't allow voting. Ask the organizer to invite you as an Editor."); }
+    else if (e && e.code==="quota_exceeded") toast("The board is full and can't take new ballots.");
+    else toast("Couldn't save. Check your connection and try again.");
+  }
+  saving = false; updateSaveBar(); renderBallot();
+});
+let confirmClear = false;
+$("#btn-clear").addEventListener("click", async ()=>{
+  const btn = $("#btn-clear");
+  if (!confirmClear){ confirmClear = true; btn.textContent = "Tap again to withdraw"; setTimeout(()=>{ confirmClear=false; btn.textContent="Withdraw ballot"; }, 4000); return; }
+  confirmClear = false; btn.textContent = "Withdraw ballot";
+  try { await Store.remove(); toast("Ballot withdrawn. Your picks are still here if you want to save again."); }
+  catch(e){ toast("Couldn't withdraw. Try again."); }
+  updateSaveBar();
+});
+let toastTimer;
+function toast(msg, action, fn){
+  const t = $("#toast"); t.innerHTML = `<span>${esc(msg)}</span>` + (action?`<button type="button">${esc(action)}</button>`:"");
+  t.hidden = false; if (action) t.querySelector("button").onclick = ()=>{ t.hidden=true; fn(); };
+  clearTimeout(toastTimer); toastTimer = setTimeout(()=>t.hidden=true, 6000);
+}
+
+/* ---------- Fit analysis: what each class brings, gear overlap, schedule overlap ---------- */
+const UTILS = [
+  {id:"cc", name:"Crowd control", why:"Forever's dungeons have no level scaling, and Blizzard says crowd control matters again. Locking down one or two mobs per pull prevents most wipes.",
+   by:{mage:"Polymorph", rogue:"Sap", hunter:"Freezing Trap", warlock:"Banish, Fear", priest:"Shackle Undead", druid:"Hibernate, Entangling Roots", paladin:"Turn Undead"}},
+  {id:"res", name:"Resurrection", why:"Without it, every death means a corpse run.",
+   by:{priest:"Resurrection", paladin:"Redemption", shaman:"Ancestral Spirit", druid:"Revive (new in Forever)"}},
+  {id:"bres", name:"Combat rez", why:"Bringing a dead healer or tank back mid-fight can save a raid attempt.",
+   by:{druid:"Rebirth", warlock:"Soulstone (cast before the pull)"}},
+  {id:"dispel", name:"Dispel and cleanse", why:"Poisons, diseases, curses and magic debuffs stack up in later dungeons.",
+   by:{priest:"Dispel Magic, Cure Disease", paladin:"Cleanse", shaman:"Cure Poison and Disease, Purge", druid:"Remove Curse, Cure Poison", mage:"Remove Lesser Curse"}},
+  {id:"buff", name:"Group buffs", why:"Buffs from different classes stack, so a varied party is stronger than five of one class.",
+   by:{priest:"Power Word: Fortitude", mage:"Arcane Intellect", druid:"Mark of the Wild", paladin:"Blessings (Kings is now baseline)", warrior:"Battle Shout", shaman:"Totems", hunter:"Aspect of the Pack"}},
+  {id:"supply", name:"Free supplies", why:"Saves gold and bag space on food, water and healing.",
+   by:{mage:"Conjured food and water", warlock:"Healthstones"}},
+  {id:"travel", name:"Group travel", why:"Gets late arrivals to the dungeon, which matters more with no flying.",
+   by:{mage:"Portals", warlock:"Ritual of Summoning"}},
+  {id:"scout", name:"Pulling and scouting", why:"Safer pulls and a way out of bad ones.",
+   by:{hunter:"Feign Death, tracking", rogue:"Stealth, Lockpicking", druid:"Prowl, tracking"}},
+];
+function gearOf(c, role){
+  if (c==="paladin") return role==="healer" ? {armor:"Plate", stat:"Intellect"} : {armor:"Plate", stat:"Strength"};
+  if (c==="warrior") return {armor:"Plate", stat:"Strength"};
+  if (c==="hunter") return {armor:"Mail", stat:"Agility"};
+  if (c==="shaman") return role==="healer" ? {armor:"Mail", stat:"Intellect"} : {armor:"Mail", stat:"Agility or Intellect"};
+  if (c==="rogue") return {armor:"Leather", stat:"Agility"};
+  if (c==="druid") return role==="healer" ? {armor:"Leather", stat:"Intellect"} : {armor:"Leather", stat:"Agility"};
+  return {armor:"Cloth", stat:"Intellect"};
+}
+const ARMORS = ["Cloth","Leather","Mail","Plate"];
+function slotsOf(b){ const s=new Set(); b.days.forEach(d=>b.times.forEach(t=>s.add(d+":"+t))); return s; }
+function shortAlias(a){ return a.replace(/^Anonymous /,""); }
+
+function members(entries, plan, alias){
+  return entries.map(([k],i)=>({k, o:plan&&plan.pick[i], me:k===Store.myKey, name: k===Store.myKey ? "You" : shortAlias(alias[k])})).filter(m=>m.o);
+}
+
+function utilityHTML(mem){
+  const rows = UTILS.map(u=>{ const prov = mem.filter(m=>u.by[m.o.c]); return {u, prov}; });
+  const covered = rows.filter(r=>r.prov.length).length;
+  return `<div class="meter"><div class="meter-fill" style="width:${pct(covered,UTILS.length)}%"></div></div>
+    <p class="small muted">${covered} of ${UTILS.length} kinds of group utility covered by the suggested party.</p>
+    <div class="util">${rows.map(({u,prov})=>`<div class="urow ${prov.length?"":"miss"}">
+      <span class="uname">${u.name}</span>
+      <span class="uprov">${prov.length ? prov.map(m=>`<span class="uchip" style="--cc:var(--c-${m.o.c})" title="${esc(u.by[m.o.c])}"><b>${CLS[m.o.c].name}</b> ${esc(u.by[m.o.c])}${m.me?" · you":""}</span>`).join("")
+        : `<span class="ugap">Missing. ${Object.keys(u.by).map(c=>CLS[c].name).join(", ")} can bring it.</span>`}</span></div>`).join("")}</div>`;
+}
+
+function lootHTML(mem){
+  if (!mem.length) return "";
+  const groups = {}; ARMORS.forEach(a=>groups[a]=[]);
+  mem.forEach(m=>{ const g=gearOf(m.o.c, m.o.role); groups[g.armor].push({...m, stat:g.stat}); });
+  const notes = [];
+  ARMORS.forEach(a=>{
+    const list = groups[a]; if (list.length<2) return;
+    const byStat = {}; list.forEach(m=>{ (byStat[m.stat] = byStat[m.stat] || []).push(m); });
+    Object.entries(byStat).forEach(([stat,ms])=>{ if (ms.length>=2) notes.push(`<b>${ms.length} people want ${stat.toLowerCase()} ${a.toLowerCase()}</b> (${ms.map(m=>m.name+" as "+CLS[m.o.c].name).join(", ")}). They'll roll against each other for the same drops.`); });
+  });
+  return `<div class="stack tall">${ARMORS.map(a=>groups[a].length?`<div style="flex:${groups[a].length} 1 0;background:var(--armor-${a.toLowerCase()})" title="${a}: ${groups[a].length}">${a} ${groups[a].length}</div>`:"").join("")}</div>
+    ${notes.length ? notes.map(n=>`<div class="callout info"><div>${n}</div></div>`).join("") : `<div class="callout good"><div>No two people in the suggested party need the same kind of gear, so loot rolls stay friendly.</div></div>`}`;
+}
+
+function overlapHTML(entries, alias){
+  const people = entries.filter(([,b])=>b.days.length&&b.times.length);
+  if (people.length<2) return `<p class="small muted">The overlap grid appears once two people have filled in a schedule.</p>`;
+  const sets = people.map(([,b])=>slotsOf(b));
+  const names = people.map(([k])=>k===Store.myKey?"You":shortAlias(alias[k]));
+  const shared = (i,j)=>{ let c=0; sets[i].forEach(s=>{ if (sets[j].has(s)) c++; }); return c; };
+  let max=1; for (let i=0;i<people.length;i++) for (let j=0;j<people.length;j++) max=Math.max(max, shared(i,j));
+  return `<div class="heat-wrap"><div class="ovl" style="grid-template-columns:96px repeat(${people.length},minmax(40px,1fr))">
+    <span></span>${names.map(n=>`<span class="h ${n==="You"?"you":""}" title="${esc(n)}">${esc(n)}</span>`).join("")}
+    ${people.map((p,i)=>`<span class="rl ${names[i]==="You"?"you":""}">${esc(names[i])}</span>${people.map((q,j)=>{ const v=shared(i,j);
+      return `<span class="cell ${i===j?"self":""} ${v===0&&i!==j?"zero":""}" style="background:color-mix(in srgb,var(--gold) ${i===j?0:Math.round(10+75*v/max)}%,var(--surface-2))" title="${esc(names[i])} and ${esc(names[j])}: ${v} shared time slots">${v}</span>`; }).join("")}`).join("")}
+  </div></div>
+  <p class="small muted">Each number is how many day-and-time slots two people share each week. The diagonal shows each person's own total. A red zero means those two never overlap.</p>`;
+}
+
+function windowsHTML(T){
+  const all = []; T.heat.forEach((row,ti)=>row.forEach((v,di)=>{ if (v) all.push({ti,di,v}); }));
+  all.sort((a,b)=>b.v-a.v); const top = all.slice(0,6);
+  if (!top.length) return "";
+  return barsHTML(top.map(s=>({label:`${DAYS[s.di]} ${TIMES[s.ti][1].toLowerCase()}`, value:s.v, text:`${s.v}/${T.schedVoters}`, color: s.v===T.schedVoters?"var(--good)":"var(--gold)"})), T.schedVoters);
+}
+
+function paceHTML(entries, mine){
+  const grid = PACE.map(()=>HOURS.map(()=>0)); let any=0;
+  entries.forEach(([,b])=>{ const p=PACE.findIndex(o=>o[0]===b.pace), h=HOURS.findIndex(o=>o[0]===b.hours); if (p>=0&&h>=0){ grid[p][h]++; any++; } });
+  if (!any) return `<p class="small muted">Nobody has answered both pace and hours yet.</p>`;
+  const max = Math.max(1,...grid.flat());
+  const mp = PACE.findIndex(o=>o[0]===mine.pace), mh = HOURS.findIndex(o=>o[0]===mine.hours);
+  return `<div class="heat-wrap"><div class="heat" style="grid-template-columns:110px repeat(4,minmax(52px,1fr));min-width:340px">
+    <span></span>${HOURS.map(h=>`<span class="h">${h[1]} h</span>`).join("")}
+    ${PACE.map((p,pi)=>`<span class="rl">${p[1].split(",")[0]}</span>${HOURS.map((h,hi)=>{ const v=grid[pi][hi];
+      return `<span class="cell ${pi===mp&&hi===mh?"mine":""}" style="background:color-mix(in srgb,var(--gold) ${v?Math.round(15+70*v/max):0}%,var(--surface-2))">${v||""}</span>`; }).join("")}`).join("")}
+  </div></div>
+  <p class="small muted">People in the same or neighboring cells will level at about the same speed. People far apart will drift apart in level within a week or two.</p>`;
+}
+
+function profChainHTML(T){
+  const rows = PROFS.filter(p=>p.kind==="gather").map(g=>{
+    const crafts = g.pairs.split(", ");
+    return `<div class="chain"><span class="node ${T.prof[g.id]?"":"gap"}">${g.name} <b class="mono">${T.prof[g.id]}</b></span>
+      <span class="arrow" aria-hidden="true">→</span>
+      <span class="targets">${crafts.map(c=>`<span class="node ${T.prof[c]?"":"gap"}">${PROF[c].name} <b class="mono">${T.prof[c]}</b></span>`).join("")}</span></div>`; });
+  const loose = ["enchanting","tailoring"].map(id=>`<span class="node ${T.prof[id]?"":"gap"}">${PROF[id].name} <b class="mono">${T.prof[id]}</b></span>`).join("");
+  return `<div class="chains">${rows.join("")}<div class="chain"><span class="node src">Cloth and disenchanting drop from mobs and gear</span><span class="arrow" aria-hidden="true">→</span><span class="targets">${loose}</span></div></div>`;
+}
+
+/* Suggestions: concrete changes, each with the reason and who it affects. */
+function buildSuggestions(T, plan, entries, mine, alias, mem){
+  const out = []; const n = T.n;
+  const add = (who, title, why) => out.push({who, title, why});
+  const canDo = (c, role) => partyRoles(c).includes(role);
+  ["healer","tank"].forEach(role=>{
+    const need = role==="healer" ? plan.needH : plan.needT, have = role==="healer" ? plan.healers : plan.tanks;
+    if (!need || have>=need) return;
+    const willingNoClass = entries.filter(([,b])=>b.roles[role]>=1 && !b.classes.some(c=>canDo(c,role))).length;
+    const classNoWill = entries.filter(([,b])=>b.roles[role]===0 && b.classes.some(c=>canDo(c,role))).length;
+    const list = role==="healer" ? "Priest, Druid, Paladin or Shaman" : "Warrior, Paladin or Druid";
+    let why = `A dungeon group needs ${role==="healer"?"a healer":"a tank"}, and right now the suggested party is short by ${need-have}.`;
+    if (willingNoClass) why += ` ${plural(willingNoClass,"person")} said they'd ${role==="healer"?"heal":"tank"} but didn't rank a class that can. Adding ${list} to their list would fix it.`;
+    if (classNoWill) why += ` ${plural(classNoWill,"person")} ranked a class that can ${role==="healer"?"heal":"tank"} but said No to it. Switching to "Can flex" would let the planner use them.`;
+    if (!willingNoClass && !classNoWill) why += ` Nobody's ballot can fill it yet, so someone would need to rank ${list}.`;
+    add("party", `Find ${role==="healer"?"a healer":"a tank"}`, why);
+  });
+  const dup = {}; mem.forEach(m=>{ (dup[m.o.c]=dup[m.o.c]||[]).push(m); });
+  const missingU = UTILS.filter(u=>!mem.some(m=>u.by[m.o.c]));
+  Object.entries(dup).forEach(([c,ms])=>{ if (ms.length<2) return;
+    const swaps = [];
+    ms.forEach(m=>{ const b = Store.ballots.get(m.k); if (!b) return;
+      b.classes.forEach((alt,i)=>{ if (alt===c || dup[alt]) return; const gains = missingU.filter(u=>u.by[alt]).map(u=>u.name.toLowerCase());
+        if (gains.length && partyRoles(alt).some(r=>(b.roles[r]??1)>0) && swaps.length<2) swaps.push(`${m.name} could play ${CLS[alt].name} (their #${i+1}), which adds ${gains.join(" and ")}`); }); });
+    add("party", `${ms.length} people are slotted as ${CLS[c].name}`, `Doubling up is fine for damage, but a different class brings new buffs and utility.${swaps.length?" "+swaps.join(". ")+".":""}`);
+  });
+  missingU.filter(u=>["cc","res","dispel"].includes(u.id)).forEach(u=>{
+    const could = entries.filter(([k,b])=>b.classes.some(c=>u.by[c])).map(([k])=>k===Store.myKey?"you":shortAlias(alias[k]));
+    add("party", `No ${u.name.toLowerCase()} in the suggested party`, `${u.why} ${could.length?`${could.slice(0,4).join(", ")} ranked a class that has it, so moving it higher would help.`:`Nobody has ranked a class that has it (${Object.keys(u.by).map(c=>CLS[c].name).join(", ")}).`}`);
+  });
+  if (T.best && T.schedVoters>=2){
+    const S = T.schedVoters;
+    if (T.best.v < S){
+      const near = []; T.heat.forEach((row,ti)=>row.forEach((v,di)=>{ if (v===S-1) near.push(`${DAYS[di]} ${TIMES[ti][1].toLowerCase()}`); }));
+      if (near.length) add("party", `One person away from a full-party night`, `${near.slice(0,3).join(", ")} ${near.length===1?"has":"have"} everyone but one free. If one more person can make ${near.length===1?"it":"one of them"}, all ${S} can play together.`);
+      else add("party", `No night works for everyone yet`, `The best slot, ${DAYS[T.best.di]} ${TIMES[T.best.ti][1].toLowerCase()}, has ${T.best.v} of ${S}. Adding a weekend afternoon or another evening is usually the easiest change.`);
+    }
+    const people = entries.filter(([,b])=>b.days.length&&b.times.length); let zero=0;
+    for (let i=0;i<people.length;i++) for (let j=i+1;j<people.length;j++){ const a=slotsOf(people[i][1]), b=slotsOf(people[j][1]); if (![...a].some(s=>b.has(s))) zero++; }
+    if (zero) add("party", `${plural(zero,"pair")} of players never overlap`, "They'll only see each other in raids or through mail. Marking one more shared evening fixes most of these.");
+  }
+  if (T.faction.cnt>=2 && T.faction.d["-2"]+T.faction.d["-1"]>0 && T.faction.d["2"]+T.faction.d["1"]>0){
+    const h=T.faction.d["-2"]+T.faction.d["-1"], a=T.faction.d["2"]+T.faction.d["1"];
+    add("party", `Faction is split ${h} Horde to ${a} Alliance`, `The two factions can't group. Since every class is now on both sides, nobody has to give up their class to switch. On Normal or Roleplay, anyone who wants the other side can keep an alt there. On PvP an account is locked to one faction.`);
+  }
+  const RV = T.rsVoters;
+  const universal = RULESETS.filter(r=>T.rs[r.id].ok===RV && RV>1);
+  const top = RULESETS.find(r=>r.id===T.rsRank[0]);
+  if (RV>1 && top && T.rs[top.id].ok<RV){
+    add("party", `${top.name} leads, but ${RV-T.rs[top.id].ok} of ${RV} didn't mark it`, universal.length ? `${universal.map(r=>r.name).join(" and ")} is acceptable to everyone. Picking a ruleset nobody objects to keeps the whole party together.` : `No ruleset is acceptable to everyone yet. Characters can't switch rulesets later, so this needs a decision before name reservation opens on Oct 27.`);
+  }
+  if (T.pace.race && T.pace.chill) add("party", "Racers and chill players are in the same party", `${T.pace.race} want to race to 60 and ${T.pace.chill} want to take it slow. A common fix is to level the party characters only when you're together, and have the racers race on an alt.`);
+  if (n>=2 && T.launch.yes < Math.ceil(n/2)) add("party", "Most of the party can't confirm launch night", `Only ${T.launch.yes} of ${n} said yes for Nov 4. Plan the first real group session for the best weekly slot instead.`);
+  PROFS.filter(p=>p.kind==="gather").forEach(g=>{ const crafters = g.pairs.split(", ").reduce((s,c)=>s+T.prof[c],0); if (crafters && !T.prof[g.id]) add("party", `Crafters without a ${g.name.toLowerCase()} supplier`, `${g.pairs.split(", ").map(c=>PROF[c].name).join(" and ")} use materials that come from ${g.name}. A crafter could take ${g.name} as their second profession, or someone could switch one of theirs to it.`); });
+
+  // Personal
+  if (mine){
+    const myIdx = entries.findIndex(([k])=>k===Store.myKey), my = plan.pick[myIdx];
+    if (mine.race && RACE[mine.race].pack && mine.skyborne!=="yes") add("you", `${RACE[mine.race].name} needs the Skyborne pack`, `You picked a Skyborne race but said "${(SKY.find(o=>o[0]===mine.skyborne)||[0,"no answer"])[1]}" to the pack. Either plan to buy the Heroic Pack or pick another race.`);
+    if (my && my.rank>0) add("you", `You're slotted as your #${my.rank+1}, ${CLS[my.c].name}`, `That fills a gap: your #1, ${CLS[mine.classes[0]].name}, is ${dup[mine.classes[0]]?"already taken in the suggested party":"weaker for the group right now"}. You can still play your #1. The planner just shows the most complete group.`);
+    if (T.best && mine.days.length && mine.times.length && !(mine.days.includes(T.best.di) && mine.times.includes(TIMES[T.best.ti][0]))) add("you", `You're not free in the party's best slot`, `Most people can do ${DAYS[T.best.di]} ${TIMES[T.best.ti][1].toLowerCase()}. If you can make that work, add it to your ballot.`);
+    if (mine.faction!==null && Math.abs(mine.faction)===2 && Math.sign(mine.faction)!==Math.sign(T.faction.mean) && Math.abs(T.faction.mean)>0.3) add("you", `You're set on ${mine.faction<0?"Horde":"Alliance"}, and the party leans the other way`, "Every class and most class roles exist on both sides now. Check whether your race or a friend's is the real reason, since that's easier to trade.");
+    if (!mine.days.length || !mine.times.length) add("you", "Add your schedule", "The overlap charts and best-night pick don't include you until you choose days and times.");
+    if (mine.roles.tank===null && mine.roles.healer===null && mine.roles.dps===null) add("you", "Mark which roles you'd play", "Without roles the planner treats you as willing to flex anything your classes can do.");
+  }
+  return out;
+}
+
+/* ---------- Render: results ---------- */
+function stackHTML(dist, opts, colors, n){
+  const total = opts.reduce((s,[v])=>s+dist[v],0);
+  if (!total) return `<p class="small muted">No answers yet.</p>`;
+  return `<div class="stack">${opts.map(([v,l],i)=>{ const c=dist[v]; if (!c) return ""; return `<div style="flex:${c} 1 0;background:${colors[i]}" title="${esc(l)}: ${c}">${c}</div>`; }).join("")}</div>`;
+}
+function barsHTML(rows, max){
+  return `<div class="bars">${rows.map(r=>`<div class="bar ${r.me?"me":""}"><span class="lab" title="${esc(r.label)}" ${r.color?`style="color:${r.color}"`:""}>${esc(r.label)}</span>
+    <span class="track"><span class="fill" style="width:${max? (100*r.value/max):0}%;--bc:${r.color||"var(--gold)"};display:block"></span></span>
+    <span class="val">${esc(r.text ?? r.value)}</span></div>`).join("")}</div>`;
+}
+function leanWord(mean, cnt, neg, pos){
+  if (!cnt) return {v:"No answers", s:""};
+  if (mean <= -1.2) return {v:neg, s:"Strong lean"}; if (mean < -0.3) return {v:neg, s:"Leaning"};
+  if (mean >= 1.2) return {v:pos, s:"Strong lean"}; if (mean > 0.3) return {v:pos, s:"Leaning"};
+  return {v:"Toss-up", s:"The party is split"};
+}
+function renderResults(){
+  const el = $("#view-results");
+  const entries = [...Store.ballots.entries()].filter(([,b])=>b.classes.length);
+  const mine = Store.mine();
+  $("#vote-count").textContent = entries.length;
+  if (!Store.ready && Store.mode!=="local"){ el.innerHTML = `<div class="locked"><div class="big">…</div><h2>Connecting to the party board</h2><p class="muted">Ballots load in a moment.</p></div>`; return; }
+  if (!mine){
+    el.innerHTML = `<div class="locked"><div class="big mono">${entries.length}</div>
+      <h2>${entries.length===1?"ballot is in":"ballots are in"}</h2>
+      <p class="muted" style="max-width:52ch">The board opens once you've saved your own ballot, so nobody gets swayed before they pick. ${Store.canWrite&&Store.mode!=="readonly"?"":"This link is view-only."}</p>
+      ${Store.canWrite&&Store.mode!=="readonly"?`<button type="button" class="btn primary" id="go-ballot">Fill out my ballot</button>`:""}</div>`;
+    const g=$("#go-ballot"); if (g) g.onclick=()=>setTab("ballot");
+    return;
+  }
+  const T = tally(entries), n = T.n;
+  const alias = aliasMap(entries.map(([k])=>k));
+  const plan = planParty(entries);
+  const fac = leanWord(T.faction.mean, T.faction.cnt, "Horde", "Alliance");
+  const sty = leanWord(T.style.mean, T.style.cnt, "PvE", "PvP");
+  const topRs = T.rsVoters ? RULESETS.find(r=>r.id===T.rsRank[0]) : null;
+  const top3 = T.classRank.filter(c=>T.classPts[c]>0).slice(0,3);
+  const bestSlot = T.best ? `${DAYS[T.best.di]} ${TIMES[T.best.ti][1].toLowerCase()}` : null;
+  const myTop = mine.classes[0], myTopRank = T.classRank.indexOf(myTop)+1;
+  const myIdx = entries.findIndex(([k])=>k===Store.myKey);
+  const myAssign = plan && myIdx>=0 ? plan.pick[myIdx] : null;
+  const sideOf = v => v===null ? null : v<0 ? "Horde" : v>0 ? "Alliance" : "Either";
+  const examples = Store.mode==="local";
+  const mem = members(entries, plan, alias);
+  const sugg = buildSuggestions(T, plan, entries, mine, alias, mem);
+  const suggYou = sugg.filter(s=>s.who==="you"), suggParty = sugg.filter(s=>s.who==="party");
+
+  // personal comparisons
+  const you = [];
+  if (myTop) you.push(`Your #1, <b style="color:var(--c-${myTop})">${CLS[myTop].name}</b>, is <b>#${myTopRank}</b> with the party.`);
+  if (mine.faction!==null && fac.v!=="No answers"){ const s=sideOf(mine.faction); you.push(s==="Either" ? `You're fine with either faction. The party leans <b>${fac.v}</b>.` : s===fac.v ? `You and the party both lean <b>${s}</b>.` : `You lean <b>${s}</b>, but the party ${fac.v==="Toss-up"?"is split":"leans <b>"+fac.v+"</b>"}.`); }
+  if (mine.favRuleset && topRs) you.push(mine.favRuleset===topRs.id ? `Your favorite ruleset, <b>${topRs.name}</b>, is in the lead.` : mine.rulesets[topRs.id] ? `<b>${topRs.name}</b> is leading. It's not your favorite, but you said you'd play it.` : `<b>${topRs.name}</b> is leading, and you didn't mark it as one you'd play.`);
+  if (bestSlot){ const ok = mine.days.includes(T.best.di) && mine.times.includes(TIMES[T.best.ti][0]); you.push(ok ? `You're free for the best slot, <b>${bestSlot}</b>.` : `The best slot is <b>${bestSlot}</b>, and you didn't mark it.`); }
+
+  // warnings
+  const warns = [];
+  if (topRs && topRs.id==="pvp") warns.push(`<b>PvP is leading.</b> A PvP account can only make characters on one faction, so settle Horde or Alliance before name reservation opens on Oct 27.`);
+  if (n>=2 && T.roles.healer.main+T.roles.healer.flex===0) warns.push(`<b>No healers yet.</b> Nobody has said they'd heal. Priest, Druid, Paladin and Shaman can.`);
+  if (n>=3 && T.roles.tank.main+T.roles.tank.flex===0) warns.push(`<b>No tanks yet.</b> Nobody has said they'd tank. Warrior, Paladin and Druid can.`);
+  if (fac.v==="Toss-up" && T.faction.cnt>=2) warns.push(`<b>Faction is a toss-up.</b> Horde and Alliance can't group with each other, so this one needs a decision.`);
+
+  const classRows = T.classRank.filter(c=>T.mentions[c]>0).map(c=>({label:CLS[c].name, value:T.classPts[c], text:`${T.classPts[c]} pts`, color:`var(--c-${c})`, me:mine.classes.includes(c)}));
+  const maxPts = Math.max(1,...classRows.map(r=>r.value));
+  const rsRows = T.rsRank.map(id=>{ const r=RULESETS.find(x=>x.id===id); return {label:r.name, value:T.rs[id].ok, text:`${T.rs[id].ok}/${n}${T.rs[id].fav?` · ${T.rs[id].fav}★`:""}`, me:!!mine.rulesets[id]}; });
+  const raceRows = Object.entries(T.race).sort((a,b)=>b[1]-a[1]).map(([id,c])=>({label:RACE[id].name, value:c, color:RACE[id].f==="H"?"var(--horde)":"var(--alliance)", me:mine.race===id}));
+  const heatMax = Math.max(1,...T.heat.flat());
+
+  el.innerHTML = `
+  ${examples?`<p class="example-note" style="margin-bottom:10px">Preview: four example voters plus you. They disappear once the board is connected.</p>`:""}
+  <div class="verdict">
+    <div class="panel-head"><div><div class="eyebrow">The party so far · ${plural(n,"ballot")}</div><h2 style="margin-top:4px">Where we're landing</h2></div></div>
+    <div class="vgrid">
+      <div class="vcell"><span class="eyebrow">Faction</span><span class="v" style="color:${fac.v==="Horde"?"var(--horde)":fac.v==="Alliance"?"var(--alliance)":"var(--fg)"}">${fac.v}</span><span class="s">${fac.s}</span></div>
+      <div class="vcell"><span class="eyebrow">Ruleset</span><span class="v">${topRs?topRs.name:"No answers"}</span><span class="s">${topRs?`${T.rs[topRs.id].ok} of ${n} would play it`:""}</span></div>
+      <div class="vcell"><span class="eyebrow">Playstyle</span><span class="v">${sty.v}</span><span class="s">${sty.s}</span></div>
+      <div class="vcell"><span class="eyebrow">Top classes</span><span class="v">${top3.map(c=>`<span style="color:var(--c-${c})">${CLS[c].name}</span>`).join(", ")||"—"}</span><span class="s">Ranked by points</span></div>
+      <div class="vcell"><span class="eyebrow">Best time</span><span class="v">${bestSlot||"No answers"}</span><span class="s">${T.best?`${T.best.v} of ${T.schedVoters} free`:""}</span></div>
+      <div class="vcell"><span class="eyebrow">Launch night</span><span class="v">${T.launch.yes} in</span><span class="s">${T.launch.maybe} maybe · ${T.launch.no} out</span></div>
+    </div>
+    ${you.length?`<div class="callout info"><div><b>You vs. the party.</b> ${you.join(" ")}</div></div>`:""}
+    ${warns.map(w=>`<div class="callout warn"><div>${w}</div></div>`).join("")}
+  </div>
+
+  <div class="board">
+    <div class="panel" id="changes">
+      <div class="panel-head"><h3>What could change, and why</h3><span class="small muted">${sugg.length ? plural(sugg.length,"suggestion") : ""}</span></div>
+      ${sugg.length ? `<div class="sugg">${[...suggYou, ...suggParty].map(s=>`<div class="sg sg-${s.who}"><span class="sg-tag">${s.who==="you"?"For you":"For the party"}</span><b>${esc(s.title)}</b><p>${esc(s.why)}</p></div>`).join("")}</div>`
+        : `<div class="callout good"><div>Nothing to fix right now. Roles, utility, schedule and ruleset all line up.</div></div>`}
+      <p class="small muted">These update every time someone votes. "For you" suggestions only appear on your screen.</p>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h3>Suggested party</h3><span class="small muted">${plan?`${plan.tanks} tank${plan.tanks===1?"":"s"} · ${plan.healers} healer${plan.healers===1?"":"s"} · ${plan.dps} damage`:""}</span></div>
+      <p class="small muted">Each voter gets one of their ranked classes in a role they said they'd play. The planner fills a tank and a healer for every five people first, then goes as high on each ballot as it can and avoids duplicate classes. Everyone appears under an anonymous name. Yours is outlined.</p>
+      <div class="party">
+        ${plan?entries.map(([k],i)=>{ const o=plan.pick[i]; if (!o) return ""; const me=k===Store.myKey;
+          return `<div class="member ${me?"me":""}" style="--cc:var(--c-${o.c})"><span class="alias">${me?"You":esc(examples&&k.startsWith("example")?alias[k]+" (example)":alias[k])}</span>
+            <span class="cls">${CLS[o.c].name}</span><span class="why">${o.role==="dps"?"Damage":o.role==="tank"?"Tank":"Healer"} · their #${o.rank+1} pick</span></div>`; }).join(""):""}
+      </div>
+      ${plan && n>=3 && plan.tanks<plan.needT ? `<div class="callout warn"><div>The planner couldn't find enough tanks. Someone could rank a Warrior, Paladin or Druid and mark Tank.</div></div>`:""}
+      ${plan && n>=2 && plan.healers<plan.needH ? `<div class="callout warn"><div>The planner couldn't find enough healers. Someone could rank a Priest, Druid, Paladin or Shaman and mark Healer.</div></div>`:""}
+      ${myAssign?`<div class="callout good"><div>Your slot: <b style="color:var(--c-${myAssign.c})">${CLS[myAssign.c].name}</b>, as ${myAssign.role==="dps"?"damage":myAssign.role}. That's your #${myAssign.rank+1} pick.</div></div>`:""}
+    </div>
+
+    <div class="cols">
+      <div class="panel">
+        <div class="panel-head"><h3>What the party brings</h3></div>
+        ${utilityHTML(mem)}
+        <p class="small muted">Based on each class's baseline kit from the original game, plus Forever's announced changes. Talents can add more.</p>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h3>Gear overlap</h3><span class="small muted">Suggested party by armor type</span></div>
+        ${lootHTML(mem)}
+        <p class="small muted">Classes that wear the same armor and want the same main stat compete for drops. A mix of armor types means more of each dungeon's loot goes to someone.</p>
+      </div>
+    </div>
+
+    <div class="cols">
+      <div class="panel">
+        <div class="panel-head"><h3>Class standings</h3><span class="small muted">1st = 5 pts … 5th = 1</span></div>
+        ${barsHTML(classRows, maxPts)}
+        <p class="small muted">${T.classRank.filter(c=>T.firsts[c]).map(c=>`${CLS[c].name} ${T.firsts[c]}×`).join(" · ")} first place</p>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h3>Faction</h3><span class="you-mark">${mine.faction!==null?"You: "+FACTION_OPTS.find(o=>o[0]===mine.faction)[1]:""}</span></div>
+        ${stackHTML(T.faction.d, FACTION_OPTS, ["var(--horde)","color-mix(in srgb,var(--horde) 55%,var(--surface-2))","var(--faint)","color-mix(in srgb,var(--alliance) 55%,var(--surface-2))","var(--alliance)"])}
+        <div class="stack-legend"><span>Horde</span><span>Either</span><span>Alliance</span></div>
+        <div class="panel-head" style="margin-top:8px"><h3>PvE ↔ PvP</h3><span class="you-mark">${mine.style!==null?"You: "+STYLE_OPTS.find(o=>o[0]===mine.style)[1]:""}</span></div>
+        ${stackHTML(T.style.d, STYLE_OPTS, ["var(--good)","color-mix(in srgb,var(--good) 55%,var(--surface-2))","var(--faint)","color-mix(in srgb,var(--bad) 55%,var(--surface-2))","var(--bad)"])}
+        <div class="stack-legend"><span>PvE</span><span>Both</span><span>PvP</span></div>
+      </div>
+    </div>
+
+    <div class="cols">
+      <div class="panel">
+        <div class="panel-head"><h3>Rulesets people would play</h3><span class="small muted">★ = favorite</span></div>
+        ${barsHTML(rsRows, n)}
+        <p class="small muted">Everyone in the party has to be on the same ruleset. The best pick is usually the one nobody rules out.</p>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h3>Role coverage</h3></div>
+        ${barsHTML([["tank","Tank"],["healer","Healer"],["dps","Damage"]].map(([k,l])=>({label:l, value:T.roles[k].main+T.roles[k].flex, text:`${T.roles[k].main} main · ${T.roles[k].flex} flex`, color:k==="tank"?"var(--alliance)":k==="healer"?"var(--good)":"var(--bad)", me:mine.roles[k]>0})), n)}
+        <p class="small muted">A 5-person dungeon wants 1 tank, 1 healer and 3 damage. Hardcore, with permanent death, rewards having a second healer.</p>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h3>When we can play</h3><span class="small muted">Count of people free · gold dot = you · outline = best slot</span></div>
+      ${T.schedVoters?`<div class="heat-wrap"><div class="heat">
+        <span></span>${DAYS.map(d=>`<span class="h">${d}</span>`).join("")}
+        ${TIMES.map(([tv,tl],ti)=>`<span class="rl">${tl}</span>${DAYS.map((d,di)=>{ const v=T.heat[ti][di]; const mineCell = mine.days.includes(di)&&mine.times.includes(tv); const best = T.best&&T.best.ti===ti&&T.best.di===di;
+          return `<span class="cell ${best?"best":""} ${mineCell?"mine":""}" style="background:color-mix(in srgb,var(--gold) ${v?Math.round(15+70*v/heatMax):0}%,var(--surface-2))" title="${d} ${tl}: ${v}">${v||""}</span>`; }).join("")}`).join("")}
+      </div></div>`:`<p class="small muted">Nobody has filled in a schedule yet.</p>`}
+      <div class="cols">
+        <div><div class="eyebrow" style="margin-bottom:8px">Best windows</div>${windowsHTML(T) || `<p class="small muted">No schedules yet.</p>`}</div>
+        <div><div class="eyebrow" style="margin-bottom:8px">Who overlaps with whom</div>${overlapHTML(entries, alias)}</div>
+      </div>
+      <div><div class="eyebrow" style="margin-bottom:8px">Leveling speed match: pace × hours per week</div>${paceHTML(entries, mine)}</div>
+      <div class="cols" style="gap:18px">
+        <div><div class="eyebrow" style="margin-bottom:6px">Hours per week</div>${barsHTML(HOURS.map(([v,l])=>({label:l, value:T.hours[v], me:mine.hours===v})), n)}</div>
+        <div><div class="eyebrow" style="margin-bottom:6px">Leveling pace</div>${barsHTML(PACE.map(([v,l])=>({label:l.split(",")[0], value:T.pace[v], me:mine.pace===v})), n)}</div>
+        <div><div class="eyebrow" style="margin-bottom:6px">Hardcore interest</div>${barsHTML(HC.map(([v,l])=>({label:l, value:T.hardcore[v], me:mine.hardcore===v})), n)}</div>
+      </div>
+    </div>
+
+    <div class="cols">
+      <div class="panel">
+        <div class="panel-head"><h3>Races</h3><span class="small muted">Skyborne pack: ${T.sky.yes} buying · ${T.sky.maybe} maybe · ${T.sky.no} no</span></div>
+        ${raceRows.length?barsHTML(raceRows, Math.max(...raceRows.map(r=>r.value))):`<p class="small muted">No race picks yet.</p>`}
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h3>Professions</h3><span class="small muted">Dashed = nobody yet</span></div>
+        ${profChainHTML(T)}
+        <div class="prof-grid">${PROFS.map(p=>`<div class="prof ${T.prof[p.id]?"":"gap"} ${mine.profs.includes(p.id)?"mine":""}"><span class="pn">${p.name}</span><span class="pc">${T.prof[p.id]} · ${p.kind==="gather"?"gathering":"crafting"}</span></div>`).join("")}</div>
+        ${profAdvice(T)}
+      </div>
+    </div>
+  </div>`;
+}
+function profAdvice(T){
+  const tips = [];
+  PROFS.filter(p=>p.kind==="gather").forEach(g=>{
+    const crafts = g.pairs.split(", ");
+    const crafters = crafts.reduce((s,c)=>s+T.prof[c],0);
+    if (crafters && !T.prof[g.id]) tips.push(`${crafts.map(c=>PROF[c].name).join(" and ")} ${crafters===1&&crafts.length===1?"needs":"need"} a ${g.name.toLowerCase()} supplier, and nobody has picked ${g.name}.`);
+  });
+  const missing = PROFS.filter(p=>!T.prof[p.id]).map(p=>p.name);
+  if (missing.length && missing.length<PROFS.length) tips.push(`Still open: ${missing.join(", ")}.`);
+  return tips.length ? `<p class="small muted">${tips.join(" ")}</p>` : `<p class="small muted">Every primary profession is covered.</p>`;
+}
+
+/* ---------- Render: field guide ---------- */
+function renderGuide(){
+  const now = Date.now(); let nextSet=false;
+  $("#view-guide").innerHTML = `
+  <div class="cols">
+    <div class="panel">
+      <h3>Key dates</h3>
+      <div class="timeline">
+        ${[{d:"2026-09-17T17:00:00Z",label:"Beta opened",sub:"Sep 17, for Epic Pack and Collection owners."},...DATES].map(x=>{ const t=new Date(x.d).getTime(); let c="tl"; if (t<now) c+=" done"; else if (!nextSet){ c+=" next"; nextSet=true; }
+          return `<div class="${c}"><span class="when">${new Date(x.d).toLocaleDateString(undefined,{month:"short",day:"numeric"})}</span><b>${esc(x.label)}</b><span class="small muted">${esc(x.sub)}</span></div>`; }).join("")}
+        <div class="tl"><span class="when">After launch</span><b>Hardcore ruleset</b><span class="small muted">No date yet. Spring 2027 brings 2 more raids, 2 dungeons and a PvP refresh.</span></div>
+      </div>
+    </div>
+    <div class="panel">
+      <h3>How Forever works</h3>
+      <ul style="margin:0;padding-left:18px;display:grid;gap:6px">
+        <li><b>No realms.</b> You pick a ruleset (Normal, PvP, Roleplay, later Hardcore) and can only group with people on it. Characters can't change ruleset.</li>
+        <li><b>PvP locks faction.</b> On PvP an account can only have one faction. Other rulesets allow both.</li>
+        <li><b>No cross-faction grouping</b> on any ruleset.</li>
+        <li><b>Level 60 cap, no flying, no level scaling.</b> 9 new dungeons and more than 1,000 new quests.</li>
+        <li><b>Dual spec at 40.</b> Every talent tree was reworked, and every race has 2 active and 2 passive racials.</li>
+        <li><b>Legacy system.</b> Account-wide points across Professions, Adventure and Resourcefulness, up to 16 per character at launch. They're shared across rulesets, but not into Hardcore.</li>
+        <li><b>Camping.</b> Campfires give vendors, repairs and 1-hour buffs. Better ones come from profession blueprints.</li>
+        <li><b>Included with a WoW subscription.</b> Skyborne needs the Heroic Pack or higher.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div><div class="panel-head" style="margin-bottom:12px"><h2>Classes</h2><span class="small muted">New in Forever, from the BlizzCon and beta notes</span></div>
+  <div class="class-guide">
+    ${CLASSES.map(c=>{ const h=RACES.filter(r=>r.f==="H"&&r.classes.includes(c.id)), a=RACES.filter(r=>r.f==="A"&&r.classes.includes(c.id));
+      const nm = r => (r.short||r.name) + (r.newc.includes(c.id)&&!r.pack?"*":"");
+      return `<article class="cg" style="--cc:var(--c-${c.id})">
+        <div class="panel-head"><h3>${c.name}</h3><span class="roles">${rolePills(c.id)}</span></div>
+        <p class="small">${esc(c.blurb)} <span class="muted">${c.armor} · ${c.specs.join(", ")}</span></p>
+        <ul>${c.news.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>
+        ${c.tankNote?`<p class="small muted">${esc(c.tankNote)}</p>`:""}
+        <p class="rr"><b class="H">Horde:</b> ${h.map(nm).join(", ")}<br><b class="A">Alliance:</b> ${a.map(nm).join(", ")}</p>
+      </article>`; }).join("")}
+  </div>
+  <p class="small muted" style="margin-top:8px">* New race and class combo in Forever.</p></div>
+
+  <div><div class="panel-head" style="margin-bottom:12px"><h2>Race and class combos</h2>
+    <div class="legend"><span><span class="dot"></span> Available</span><span><span class="dot new"></span> New in Forever</span></div></div>
+  <div class="matrix-wrap"><table class="matrix">
+    <thead><tr><th>Race</th>${CLASSES.map(c=>`<th style="--cc:var(--c-${c.id})">${c.name}</th>`).join("")}</tr></thead>
+    <tbody>${RACES.map(r=>`<tr><td title="${esc(r.racials)}">${esc(r.name)}<span class="fac ${r.f}">${r.f==="H"?"HORDE":"ALLIANCE"}</span></td>${CLASSES.map(c=>`<td>${r.classes.includes(c.id)?`<span class="dot ${r.newc.includes(c.id)?"new":""}" title="${esc(r.name+" "+c.name)}"></span>`:""}</td>`).join("")}</tr>`).join("")}</tbody>
+  </table></div>
+  <p class="small muted" style="margin-top:8px">Hover a race for its racials: actives, then passives. The Oct 15 beta build changed some racials, so check before launch. Both Skyborne variants need the Skyborne pack.</p></div>
+
+  <div class="panel">
+    <h3>Sources</h3>
+    <div class="sources">
+      <a href="https://news.blizzard.com/en-us/article/24301145/world-of-warcraft-at-blizzcon-2026-news-round-up" target="_blank" rel="noopener">Blizzard: World of Warcraft at BlizzCon 2026 round-up</a>
+      <a href="https://www.icy-veins.com/wow-forever/news/all-new-race-and-class-combos-and-racial-abilities-in-wow-forever-official/" target="_blank" rel="noopener">Icy Veins: all new race and class combos and racials (official)</a>
+      <a href="https://www.icy-veins.com/wow-forever/news/rulesets-replace-realms-in-wow-forever-heres-how-it-works/" target="_blank" rel="noopener">Icy Veins: rulesets replace realms</a>
+      <a href="https://blizzardwatch.com/2026/10/19/wow-forever-stress-test-scheduled-october-21-heres-need-know/" target="_blank" rel="noopener">Blizzard Watch: Oct 21 stress test</a>
+      <a href="https://www.warcrafttavern.com/forever/guides/classes/" target="_blank" rel="noopener">Warcraft Tavern: classes, specs and roles</a>
+      <a href="https://games.gg/world-of-warcraft/guides/wow-forever-every-class-new-ability-and-talent-change/" target="_blank" rel="noopener">games.gg: every class's new abilities and talents</a>
+      <a href="https://www.warcrafttavern.com/forever/guides/professions/" target="_blank" rel="noopener">Warcraft Tavern: professions</a>
+      <a href="https://lfcarry.com/guides/wow-forever-blizzcon-2026" target="_blank" rel="noopener">LFCarry: BlizzCon 2026 roadmap and dates</a>
+      <span>Compiled October 19, 2026. Beta details can still change before launch.</span>
+    </div>
+  </div>`;
+}
+
+/* ---------- Tabs, connection, boot ---------- */
+function setTab(name){
+  currentTab = name;
+  document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected", t.dataset.tab===name));
+  $("#view-ballot").hidden = name!=="ballot"; $("#view-results").hidden = name!=="results"; $("#view-guide").hidden = name!=="guide";
+  $("#savebar").hidden = name!=="ballot";
+  if (name==="results") renderResults();
+  try { history.replaceState(null, "", "#"+name); } catch(e){}
+  window.scrollTo({top: Math.min(window.scrollY, $(".tabs").offsetTop), behavior:"auto"});
+}
+document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click", ()=>setTab(t.dataset.tab)));
+function renderConn(){
+  const c = $("#conn"), s = c.querySelector("span");
+  c.classList.toggle("live", Store.ready && !Store.error && (Store.mode==="claude"||Store.mode==="supabase"||Store.mode==="readonly"));
+  s.textContent = Store.error ? "Board offline, retrying" : !Store.ready ? "Connecting…" : Store.mode==="local" ? "Preview, not shared" : "Live board";
+}
+Store.on(()=>{
+  const mine = Store.mine();
+  if (mine && !dirty) draft = normBallot(mine);
+  renderConn(); updateSaveBar(); renderBallot();
+  $("#vote-count").textContent = [...Store.ballots.values()].filter(b=>b.classes.length).length;
+  if (currentTab==="results") renderResults();
+});
+
+loadDraft();
+renderDates(); renderBallot(); renderGuide(); updateSaveBar();
+const h = (location.hash||"").slice(1); if (["ballot","results","guide"].includes(h)) setTab(h);
+Store.init();
+setTimeout(()=>{ if (!Store.ready && Store.mode==="connecting") Store.initLocal(); }, 12000);
+</script>
+
+</body>
+</html>
