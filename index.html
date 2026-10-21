@@ -8,7 +8,7 @@
 <title>Forever Party Draft</title>
 <meta name="theme-color" content="#0e1120">
 <script>try{if(localStorage.getItem("fpd-skin")==="classic")document.documentElement.dataset.skin="classic"}catch(e){}</script>
-<script src="forever-fx.js?v=1"></script>
+<script src="forever-fx.js?v=3"></script>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -533,6 +533,36 @@ button .ico{margin-right:.3em}
 :is(.chip .tag,.race-col h4,.sg-tag,.picks th,.example-note,#view-plan .pill,#view-plan .drow .topic,#view-plan .night .k,#view-plan .you dt,#view-plan .cmp td:first-child,#view-launch th,#view-launch .tag){font-family:var(--f-body);text-transform:none;letter-spacing:.01em;font-weight:600;font-size:.84rem}
 .conn{font-family:var(--f-body);font-size:.82rem}
 
+/* Role call */
+#view-plan .rc{display:grid;gap:10px;padding:16px;border-radius:12px;background:color-mix(in srgb,var(--gold) 6%,var(--surface-2))}
+#view-plan .rc + .rc{margin-top:12px}
+#view-plan .rc-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+#view-plan .rc-list{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+#view-plan .rc-list li{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1.4fr) 64px;gap:12px;align-items:center;padding:10px 12px;border-radius:9px;background:var(--surface);transition:box-shadow .3s}
+#view-plan .rc-list li.win{box-shadow:inset 0 0 0 1px var(--gold)}
+#view-plan .rc-list li.me .who b{color:var(--gold)}
+#view-plan .rc-list .who{display:grid;gap:2px;min-width:0}
+#view-plan .rc-list .then{font-size:.85rem;color:var(--muted)}
+#view-plan .rc-list .cl{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:.92rem}
+#view-plan .rc-list .st{text-align:right}
+#view-plan .rc .roll{display:inline-block;font-family:var(--f-display);font-size:1.5rem;line-height:1;color:var(--gold);font-variant-numeric:tabular-nums;min-width:2.2ch;text-align:right}
+#view-plan .rc .roll.spinning{opacity:.75;filter:blur(.4px)}
+#view-plan .rc .roll.landed{animation:rcland .5s cubic-bezier(.16,1,.3,1)}
+@keyframes rcland{0%{transform:scale(1.6);color:var(--fg)}100%{transform:scale(1);color:var(--gold)}}
+#view-plan .rc-tag{font-size:.84rem;font-weight:600;color:var(--muted)}
+#view-plan .rc-tag.wait{color:var(--faint)}
+#view-plan .rc-result{margin:0;font-weight:600}
+#view-plan .rc.open .rc-result{color:var(--muted);font-weight:400}
+#view-plan .rc-acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+#view-plan .rc-acts button{display:inline-flex;align-items:center;gap:6px;font:inherit;font-weight:600;border-radius:8px;padding:8px 14px;cursor:pointer}
+#view-plan .rc-acts .roll-btn{background:var(--gold);color:var(--gold-ink);border:1px solid var(--gold)}
+#view-plan .rc-acts .ghost{background:none;color:var(--fg);border:1px solid var(--line)}
+#view-plan .rc-acts button:disabled{opacity:.55;cursor:default}
+@media (prefers-reduced-motion: reduce){ #view-plan .rc .roll.landed{animation:none} }
+@media (max-width:639.98px){
+  #view-plan .rc-list li{grid-template-columns:minmax(0,1fr) auto}
+  #view-plan .rc-list .cl{grid-column:1/-1;grid-row:2}
+}
 /* Sections are the cards; what sits inside them is grouped by space and tint, never another card */
 #view-plan .decisions,#view-launch .check{border:0;border-radius:0;background:none;border-block:1px solid var(--line-soft)}
 #view-plan .drow,#view-launch .check li{padding-inline:2px}
@@ -616,7 +646,7 @@ button .ico{margin-right:.3em}
 </div>
 <div class="toast" id="toast" hidden></div>
 
-<script src="forever-data.js?v=13"></script>
+<script src="forever-data.js?v=14"></script>
 <script>
 /* ---------- Config for hosting outside Claude (GitHub Pages) ----------
    Leave blank inside Claude. For GitHub Pages, paste your Supabase project URL
@@ -938,12 +968,13 @@ function fdImprove(opts, objective, start){
    covering tanks and healers first, then rank, with a small penalty for duplicate classes. */
 function planParty(entries){
   const n = entries.length; if (!n) return null;
+  const RC = fdRoleCalls(entries);
   const opts = entries.map(([k,b])=>{
     const anyRole = ["tank","healer","dps"].some(r=>b.roles[r]!==null);
     const list = [];
     const dib = claimOf(b);
     b.classes.forEach((c,i)=>{ if (dib && c!==dib) return; rolesFor(b,c).forEach(role=>{
-      const pref = anyRole ? (b.roles[role] ?? 0) : 1;
+      const pref = anyRole ? fdPrefFor(RC, k, b, role) : 1;
       if (pref>0) list.push({c, role, rank:i, score:(5-i)*2 + pref*3});
     }); });
     if (!list.length) b.classes.forEach((c,i)=>{ if (dib && c!==dib) return; rolesFor(b,c).forEach(role=>list.push({c, role, rank:i, score:(5-i)*2 - 2})); });
@@ -1325,8 +1356,8 @@ function buildSuggestions(T, plan, entries, mine, alias, mem){
       const locked = on.filter(m=>{ const e = entries.find(([k])=>k===m.k); if (!e) return false; const b = e[1], dib = claimOf(b);
         return !b.classes.some(c=>(!dib || c===dib) && rolesFor(b,c).some(r=>r!==role && (b.roles[r] ?? 1)>0)); }).map(m=>m.name);
       add("party", `${on.length} ${role}s in the suggested party`, `A five-person group usually runs one ${role}. ${locked.length?`${locked.join(" and ")} can only ${verb} with the dibs, specs and roles on ${locked.length===1?"that ballot":"those ballots"}. `:""}If one of you picks a damage spec, drops dibs or marks damage as "Can flex", the planner will rebalance.`);
-    } else if (wants.length > need){
-      add("party", `${wants.length} of you want to ${verb}`, `A five-person group runs ${need===1?"one":need} ${role}${need===1?"":"s"}${need>1?" in total":""}, so the suggested party has ${on.length?on.map(m=>m.name).join(" and ")+" "+ing:"nobody "+ing+" yet"} and moves the others to a role they marked "Can flex". Agree on who ${verb}s. A second ${role} spec is still a good backup for tough dungeons or hardcore.`);
+    } else if (wants.length > need && fdRoleCall(entries, role).state==="open"){
+      add("party", `${wants.length} of you want to ${verb}`, `A five-person group runs ${need===1?"one":need} ${role}${need===1?"":"s"}. Everyone keeps their pick: settle it in the Role call on the Game plan by rolling for it or flexing to another role. Until then the suggested party has ${on.length?on.map(m=>m.name).join(" and ")+" "+ing:"nobody "+ing+" yet"}.`);
     }
   });
   const dup = {}; mem.forEach(m=>{ (dup[m.o.c]=dup[m.o.c]||[]).push(m); });
@@ -1720,6 +1751,7 @@ function setTab(name){
   fdDecorate(document.querySelector("main"));
   if (window.fdNavRefresh) window.fdNavRefresh();
   try { history.replaceState(null, "", "#"+name); } catch(e){}
+  if (window.FX && FX.onTab) FX.onTab(name);
   window.scrollTo({top: Math.min(window.scrollY, $(".tabs").offsetTop), behavior:"auto"});
 }
 document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click", ()=>setTab(t.dataset.tab)));
@@ -1926,12 +1958,13 @@ function tally(entries){
    covering tanks and healers first, then rank, with a small penalty for duplicate classes. */
 function planParty(entries){
   const n = entries.length; if (!n) return null;
+  const RC = fdRoleCalls(entries);
   const opts = entries.map(([k,b])=>{
     const anyRole = ["tank","healer","dps"].some(r=>b.roles[r]!==null);
     const list = [];
     const dib = claimOf(b);
     b.classes.forEach((c,i)=>{ if (dib && c!==dib) return; rolesFor(b,c).forEach(role=>{
-      const pref = anyRole ? (b.roles[role] ?? 0) : 1;
+      const pref = anyRole ? fdPrefFor(RC, k, b, role) : 1;
       if (pref>0) list.push({c, role, rank:i, score:(5-i)*2 + pref*3});
     }); });
     if (!list.length) b.classes.forEach((c,i)=>{ if (dib && c!==dib) return; rolesFor(b,c).forEach(role=>list.push({c, role, rank:i, score:(5-i)*2 - 2})); });
@@ -2014,8 +2047,8 @@ function buildSuggestions(T, plan, entries, mine, alias, mem){
       const locked = on.filter(m=>{ const e = entries.find(([k])=>k===m.k); if (!e) return false; const b = e[1], dib = claimOf(b);
         return !b.classes.some(c=>(!dib || c===dib) && rolesFor(b,c).some(r=>r!==role && (b.roles[r] ?? 1)>0)); }).map(m=>m.name);
       add("party", `${on.length} ${role}s in the suggested party`, `A five-person group usually runs one ${role}. ${locked.length?`${locked.join(" and ")} can only ${verb} with the dibs, specs and roles on ${locked.length===1?"that ballot":"those ballots"}. `:""}If one of you picks a damage spec, drops dibs or marks damage as "Can flex", the planner will rebalance.`);
-    } else if (wants.length > need){
-      add("party", `${wants.length} of you want to ${verb}`, `A five-person group runs ${need===1?"one":need} ${role}${need===1?"":"s"}${need>1?" in total":""}, so the suggested party has ${on.length?on.map(m=>m.name).join(" and ")+" "+ing:"nobody "+ing+" yet"} and moves the others to a role they marked "Can flex". Agree on who ${verb}s. A second ${role} spec is still a good backup for tough dungeons or hardcore.`);
+    } else if (wants.length > need && fdRoleCall(entries, role).state==="open"){
+      add("party", `${wants.length} of you want to ${verb}`, `A five-person group runs ${need===1?"one":need} ${role}${need===1?"":"s"}. Everyone keeps their pick: settle it in the Role call on the Game plan by rolling for it or flexing to another role. Until then the suggested party has ${on.length?on.map(m=>m.name).join(" and ")+" "+ing:"nobody "+ing+" yet"}.`);
     }
   });
   const dup = {}; mem.forEach(m=>{ (dup[m.o.c]=dup[m.o.c]||[]).push(m); });
@@ -2132,11 +2165,12 @@ const inName = m => m.me ? "you" : m.name;
 const tagged = m => `${CLS[m.c].name} (${inName(m)})`;
 function planVariant(entries, W, avoid, near){
   const n = entries.length; if (!n) return null;
+  const RC = fdRoleCalls(entries);
   const opts = entries.map(([k,b])=>{
     const anyRole = ["tank","healer","dps"].some(r=>b.roles[r]!==null);
     const list = [];
     const dib = claimOf(b);
-    b.classes.forEach((c,i)=>{ if (dib && c!==dib) return; rolesFor(b,c).forEach(role=>{ const pref = anyRole ? (b.roles[role] ?? 0) : 1; if (pref>0) list.push({c, role, rank:i, pref}); }); });
+    b.classes.forEach((c,i)=>{ if (dib && c!==dib) return; rolesFor(b,c).forEach(role=>{ const pref = anyRole ? fdPrefFor(RC, k, b, role) : 1; if (pref>0) list.push({c, role, rank:i, pref}); }); });
     if (!list.length) b.classes.forEach((c,i)=>{ if (dib && c!==dib) return; rolesFor(b,c).forEach(role=>list.push({c, role, rank:i, pref:-2/3})); });
     list.forEach(o=>{ o.score = (5-o.rank)*2*W.rank + o.pref*3; o.profs = profsFor(b, o.c); });
     return list.sort((a,b)=>b.score-a.score);
@@ -2305,6 +2339,37 @@ function render(){
   const fifth = bestFifth(plan, mem);
   const samples = buildSamples(entries, plan, alias);
   const bestS = samples.find(s=>s.best);
+  /* ---- Role call ---- */
+  const RCs = fdRoleCalls(entries), rcActive = ["healer","tank"].map(r=>RCs[r]).filter(rc=>rc.active);
+  const rcName = k => k===Store.myKey ? "You" : shortAlias(alias[k]);
+  const rcSubj = (arr, V) => { const names = arr.map(x=>x.k===Store.myKey ? "you" : shortAlias(alias[x.k])); return `${listJoin(names)} ${arr.length===1 && arr[0].k!==Store.myKey ? V+"s" : V}`; };
+  const rcHTML = rcActive.length ? `<section id="rolecall" aria-labelledby="h-rc">
+    <div class="sec-head"><h2 id="h-rc">Role call</h2><span class="small muted">Everyone keeps their pick. This only settles the suggested party.</span></div>
+    ${rcActive.map(rc=>{
+      const R = rc.role, V = R==="healer" ? "heal" : "tank", settled = rc.state!=="open", meIn = rc.cont.find(x=>x.k===Store.myKey);
+      const rv = x => x.call && x.call.v==="roll" ? x.call.roll : x.call && x.call.v==="flex" ? -2 : -1;
+      const rows = rc.cont.slice().sort((a,b)=>rv(b)-rv(a)).map(x=>{
+        const i = entries.findIndex(([k])=>k===x.k), o = plan.pick[i], win = !!(rc.winners && rc.winners.some(w=>w.k===x.k)), dib = claimOf(x.b);
+        const cls = x.b.classes.filter(c=>(!dib || c===dib) && fdCanFill(x.b, c, R)).slice(0,3).map(c=>`<span style="color:var(--c-${c})">${fdEmblem(c)}${CLS[c].name}</span>`).join("");
+        const st = x.call && x.call.v==="roll" ? `<span class="roll">${x.call.roll}</span>` : x.call && x.call.v==="flex" ? `<span class="rc-tag">Flexing</span>` : `<span class="rc-tag wait">Deciding</span>`;
+        const then = o ? `In the party: ${esc(specLabel(x.b, o.c, o.role))}${CLS[o.c].name}, ${roleWord(o.role)}` : "Not in the party yet";
+        return `<li class="${win?"win":""} ${x.k===Store.myKey?"me":""}"><div class="who"><b>${esc(rcName(x.k))}</b><span class="then">${then}</span></div><div class="cl">${cls}</div><div class="st">${st}</div></li>`;
+      }).join("");
+      const rolls = rc.cont.filter(x=>x.call && x.call.v==="roll");
+      const result = rc.state==="rolled" ? `Settled by roll: ${rcSubj(rc.winners, V)} with ${rc.winners.map(w=>w.call.roll).join(" and ")}. Everyone else plays a role they marked "Can flex".`
+        : rc.state==="settled" ? `Settled: ${rcSubj(rc.winners, V)}. The others chose to flex.`
+        : `Waiting on ${listJoin(rc.waiting.map(x=>x.k===Store.myKey?"you":shortAlias(alias[x.k])))}.${rolls.length?` Rolls so far: ${rolls.map(x=>`${x.k===Store.myKey?"you":shortAlias(alias[x.k])} ${x.call.roll}`).join(", ")}.`:""}`;
+      const acts = !meIn ? "" : meIn.call && meIn.call.v==="roll"
+        ? `<span class="small muted">You rolled ${meIn.call.roll}.</span>${rc.winners && rc.winners.some(w=>w.k===Store.myKey) || !settled ? `<button type="button" class="ghost" data-rc="flex" data-role="${R}">Let someone else ${V}</button>` : ""}`
+        : meIn.call && meIn.call.v==="flex"
+        ? `<span class="small muted">You're flexing.</span><button type="button" class="ghost" data-rc="back" data-role="${R}">I want to ${V} after all</button>`
+        : `<button type="button" class="roll-btn" data-rc="roll" data-role="${R}">${ICO.die}Roll for it</button><button type="button" class="ghost" data-rc="flex" data-role="${R}">I'll flex</button>`;
+      return `<div class="rc ${rc.state}"><div class="rc-head"><h3>${R==="healer"?"Who heals?":"Who tanks?"}</h3><span class="pill ${settled?"settled":"open"}">${settled?"Settled":"Open"}</span></div>
+        <p class="small muted">${rc.cont.length} of you marked ${R==="healer"?"Healer":"Tank"} as your main role, and a five-person group runs ${rc.need===1?"one":rc.need}. Roll for it or flex to another role you marked. Highest roll ${V}s.</p>
+        <ul class="rc-list">${rows}</ul>
+        <p class="rc-result">${result}</p>${acts?`<div class="rc-acts">${acts}</div>`:""}</div>`;
+    }).join("")}
+  </section>` : "";
   const lkey = entries.map(([k],i)=>{ const o = plan.pick[i]; return k.slice(0,10)+":"+(o ? o.c+"/"+o.role : "-"); }).join(",");
   const confirmed = entries.filter(([,b])=>b.confirm===lkey);
   const staleConf = entries.filter(([,b])=>b.confirm && b.confirm!==lkey).length;
@@ -2342,6 +2407,9 @@ function render(){
       why: `${f.v} of ${S} free${s2?` on both`:""}. There are ${nights.full} slots a week when everyone is free.${nights.backups.length?` Backups: ${nights.backups.map(b=>slotName(b.di,b.ti)).join(", ")}.`:""}`});
   } else D.push({topic:"Group nights", call:"Not answered", st:"open", why:"Nobody has added a schedule yet."});
 
+  rcActive.forEach(rc=>{ const V = rc.role==="healer" ? "heal" : "tank";
+    D.push({topic: rc.role==="healer" ? "Healer" : "Tank", call: rc.state==="open" ? `${rc.cont.length} want it` : listJoin(rc.winners.map(x=>x.k===Store.myKey?"You":shortAlias(alias[x.k]))), st: rc.state==="open" ? "open" : "settled",
+      why: rc.state==="open" ? `${rc.cont.length} of you marked it as your main role. Settle it in the Role call: roll for it or flex.` : rc.state==="rolled" ? `Settled by roll (${rc.winners.map(w=>w.call.roll).join(", ")}). Everyone else plays a role they marked "Can flex".` : `The others chose to flex, so ${rcSubj(rc.winners, V)}.` }); });
   if (plan){
     const allTop2 = mem.every(m=>m.o.rank<=1), covered = plan.tanks>=1 && plan.healers>=1;
     D.push({topic:"Lineup", call: mem.map(m=>CLS[m.o.c].name+" "+roleWord(m.o.role)).join(", "), st: locked || (covered && allTop2) ? "settled" : covered ? "leaning" : "open",
@@ -2456,6 +2524,7 @@ function render(){
     </div>
   </section>
 
+  ${rcHTML}
   <section aria-labelledby="h-dec">
     <div class="sec-head"><h2 id="h-dec">Decisions</h2><span class="small muted">${pill("settled","Settled")} ${pill("leaning","Leaning")} ${pill("open","Open")}</span></div>
     <div class="decisions">${D.map(d=>`<div class="drow"><span class="topic">${esc(d.topic)}</span><span class="call">${esc(d.call)}</span><span class="st">${pill(d.st, d.st==="settled"?"Settled":d.st==="leaning"?"Leaning":"Open")}</span><p class="why">${esc(d.why)}</p></div>`).join("")}</div>
@@ -2526,6 +2595,29 @@ function render(){
   $("#sh-full").onclick = () => copy(discord(true), "Copied. Paste it into Discord.");
   $("#sh-safe").onclick = () => copy(discord(false), "Copied the status without anyone's picks.");
   const ics = $("#sh-ics"); if (ics) ics.onclick = () => downloadText("forever-group-nights.ics", icsFor([nights.first, nights.second].filter(Boolean).map(x=>({di:x.di, key:TIMES[x.ti][0]})), "WoW Forever"), "text/calendar");
+  const rollAnim = (card, final) => new Promise(res => {
+    const box = card && card.querySelector("li.me .st"); if (!box){ res(); return; }
+    box.innerHTML = `<span class="roll spinning">1</span>`; const sp = box.querySelector(".roll");
+    if (window.FX) FX.play("dice");
+    const t0 = performance.now(), dur = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 950;
+    const tick = () => { const t = performance.now() - t0;
+      if (t >= dur){ sp.textContent = final; sp.classList.remove("spinning"); sp.classList.add("landed"); setTimeout(res, 520); return; }
+      sp.textContent = 1 + Math.floor(Math.random()*100); setTimeout(tick, 38 + t/14); };
+    tick();
+  });
+  el.querySelectorAll("[data-rc]").forEach(btn => btn.onclick = async () => {
+    const R = btn.dataset.role, act = btn.dataset.rc, call = Object.assign({}, mine.call || {}); let rolled = null;
+    el.querySelectorAll("[data-rc]").forEach(x => x.disabled = true);
+    if (act==="roll"){ rolled = 1 + Math.floor(Math.random()*100); await rollAnim(btn.closest(".rc"), rolled); call[R] = {v:"roll", roll:rolled, at:new Date().toISOString()}; }
+    else if (act==="flex") call[R] = {v:"flex", at:new Date().toISOString()};
+    else delete call[R];
+    try {
+      if (Store.mode==="demo"){ mine.call = call; render(); return; }
+      const saved = await fdSaveMine(Store.raw.get(Store.myKey), {call});
+      Store.raw.set(Store.myKey, saved); Store.ballots.set(Store.myKey, normBallot(saved));
+      toast(act==="roll" ? `You rolled ${rolled} out of 100.` : act==="flex" ? "You're flexing. The planner will slot you in another role you marked." : `You're back in the running to ${R==="healer"?"heal":"tank"}.`); render(); Outer.refresh();
+    } catch(e){ toast("Couldn't save. Open this page in the browser you voted from and try again."); render(); }
+  });
   $("#btn-confirm").onclick = async () => {
     const patch = {confirm: iConfirmed ? null : lkey};
     try {
@@ -2601,9 +2693,10 @@ function profsFor(b, c){ const p = b.profMode==="each" && c && b.profsBy && b.pr
 /* Same party planner as the board and game plan: tanks and healers first, then rank, dibs and specs respected. */
 function planParty(entries){
   const n = entries.length; if (!n) return null;
+  const RC = fdRoleCalls(entries);
   const opts = entries.map(([k,b])=>{
     const anyRole = ["tank","healer","dps"].some(r=>b.roles[r]!==null); const list = []; const dib = claimOf(b);
-    b.classes.forEach((c,i)=>{ if (dib && c!==dib) return; rolesFor(b,c).forEach(role=>{ const pref = anyRole ? (b.roles[role] ?? 0) : 1; if (pref>0) list.push({c, role, rank:i, score:(5-i)*2 + pref*3}); }); });
+    b.classes.forEach((c,i)=>{ if (dib && c!==dib) return; rolesFor(b,c).forEach(role=>{ const pref = anyRole ? fdPrefFor(RC, k, b, role) : 1; if (pref>0) list.push({c, role, rank:i, score:(5-i)*2 + pref*3}); }); });
     if (!list.length) b.classes.forEach((c,i)=>{ if (dib && c!==dib) return; rolesFor(b,c).forEach(role=>list.push({c, role, rank:i, score:(5-i)*2 - 2})); });
     return list.sort((a,b)=>b.score-a.score);
   });
@@ -2791,7 +2884,7 @@ return {
 };
 })(Store);
 
-const ICO = {star:'<svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.6l1.9 4 4.4.5-3.3 3 .9 4.3L8 11.2l-3.9 2.2.9-4.3-3.3-3 4.4-.5z" fill="currentColor"/></svg>', starO:'<svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.6l1.9 4 4.4.5-3.3 3 .9 4.3L8 11.2l-3.9 2.2.9-4.3-3.3-3 4.4-.5z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>', check:'<svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'};
+const ICO = {die:'<svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="2" width="12" height="12" rx="3" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="5.4" cy="5.4" r="1.1" fill="currentColor"/><circle cx="8" cy="8" r="1.1" fill="currentColor"/><circle cx="10.6" cy="10.6" r="1.1" fill="currentColor"/></svg>', star:'<svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.6l1.9 4 4.4.5-3.3 3 .9 4.3L8 11.2l-3.9 2.2.9-4.3-3.3-3 4.4-.5z" fill="currentColor"/></svg>', starO:'<svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.6l1.9 4 4.4.5-3.3 3 .9 4.3L8 11.2l-3.9 2.2.9-4.3-3.3-3 4.4-.5z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>', check:'<svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'};
 /* ---------- Next up: one click to whatever you need to do next ---------- */
 function jumpTo(el){ if (!el) return; const y = el.getBoundingClientRect().top + window.scrollY - $(".tabs").offsetHeight - 16; window.scrollTo({top:Math.max(0,y), behavior:"smooth"}); }
 function nextUpAction(){
@@ -2799,6 +2892,8 @@ function nextUpAction(){
   const mine = Store.mine(), now = new Date();
   if (!mine) return { label:"Cast my ballot", go:()=>{ setTab("ballot"); setTimeout(()=>jumpTo(document.querySelector("#view-ballot .step")), 60); } };
   const n = [...Store.ballots.values()].filter(b=>b.classes && b.classes.length).length;
+  const RCn = fdRoleCalls([...Store.ballots.entries()].filter(([,b])=>b.classes && b.classes.length));
+  for (const R of ["healer","tank"]){ const rc = RCn[R]; if (rc.active && rc.state==="open" && rc.cont.some(x=>x.k===Store.myKey && !x.call)) return { label: R==="healer" ? "Settle who heals" : "Settle who tanks", go:()=>{ setTab("plan"); setTimeout(()=>jumpTo($("#rolecall")), 80); } }; }
   if (n >= 2 && !mine.confirm) return { label:"Confirm the lineup", go:()=>{ setTab("plan"); setTimeout(()=>jumpTo($("#btn-confirm")), 80); } };
   const open = new Date(2026, 9, 27), close = new Date(2026, 10, 4);
   if (now >= open && now < close && !(mine.chars||[]).some(c=>c.r)) return { label:"Reserve my names", go:()=>{ setTab("launch"); setTimeout(()=>jumpTo($("#names")), 80); } };
@@ -2826,7 +2921,8 @@ fdDecorate(document.querySelector("main"));
 Store.init();
 fdNav({current:()=>currentTab, root:document.querySelector("main"), sticky:".tabs",
   onPage:id=>{ if (VIEWS.includes(id)){ setTab(id); return true; } return false; },
-  items:()=>{
+  items:legendItems});
+function legendItems(){
     const out = [];
     if (currentTab==="ballot"){
       const ns = $("#name-step"); if (ns && !ns.hidden) out.push({el:ns, label:"Your name", level:1});
@@ -2847,10 +2943,10 @@ fdNav({current:()=>currentTab, root:document.querySelector("main"), sticky:".tab
       document.querySelectorAll("#view-guide h2, #view-guide h3").forEach(h=>{ const cg = h.closest(".cg"); out.push({el:cg || h.parentElement, label:h.textContent, level:cg ? 2 : 1}); });
     }
     return out;
-  }});
+}
 setTimeout(()=>{ if (!Store.ready && Store.mode==="connecting") Store.initLocal(); }, 12000);
 renderNextUp(); renderXP();
-if (window.FX) FX.init({ setTab, current:()=>currentTab, voted:()=>!!Store.mine() });
+if (window.FX) FX.init({ setTab, current:()=>currentTab, voted:()=>!!Store.mine(), sections:legendItems });
 </script>
 
 </body>
