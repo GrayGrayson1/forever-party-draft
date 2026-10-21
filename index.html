@@ -919,6 +919,21 @@ function tally(entries){
     hours:count("hours",HOURS), pace:count("pace",PACE), hardcore:count("hardcore",HC), launch:count("launch",LAUNCH)};
 }
 
+/* Search over everyone's options: take the best single or paired change until nothing improves.
+   Paired changes matter. Moving one person off a crowded role often only pays off once someone else moves too. */
+function fdImprove(opts, objective, start){
+  const n = opts.length; let pick = start.slice(), cur = objective(pick);
+  for (let loop=0; loop<50; loop++){
+    let bestP = null, bestV = cur;
+    for (let i=0;i<n;i++) for (const o of opts[i]){
+      if (o===pick[i]) continue;
+      const p1 = pick.slice(); p1[i] = o; const v1 = objective(p1); if (v1 > bestV + 1e-9){ bestV = v1; bestP = p1; }
+      for (let j=i+1;j<n;j++) for (const o2 of opts[j]){ if (o2===pick[j]) continue; const p2 = p1.slice(); p2[j] = o2; const v2 = objective(p2); if (v2 > bestV + 1e-9){ bestV = v2; bestP = p2; } }
+    }
+    if (!bestP) break; pick = bestP; cur = bestV;
+  }
+  return [pick, cur];
+}
 /* Party planner: give each voter one of their ranked classes in a role they'll play,
    covering tanks and healers first, then rank, with a small penalty for duplicate classes. */
 function planParty(entries){
@@ -941,17 +956,10 @@ function planParty(entries){
     pick.forEach((o,i)=>{ if (!o) return; s+=o.score; if (o.role==="tank") t++; if (o.role==="healer") h++; seen[o.c]=(seen[o.c]||0)+1; });
     Object.values(seen).forEach(v=>{ if (v>1) s -= 4*(v-1); });
     s += 14*Math.min(t,needT) + 14*Math.min(h,needH);
-    s -= 6*Math.max(0,t-needT) + 3*Math.max(0,h-needH);
+    s -= 12*Math.max(0,t-needT) + 12*Math.max(0,h-needH);
     return s;
   };
-  let pick = opts.map(l=>l[0]||null), cur = objective(pick);
-  for (let loop=0; loop<60; loop++){
-    let improved=false;
-    for (let i=0;i<n;i++){
-      for (const o of opts[i]){ const trial = pick.slice(); trial[i]=o; const v=objective(trial); if (v>cur+1e-9){ pick=trial; cur=v; improved=true; } }
-    }
-    if (!improved) break;
-  }
+  const pick = fdImprove(opts, objective, opts.map(l=>l[0]||null))[0];
   const t = pick.filter(o=>o&&o.role==="tank").length, h = pick.filter(o=>o&&o.role==="healer").length;
   return {pick, tanks:t, healers:h, dps:pick.filter(o=>o&&o.role==="dps").length, needT, needH, groups};
 }
@@ -1308,6 +1316,18 @@ function buildSuggestions(T, plan, entries, mine, alias, mem){
     if (classNoWill) why += ` ${plural(classNoWill,"person")} ranked a class that can ${role==="healer"?"heal":"tank"} but said No to it. Switching to "Can flex" would let the planner use them.`;
     if (!willingNoClass && !classNoWill) why += ` Nobody's ballot can fill it yet, so someone would need to rank ${list}.`;
     add("party", `Find ${role==="healer"?"a healer":"a tank"}`, why);
+  });
+  [["healer","heal","healing"],["tank","tank","tanking"]].forEach(([role, verb, ing])=>{
+    const need = role==="healer" ? plan.needH : plan.needT; if (!need) return;
+    const wants = entries.filter(([,b])=>b.roles[role]===2 && b.classes.some(c=>canDo(c,role)));
+    const on = mem.filter(m=>m.o.role===role);
+    if (on.length > need){
+      const locked = on.filter(m=>{ const e = entries.find(([k])=>k===m.k); if (!e) return false; const b = e[1], dib = claimOf(b);
+        return !b.classes.some(c=>(!dib || c===dib) && rolesFor(b,c).some(r=>r!==role && (b.roles[r] ?? 1)>0)); }).map(m=>m.name);
+      add("party", `${on.length} ${role}s in the suggested party`, `A five-person group usually runs one ${role}. ${locked.length?`${locked.join(" and ")} can only ${verb} with the dibs, specs and roles on ${locked.length===1?"that ballot":"those ballots"}. `:""}If one of you picks a damage spec, drops dibs or marks damage as "Can flex", the planner will rebalance.`);
+    } else if (wants.length > need){
+      add("party", `${wants.length} of you want to ${verb}`, `A five-person group runs ${need===1?"one":need} ${role}${need===1?"":"s"}${need>1?" in total":""}, so the suggested party has ${on.length?on.map(m=>m.name).join(" and ")+" "+ing:"nobody "+ing+" yet"} and moves the others to a role they marked "Can flex". Agree on who ${verb}s. A second ${role} spec is still a good backup for tough dungeons or hardcore.`);
+    }
   });
   const dup = {}; mem.forEach(m=>{ (dup[m.o.c]=dup[m.o.c]||[]).push(m); });
   const missingU = UTILS.filter(u=>!mem.some(m=>u.by[m.o.c]));
@@ -1924,17 +1944,10 @@ function planParty(entries){
     pick.forEach((o,i)=>{ if (!o) return; s+=o.score; if (o.role==="tank") t++; if (o.role==="healer") h++; seen[o.c]=(seen[o.c]||0)+1; });
     Object.values(seen).forEach(v=>{ if (v>1) s -= 4*(v-1); });
     s += 14*Math.min(t,needT) + 14*Math.min(h,needH);
-    s -= 6*Math.max(0,t-needT) + 3*Math.max(0,h-needH);
+    s -= 12*Math.max(0,t-needT) + 12*Math.max(0,h-needH);
     return s;
   };
-  let pick = opts.map(l=>l[0]||null), cur = objective(pick);
-  for (let loop=0; loop<60; loop++){
-    let improved=false;
-    for (let i=0;i<n;i++){
-      for (const o of opts[i]){ const trial = pick.slice(); trial[i]=o; const v=objective(trial); if (v>cur+1e-9){ pick=trial; cur=v; improved=true; } }
-    }
-    if (!improved) break;
-  }
+  const pick = fdImprove(opts, objective, opts.map(l=>l[0]||null))[0];
   const t = pick.filter(o=>o&&o.role==="tank").length, h = pick.filter(o=>o&&o.role==="healer").length;
   return {pick, tanks:t, healers:h, dps:pick.filter(o=>o&&o.role==="dps").length, needT, needH, groups};
 }
@@ -1992,6 +2005,18 @@ function buildSuggestions(T, plan, entries, mine, alias, mem){
     if (classNoWill) why += ` ${plural(classNoWill,"person")} ranked a class that can ${role==="healer"?"heal":"tank"} but said No to it. Switching to "Can flex" would let the planner use them.`;
     if (!willingNoClass && !classNoWill) why += ` Nobody's ballot can fill it yet, so someone would need to rank ${list}.`;
     add("party", `Find ${role==="healer"?"a healer":"a tank"}`, why);
+  });
+  [["healer","heal","healing"],["tank","tank","tanking"]].forEach(([role, verb, ing])=>{
+    const need = role==="healer" ? plan.needH : plan.needT; if (!need) return;
+    const wants = entries.filter(([,b])=>b.roles[role]===2 && b.classes.some(c=>canDo(c,role)));
+    const on = mem.filter(m=>m.o.role===role);
+    if (on.length > need){
+      const locked = on.filter(m=>{ const e = entries.find(([k])=>k===m.k); if (!e) return false; const b = e[1], dib = claimOf(b);
+        return !b.classes.some(c=>(!dib || c===dib) && rolesFor(b,c).some(r=>r!==role && (b.roles[r] ?? 1)>0)); }).map(m=>m.name);
+      add("party", `${on.length} ${role}s in the suggested party`, `A five-person group usually runs one ${role}. ${locked.length?`${locked.join(" and ")} can only ${verb} with the dibs, specs and roles on ${locked.length===1?"that ballot":"those ballots"}. `:""}If one of you picks a damage spec, drops dibs or marks damage as "Can flex", the planner will rebalance.`);
+    } else if (wants.length > need){
+      add("party", `${wants.length} of you want to ${verb}`, `A five-person group runs ${need===1?"one":need} ${role}${need===1?"":"s"}${need>1?" in total":""}, so the suggested party has ${on.length?on.map(m=>m.name).join(" and ")+" "+ing:"nobody "+ing+" yet"} and moves the others to a role they marked "Can flex". Agree on who ${verb}s. A second ${role} spec is still a good backup for tough dungeons or hardcore.`);
+    }
   });
   const dup = {}; mem.forEach(m=>{ (dup[m.o.c]=dup[m.o.c]||[]).push(m); });
   const missingU = UTILS.filter(u=>!mem.some(m=>u.by[m.o.c]));
@@ -2124,7 +2149,7 @@ function planVariant(entries, W, avoid, near){
       UTILS.forEach(u=>{ if (u.by[o.c]) util.add(u.id); }); o.profs.forEach(p=>pc[p]=(pc[p]||0)+1);
       (avoid||[]).forEach(a=>{ if (a[i] && a[i].c!==o.c) s += W.diff||0; }); });
     Object.values(seen).forEach(v=>{ if (v>1) s -= 4*W.dupe*(v-1); });
-    s += 14*Math.min(t,needT) + 14*Math.min(h,needH) - 6*Math.max(0,t-needT) - 3*Math.max(0,h-needH);
+    s += 14*Math.min(t,needT) + 14*Math.min(h,needH) - 12*Math.max(0,t-needT) - 12*Math.max(0,h-needH);
     s += W.util*util.size + W.prof*Object.keys(pc).length;
     PROFS.forEach(p=>{ if (p.kind==="craft" && pc[p.id]>1) s -= W.prof*(pc[p.id]-1); });
     Object.entries(FEEDS).forEach(([c,g])=>{ if (pc[c] && pc[g]) s += W.prof*0.5; });
@@ -2140,12 +2165,7 @@ function planVariant(entries, W, avoid, near){
     return best;
   }
   for (let st=0; st<5; st++){
-    let pick = opts.map(l=>l[Math.min(st,l.length-1)]||null), cur = objective(pick);
-    for (let loop=0; loop<60; loop++){
-      let improved=false;
-      for (let i=0;i<n;i++) for (const o of opts[i]){ const trial = pick.slice(); trial[i]=o; const v=objective(trial); if (v>cur+1e-9){ pick=trial; cur=v; improved=true; } }
-      if (!improved) break;
-    }
+    const [pick, cur] = fdImprove(opts, objective, opts.map(l=>l[Math.min(st,l.length-1)]||null));
     if (cur>bestV){ best=pick; bestV=cur; }
   }
   return best;
@@ -2591,11 +2611,8 @@ function planParty(entries){
   const objective = pick => { let s=0, t=0, h=0; const seen={};
     pick.forEach(o=>{ if (!o) return; s+=o.score; if (o.role==="tank") t++; if (o.role==="healer") h++; seen[o.c]=(seen[o.c]||0)+1; });
     Object.values(seen).forEach(v=>{ if (v>1) s -= 4*(v-1); });
-    return s + 14*Math.min(t,needT) + 14*Math.min(h,needH) - 6*Math.max(0,t-needT) - 3*Math.max(0,h-needH); };
-  let pick = opts.map(l=>l[0]||null), cur = objective(pick);
-  for (let loop=0; loop<60; loop++){ let improved=false;
-    for (let i=0;i<n;i++) for (const o of opts[i]){ const trial = pick.slice(); trial[i]=o; const v=objective(trial); if (v>cur+1e-9){ pick=trial; cur=v; improved=true; } }
-    if (!improved) break; }
+    return s + 14*Math.min(t,needT) + 14*Math.min(h,needH) - 12*Math.max(0,t-needT) - 12*Math.max(0,h-needH); };
+  const pick = fdImprove(opts, objective, opts.map(l=>l[0]||null))[0];
   return {pick};
 }
 
