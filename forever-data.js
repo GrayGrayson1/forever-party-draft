@@ -255,10 +255,10 @@ function specLabel(b, c, role){ const s = specFor(b, c, role); return s ? s.name
 function claimOf(b){ return b && b.claim && b.classes.includes(b.claim) ? b.claim : null; }
 
 const LOOT = [["nbg","Need before greed"],["ml","One looter hands it out"],["rr","Take turns"],["any","Don't mind"]];
-const LIVE_FIELDS = ["confirm","lvl","lvlAt"];
+const LIVE_FIELDS = ["confirm","lvl","lvlAt","call"];
 
 /* Extra ballot fields added in October 2026. Older ballots simply get the defaults. */
-function extraDefaults(){ return {nope:[], specBy:{}, claim:null, chars:[], loot:null, tz:"", upd:"", confirm:null, lvl:null, lvlAt:""}; }
+function extraDefaults(){ return {nope:[], specBy:{}, claim:null, chars:[], loot:null, tz:"", upd:"", confirm:null, lvl:null, lvlAt:"", call:{}}; }
 function normExtra(b, n){
   Object.assign(n, extraDefaults());
   if (!b || typeof b!=="object") return n;
@@ -273,7 +273,38 @@ function normExtra(b, n){
   n.confirm = typeof b.confirm==="string" ? b.confirm.slice(0,600) : null;
   n.lvl = Number.isInteger(b.lvl) && b.lvl>=1 && b.lvl<=60 ? b.lvl : null;
   n.lvlAt = typeof b.lvlAt==="string" ? b.lvlAt.slice(0,40) : "";
+  if (b.call && typeof b.call==="object") ["healer","tank"].forEach(r=>{ const c = b.call[r]; if (!c || (c.v!=="roll" && c.v!=="flex")) return;
+    const x = {v:c.v, at: typeof c.at==="string" ? c.at.slice(0,40) : ""};
+    if (c.v==="roll"){ const v = Number(c.roll); if (!(Number.isInteger(v) && v>=1 && v<=100)) return; x.roll = v; }
+    n.call[r] = x; });
   return n;
+}
+
+/* Role call. When more people want to tank or heal than the party has room for, everyone keeps their pick
+   and the contenders settle it themselves: roll for it, or flex to another role they marked. */
+function fdCanFill(b, c, role){
+  const sp = fdSpecs(c), mine = b.specBy && b.specBy[c] && b.specBy[c].length ? sp.filter(s=>b.specBy[c].includes(s.name)) : sp;
+  return mine.some(s=>s.roles.includes(role));
+}
+function fdRoleCall(entries, role){
+  const n = entries.length, need = n >= (role==="healer" ? 2 : 3) ? Math.max(1, Math.ceil(n/5)) : 0;
+  const cont = entries.filter(([,b])=>b.roles && b.roles[role]===2 && b.classes.some(c=>(!b.claim || c===b.claim) && fdCanFill(b, c, role)))
+    .map(([k,b])=>({k, b, call:(b.call && b.call[role]) || null}));
+  if (!need || cont.length <= need) return {role, need, cont, active:false, state:"none"};
+  const staying = cont.filter(x=>!(x.call && x.call.v==="flex"));
+  const waiting = staying.filter(x=>!(x.call && x.call.v==="roll"));
+  let winners = null, state = "open";
+  if (staying.length <= need){ winners = staying; state = "settled"; }
+  else if (!waiting.length){ winners = staying.slice().sort((a,b)=>b.call.roll-a.call.roll || String(a.call.at).localeCompare(String(b.call.at))).slice(0, need); state = "rolled"; }
+  return {role, need, cont, staying, waiting, winners, state, active:true};
+}
+function fdRoleCalls(entries){ return {healer:fdRoleCall(entries, "healer"), tank:fdRoleCall(entries, "tank")}; }
+/* How much a voter wants a role once the role call is taken into account: the winner leans in, the others flex. */
+function fdPrefFor(rc, k, b, role){
+  const base = b.roles[role] ?? 0, r = rc && rc[role];
+  if (!r || !r.active || base < 2) return base;
+  if (r.winners) return r.winners.some(x=>x.k===k) ? 3 : 1;
+  return b.call && b.call[role] && b.call[role].v==="flex" ? 1 : base;
 }
 function cleanChars(b){ b.chars = (b.chars||[]).filter(x=>x.n.trim()).map(x=>({...x, n:x.n.trim()})); }
 
@@ -472,6 +503,7 @@ const FD_ICONS = {
   book:'<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 5v16"/>',
   bars:'<path d="M5 20V10M12 20V4M19 20v-7"/>',
   flag:'<path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/>',
+  dice:'<rect x="4" y="4" width="16" height="16" rx="4"/><path d="M9 9h.01M12 12h.01M15 15h.01" stroke-width="2.6"/>',
 };
 function fdIcon(name){ const p = FD_ICONS[name]; return p ? `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${p}</svg>` : ""; }
 const FD_EMBLEM = {
@@ -486,7 +518,7 @@ const FD_EMBLEM = {
   druid:'<path d="M5 19C5 9 11 4 20 4c0 9-5 15-15 15z"/><path d="M5 19l9-9"/>',
 };
 function fdEmblem(c){ const p = FD_EMBLEM[c]; return p ? `<svg class="emb" viewBox="0 0 24 24" aria-hidden="true" style="color:var(--c-${c})" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${p}</svg>` : ""; }
-const FD_SEC_ICONS = [[/short version/i,"list"],[/^decisions/i,"check"],[/adjustments|could change/i,"sliders"],[/lineup|suggested party|role coverage/i,"shield"],[/sample parties/i,"layers"],[/when (to|we can) play/i,"clock"],[/your plan/i,"user"],[/happens next|before oct|key dates/i,"calendar"],[/^the party$|everyone's picks|^races$/i,"results"],[/^names$/i,"quill"],[/start/i,"pin"],[/new for your classes|party brings|^classes$/i,"sparkle"],[/dungeons/i,"gate"],[/professions|campfire/i,"fire"],[/costs/i,"coins"],[/raids|pvp/i,"swords"],[/ruleset/i,"scales"],[/sources/i,"book"],[/standings|gear overlap/i,"bars"],[/faction/i,"flag"],[/landing/i,"plan"],[/how forever works|race and class/i,"guide"]];
+const FD_SEC_ICONS = [[/role call/i,"dice"],[/short version/i,"list"],[/^decisions/i,"check"],[/adjustments|could change/i,"sliders"],[/lineup|suggested party|role coverage/i,"shield"],[/sample parties/i,"layers"],[/when (to|we can) play/i,"clock"],[/your plan/i,"user"],[/happens next|before oct|key dates/i,"calendar"],[/^the party$|everyone's picks|^races$/i,"results"],[/^names$/i,"quill"],[/start/i,"pin"],[/new for your classes|party brings|^classes$/i,"sparkle"],[/dungeons/i,"gate"],[/professions|campfire/i,"fire"],[/costs/i,"coins"],[/raids|pvp/i,"swords"],[/ruleset/i,"scales"],[/sources/i,"book"],[/standings|gear overlap/i,"bars"],[/faction/i,"flag"],[/landing/i,"plan"],[/how forever works|race and class/i,"guide"]];
 function fdDecorate(root){
   if (!root) return;
   root.querySelectorAll(".sec-head h2, .panel-head h3, .panel > h3, .panel-head h2, .verdict h2").forEach(h=>{
