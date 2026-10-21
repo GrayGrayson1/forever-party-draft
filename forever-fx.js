@@ -12,6 +12,7 @@ if (ls.get(K.skin) === "classic") root.dataset.skin = "classic";
 const reduce = () => window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
 const wait = ms => new Promise(r => setTimeout(r, ms));
 const svgUrl = s => `url("data:image/svg+xml,${encodeURIComponent(s)}")`;
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
 /* ---------- Original artwork ---------- */
 const CUR_ARROW = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff6cf"/><stop offset=".45" stop-color="#e8b53a"/><stop offset="1" stop-color="#7a4a0e"/></linearGradient></defs><path d="M3 2.5L3 25l6.2-5.6 4.4 9.2 4.4-2-4.3-9 8.3-.2z" fill="url(#g)" stroke="#1d1104" stroke-width="1.6" stroke-linejoin="round"/><path d="M5 6.5v13l3.6-3.1" fill="none" stroke="#fffbe6" stroke-width="1.1" stroke-linecap="round" opacity=".85"/></svg>`;
@@ -47,6 +48,7 @@ const WICK = `<svg viewBox="0 0 120 140" width="100%" height="100%" aria-hidden=
 </svg>`;
 
 const ICON = {
+  page:'<svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M13 7l-1.7 4.3L7 13l1.7-4.3z" fill="currentColor"/></svg>',
   lantern:'<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 4.5q3-3 6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><rect x="5.5" y="5" width="9" height="10.5" rx="3.4" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10 7.5c1.3 1.5 1.4 2.8 0 3.7-1.4-.9-1.3-2.2 0-3.7z" fill="currentColor"/><path d="M7 15.5h6l-1 2H8z" fill="currentColor"/></svg>',
   shield:'<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.5l6 2.2v4.6c0 4-2.6 6.6-6 8.2-3.4-1.6-6-4.2-6-8.2V4.7z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M10 5.5v9M6.8 9h6.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
   sound:'<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3.5 8h3l4-3.5v11l-4-3.5h-3z" fill="currentColor"/><path d="M13.5 7.2a4 4 0 0 1 0 5.6M15.6 5a7 7 0 0 1 0 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
@@ -55,8 +57,8 @@ const ICON = {
 
 /* ---------- Styles ---------- */
 const S = 'html[data-skin="classic"]';
-const PRIMARY = `:is(.btn.primary,#view-plan .btn:not(.ghost),#view-launch .btn:not(.ghost),#view-plan #btn-confirm:not(.ghost),.nextup,#wk-bub .wk-go)`;
-const STONE = `:is(.btn:not(.primary),.btn.ghost,.invite,#view-plan .sbtn,#view-plan #btn-confirm.ghost,#view-launch .btn.ghost,.fx-b,#fd-fab,#wk-bub .wk-alt)`;
+const PRIMARY = `:is(.btn.primary,#view-plan .btn:not(.ghost),#view-launch .btn:not(.ghost),#view-plan #btn-confirm:not(.ghost),#view-plan .rc-acts .roll-btn,.nextup,#wk-bub .wk-go)`;
+const STONE = `:is(.btn:not(.primary),.btn.ghost,.invite,#view-plan .sbtn,#view-plan #btn-confirm.ghost,#view-launch .btn.ghost,#view-plan .rc-acts .ghost,.fx-b,#fd-fab,#wk-bub .wk-alt)`;
 const CSS = `
 .fx-ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .fx-b{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:999px;padding:7px 13px;font:inherit;font-size:.88rem;cursor:pointer;line-height:1.1;transition:border-color .15s,background .15s}
@@ -70,6 +72,14 @@ const CSS = `
 #fd-nav .fd-fx{margin:18px 6px 0;padding-top:14px;border-top:1px solid var(--line);display:grid;gap:6px}
 #fd-nav .fd-fx .fx-b{border-radius:8px;width:100%;justify-content:flex-start}
 #fd-nav .fd-fx .fx-b .sw{margin-left:auto}
+.wk-ask{display:inline-grid;place-items:center;width:24px;height:24px;margin:0 0 0 8px;padding:0;border:1px solid transparent;border-radius:50%;background:none;color:var(--muted);cursor:pointer;vertical-align:middle;opacity:.7;font:inherit;line-height:0;transition:opacity .15s,color .15s,background .15s,border-color .15s,transform .2s cubic-bezier(.16,1,.3,1)}
+.wk-ask svg{width:15px;height:15px}
+h2 .wk-ask{width:28px;height:28px}
+h2 .wk-ask svg{width:17px;height:17px}
+.wk-ask:hover,.wk-ask:focus-visible{opacity:1;color:var(--gold);background:var(--gold-soft);border-color:color-mix(in srgb,var(--gold) 35%,transparent);transform:translateY(-1px)}
+.wk-ask:active{transform:translateY(0) scale(.94)}
+@media (hover:none){ .wk-ask{opacity:.85} }
+#wk-bub .wk-hd small{max-width:62%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* Wick and the tour */
 #wk-dim{position:fixed;inset:0;z-index:1000;background:transparent}
@@ -233,6 +243,11 @@ ${S} #wk-bub .wk-ic:hover{background:rgba(0,0,0,.08);color:#2b1906}
 ${S} #wk-bub .wk-xp{background:#2a1a08}
 ${S} #wk-bub .wk-txt .typed::after{background:#7a1f0a}
 ${S} .wk-big{color:#7a1f0a;text-shadow:none}
+${S} .wk-ask{color:#c9a24a}
+${S} #view-plan .rc{background:linear-gradient(180deg,rgba(255,214,140,.07),rgba(0,0,0,.15));box-shadow:inset 0 0 0 1px rgba(138,106,42,.45)}
+${S} #view-plan .rc-list li{background:rgba(0,0,0,.35)}
+${S} #view-plan .rc .roll{color:#ffd451;text-shadow:0 1px 0 #000}
+${S} .wk-ask:hover,${S} .wk-ask:focus-visible{color:#ffd451;background:radial-gradient(circle at 50% 35%,#4a3a1a,#1d1509);border-color:#8a6a2a}
 `;
 const st = document.createElement("style"); st.id = "fx-style"; st.textContent = CSS;
 (document.head || root).appendChild(st);
@@ -281,6 +296,7 @@ const Snd = (() => {
     coin(t){ bell(1568, t, .25, .16); bell(2093, t + .07, .4, .14); },
     error(t){ tone(220, t, .16, "square", .09, 180); tone(160, t + .14, .26, "square", .09, 130); },
     gong(t){ [98, 196, 294.5, 392.6, 588].forEach((f, i) => tone(f, t, 2 - i * .25, "sine", .3 / (i + 1))); noise(t, .1, .14, "lowpass", 900); },
+    dice(t){ for (let i = 0; i < 8; i++){ const tt = t + i * .075 + Math.random() * .03; noise(tt, .035, .28, "bandpass", 1800 + Math.random() * 2600, 3); tone(260 + Math.random() * 380, tt, .03, "triangle", .1); } bell(1318.5, t + .7, .5, .12); },
     ding(t){ [659.25, 783.99, 987.77, 1318.5].forEach((f, i) => bell(f, t + i * .06, 1.4, .17)); bell(1975.5, t + .32, 1.6, .12); noise(t + .25, 1.1, .05, "highpass", 6000, .5); }
   };
   let last = 0;
@@ -309,7 +325,7 @@ function setSound(on){ ls.set(K.snd, on ? null : "off"); mount(); if (on) Snd.pl
 document.addEventListener("click", ev => {
   if (!skinOn() || Tour.active) return;
   const t = ev.target.closest('.tab, #fd-nav a, summary, button, a[href], [role="button"], input[type="checkbox"], input[type="radio"], .ccard');
-  if (!t || t.closest("[data-fx-ctl]") || t.closest("#wk-bub")) return;
+  if (!t || t.closest("[data-fx-ctl]") || t.closest("#wk-bub") || t.closest(".wk-ask")) return;
   if (t.matches(":disabled")) return Snd.play("error");
   if (t.matches(".tab") || t.closest("#fd-nav a[data-page]")) return Snd.play("page");
   if (t.closest("#fd-nav")) return Snd.play("click");
@@ -320,6 +336,7 @@ function toastSound(msg){
   const s = String(msg || "");
   if (/copied|copy/i.test(s)) Snd.play("coin");
   else if (/couldn|can't|cannot|failed|error|offline|missing|pick a|add your|need/i.test(s)) Snd.play("error");
+  else if (/rolled/i.test(s)) Snd.play("pop");
   else if (/saved|confirmed|in with|level|withdrawn|updated|locked/i.test(s)) Snd.play("quest");
   else Snd.play("pop");
 }
@@ -337,8 +354,10 @@ const TIPS = [
   "Dibs tells the planner you're set on a class. It will always slot you as that class.",
   "Won't play keeps a class off your plate. Suggestions will never push you toward it.",
   "Two clicks to anywhere: pick a page in the Legend, then a section.",
+  "Every section has a small lantern button. Tap it and I'll explain that section.",
   "Copy the plan for Discord from the Game plan tab. It reads well on a phone, too.",
   "Confirm the lineup on the Game plan. It locks once everyone in the party has confirmed.",
+  "Too many healers? The Role call on the Game plan settles it with a roll, the old-fashioned way.",
   "Your vote link moves your ballot to another device. Keep it to yourself."
 ];
 let tipI = Math.floor(Math.random() * TIPS.length);
@@ -353,7 +372,8 @@ function mount(){
   renderTip(false);
   document.querySelectorAll("[data-fx-ctl]").forEach(el => {
     const sk = skinOn(), sn = soundOn();
-    el.innerHTML = `<button type="button" class="fx-b" data-fx="tour">${ICON.lantern}<span>Take the tour</span></button>`
+    el.innerHTML = `<button type="button" class="fx-b" data-fx="page">${ICON.page}<span>Tour this page</span></button>`
+      + `<button type="button" class="fx-b" data-fx="tour">${ICON.lantern}<span>Full site tour</span></button>`
       + `<button type="button" class="fx-b" data-fx="skin" aria-pressed="${sk}">${ICON.shield}<span>Classic 2005 look</span><i class="sw" aria-hidden="true"></i></button>`
       + `<button type="button" class="fx-b" data-fx="snd" aria-pressed="${sn}" aria-label="Sounds ${sn ? "on" : "off"}">${sn ? ICON.sound : ICON.mute}<span>Sounds</span><i class="sw" aria-hidden="true"></i></button>`;
   });
@@ -365,7 +385,98 @@ document.addEventListener("click", ev => {
   if (a === "skin") setSkin(!skinOn());
   else if (a === "snd") setSound(!soundOn());
   else if (a === "tour"){ document.body.classList.remove("fd-open"); Tour.start(); }
+  else if (a === "page"){ document.body.classList.remove("fd-open"); Tour.startPage(); }
 });
+
+/* ---------- Section guides: what Wick says about every section of every tab ---------- */
+const TABS = { ballot:"My ballot", results:"Party board", guide:"Field guide", plan:"Game plan", launch:"Launch guide" };
+const TAB_ORDER = ["ballot", "results", "plan", "launch", "guide"];
+const OFFER = {
+  ballot:["Want a quick walk through your ballot? Seven stops, one minute.", "Quick tour of your ballot?"],
+  results:["First time on the Party board? I can walk you through it.", "Quick tour of the Party board?"],
+  plan:["First time on the Game plan? I can walk you through it.", "Quick tour of the Game plan?"],
+  launch:["First time in the Launch guide? Want the quick version?", "Quick tour of the Launch guide?"],
+  guide:["First time in the Field guide? Want the quick version?", "Quick tour of the Field guide?"]
+};
+const NOTES = {
+  ballot:[
+    [/^Your name$/, "Your name shows next to your picks on the party board, and only people who've voted can see it. Nicknames welcome. I go by Wick, legally."],
+    [/Rank the classes/, "Tap up to five classes in the order you'd play them. Your #1 gets 5 points, your #5 gets 1. Each pick can take up to two specs, and a Dibs if you're set on it."],
+    [/^Won't play$/, "Classes you'd rather not touch. Suggestions will never push you toward them, and the party can see them on the board, so nobody's surprised."],
+    [/Faction and playstyle/, "Horde or Alliance, and how much you're here for PvP. The two factions can never group, so this is the one to settle first."],
+    [/Ruleset$/, "Forever has no realms, just rulesets, and you can only group on the same one. Mark every ruleset you'd play and star your favorite."],
+    [/Roles you'd fill/, "Main is what you want to play. Can flex is what you'd do if the party needs it. The planner fits one tank and one healer per five, so flex generously."],
+    [/Race$/, "Races that can play your #1 pick. Where you start matters if you want to level together from the very first quest."],
+    [/^Heroic Pack$/, "Yes, maybe or no on the Heroic Pack. It's needed for early name reservation and the Skyborne race, and each one comes with an Invite-A-Friend code."],
+    [/^Character names$/, "Up to three name ideas for reservation week, Oct 27 to Nov 3. Mark one Reserved once you've grabbed it, so nobody chases the same name."],
+    [/Professions$/, "Up to two professions, once for your #1 or for each class you ranked. The game plan spots gaps and doubles, like two blacksmiths and no alchemist."],
+    [/Schedule and pace/, "Days, times, hours a week and how fast you level. This is how the plan finds the night most of you can actually play."],
+    [/^Loot rule$/, "How drops get split. Agree before the first dungeon and spare the party an argument over the first shiny sword."],
+    [/Start over or withdraw/, "Start over clears your draft. Withdraw takes your ballot off the board entirely, and it asks twice, because I care."]
+  ],
+  results:[
+    [/Where we're landing/, "The headline: faction, ruleset, playstyle, top classes, best night and launch night, from every ballot so far."],
+    [/Everyone's picks/, "Every ballot by name, ranked 1st to 5th. A star means dibs, and won't-play classes sit on the far right."],
+    [/What could change/, "Suggestions that would make the party work better, like a crowded role, a doubled class or a schedule gap."],
+    [/Suggested party/, "The planner's lineup: one ranked class each, in a role you said you'd play, with one tank and one healer per five."],
+    [/What the party brings/, "The buffs and tools the suggested party covers, like resurrection, crowd control and dispels, and anything it's missing."],
+    [/Gear overlap/, "Armor types in the suggested party. Fewer people sharing an armor type means fewer loot fights."],
+    [/Class standings/, "Points per class across every ballot. A 1st-place pick is worth 5, a 5th is worth 1."],
+    [/^Faction$/, "Where everyone leans, from Horde for sure to Alliance for sure. Your own answer is marked."],
+    [/PvE/, "How the group splits between dungeons and quests on one side and PvP on the other."],
+    [/Rulesets people would play/, "How many of you would play each ruleset, with favorites counted separately."],
+    [/Role coverage/, "Who can tank, heal and deal damage, as main or flex. A dungeon wants one tank, one healer and three damage."],
+    [/When we can play/, "Who's free when. The outlined cell is the best slot, and the gold dot is you."],
+    [/^Races$/, "The races everyone picked, plus who's buying the Heroic Pack for Skyborne."],
+    [/^Professions$/, "Professions for each person's slotted class. Dashed means nobody has it yet."]
+  ],
+  guide:[
+    [/Key dates/, "Every date that matters, from the beta to raids. The highlighted one is what's coming up next."],
+    [/How Forever works/, "The ground rules in one list: rulesets instead of realms, no cross-faction groups, level 60 with no flying, camping and the legacy system."],
+    [/^Classes$/, "All nine classes, their roles and what changed in the beta. Worth a skim before you rank."],
+    [/^(Warrior|Paladin|Hunter|Rogue|Priest|Shaman|Mage|Warlock|Druid)$/, "Roles, specs and the biggest beta changes for this class. The launch guide has every change."],
+    [/Race and class combos/, "Which races can play which classes, so your race and your #1 pick actually match."],
+    [/^Sources$/, "Where all of this comes from. Beta details can still change before launch."]
+  ],
+  plan:[
+    [/short version/, "The whole plan in five lines, plus one-tap copies for Discord and a calendar file for your group nights."],
+    [/^Role call$/, "When more of you want to heal or tank than a party of five has room for, settle it here. Roll for it or flex. Everyone keeps their pick; this only decides the suggested party."],
+    [/^Decisions/, "Every big call with a status: settled, leaning or open. The open ones need a conversation."],
+    [/Adjustments/, "The changes that would help the party most, ranked by impact, with who needs to act."],
+    [/Proposed lineup/, "The suggested party with each person's class, role and what they bring. Confirm it here; it locks once everyone has."],
+    [/Sample parties/, "Three ways the party could look, each with what it gains and what it misses. Handy when two of you want the same role."],
+    [/When to play/, "The best group nights and how many of you are free for each."],
+    [/Your plan/, "Just you: your slot, race, starting zone, names and what's new for your class."],
+    [/happens next/, "The road from here to raids, and what to do at each stop."]
+  ],
+  launch:[
+    [/Before Oct 27/, "Your party's pre-launch checklist, built from the ballots. Green is done; everything else says what's left."],
+    [/^The party$/, "Who's playing what, where they start, Heroic Pack, names, level and time zone, all in one table."],
+    [/^Names$/, "How name reservation works, plus everyone's name ideas. It's first come, first served, so keep a backup."],
+    [/Where you'll start/, "Starting zones by race, and where the party can meet up if you start apart."],
+    [/What's new for your classes/, "The beta changes for the classes in your party."],
+    [/^Every class$/, "Changes for all nine classes. Tap one to open it."],
+    [/Levels and dungeons/, "Log your level after each session and see which dungeons fit the party right now."],
+    [/^All dungeons$/, "Every dungeon by level range. Filter by side to see what's close to home."],
+    [/Professions and campfires/, "Each profession's campfire buff and who in the party has it."],
+    [/Costs and milestones/, "What costs what and when, from the Heroic Pack to riding at 40 and 60."],
+    [/Raids and PvP/, "The launch raids and battlegrounds, their sizes, and how many more players you'd need for each raid."],
+    [/Rulesets, explained/, "Every ruleset in a sentence, so the vote means something."],
+    [/^Sources$/, "Where the launch guide's facts come from, and when they were last checked."]
+  ]
+};
+const STOPS = {
+  ballot:[/^Your name$/, /Rank the classes/, /Faction and playstyle/, /Ruleset$/, /Roles you'd fill/, /Race$/, /Professions$/, /Schedule and pace/],
+  results:[/Where we're landing/, /Everyone's picks/, /What could change/, /Suggested party/, /What the party brings/, /Role coverage/, /When we can play/],
+  guide:[/Key dates/, /How Forever works/, /^Classes$/, /Race and class combos/, /^Sources$/],
+  plan:[/short version/, /^Role call$/, /^Decisions/, /Adjustments/, /Proposed lineup/, /Sample parties/, /When to play/, /Your plan/, /happens next/],
+  launch:[/Before Oct 27/, /^The party$/, /^Names$/, /Where you'll start/, /What's new for your classes/, /Levels and dungeons/, /Costs and milestones/, /Raids and PvP/]
+};
+const LOCKED = {
+  results:"The party board unlocks once you've voted. Then you'll see everyone's picks by name and the party that fits best. No peeking. I tried.",
+  plan:"The game plan fills in once you've voted: decisions, a lineup to confirm and sample parties. Cast your ballot and I'll show you around."
+};
+const noteFor = (tab, label) => { const hit = (NOTES[tab] || []).find(([re]) => re.test(label)); return hit ? hit[1] : null; };
 
 /* ---------- Wick's tour ---------- */
 const Tour = {
@@ -386,11 +497,15 @@ const Tour = {
       const a = b.dataset.a;
       if (a === "next") this.next(); else if (a === "back") this.go(this.i - 1); else if (a === "close") this.end(false);
       else if (a === "mute"){ setSound(!soundOn()); this.renderHead(); }
-      else if (a === "start"){ Snd.unlock(); this.begin(); } else if (a === "later"){ ls.set(K.tour, "1"); this.hide(); }
+      else if (a === "start"){ Snd.unlock(); const o = this.peekOpts; this.peeking = false; if (o) o.onStart(); }
+      else if (a === "later"){ const o = this.peekOpts; if (o && o.onLater) o.onLater(); this.hide(); }
       else if (a === "finish-go"){ const g = this.finishGo; this.end(true); if (g) g(); }
+      else if (a === "done") this.end(true);
+      else if (a === "pagetour"){ this.end(true); setTimeout(() => this.startPage(), 260); }
+      else if (a === "nextpage"){ const t = b.dataset.tab; this.end(true); setTimeout(() => this.startPage(t), 260); }
     });
-    document.addEventListener("click", ev => { if (this.peeking && !ev.target.closest("#wk-bub, #wk, [data-fx-ctl]")){ ls.set(K.tour, "1"); this.hide(); } }, true);
-    wk.addEventListener("click", () => { if (wk.classList.contains("peek")){ Snd.unlock(); this.begin(); } });
+    document.addEventListener("click", ev => { if (this.peeking && !ev.target.closest("#wk-bub, #wk, [data-fx-ctl]")){ const o = this.peekOpts; if (o && o.onLater) o.onLater(); this.hide(); } }, true);
+    wk.addEventListener("click", () => { if (wk.classList.contains("peek")){ Snd.unlock(); const o = this.peekOpts; this.peeking = false; if (o) o.onStart(); } });
     addEventListener("resize", () => this.reflow());
     addEventListener("scroll", () => this.reflow(), { passive:true });
     document.addEventListener("keydown", ev => {
@@ -420,25 +535,44 @@ const Tour = {
           ? "The party board: everyone's picks by name, where we're landing, and the party that fits best."
           : "The party board unlocks once you've voted. Then you'll see everyone's picks by name and the party that fits best. No peeking. I tried." },
       { tab:"plan", target:["#brief section", "#brief"], text:"The game plan turns votes into decisions, sample parties and a lineup everyone confirms. The launch guide next door has the checklist, names, dungeons and costs." },
-      { target:["#fx-hero [data-fx='skin']", "#fd-nav [data-fx='skin']"], mood:"happy", text:"Feeling nostalgic? Flip on the Classic 2005 look for stone, gold and a sword cursor. Sounds toggle right next to it, and the tour button brings me back anytime." },
+      { target:["#fx-hero [data-fx='skin']", "#fd-nav [data-fx='skin']"], mood:"happy", text:"Feeling nostalgic? Flip on the Classic 2005 look for stone, gold and a sword cursor. Sounds toggle right next to it, and every section has a little lantern button if you want me again." },
       { finale:true }
     ];
   },
-  offer(){
-    if (this.active || ls.get(K.tour)) return;
+  peek(o){
+    if (this.active) return;
     const { wk, bub } = this.build();
-    this.peeking = true;
+    this.peeking = true; this.peekOpts = o;
     wk.classList.add("peek"); this.mood("happy");
     const small = innerWidth < 640, bw = small ? innerWidth - 86 : Math.min(310, innerWidth - 24);
     bub.className = small ? "mini" : ""; bub.style.width = bw + "px";
-    bub.innerHTML = small ? `<div class="wk-row"><span class="wk-q">New here? One-minute tour, with sound.</span><button type="button" class="wk-go" data-a="start">Show me</button><button type="button" class="wk-ic" data-a="later" aria-label="No thanks"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button></div>` : `<div class="wk-hd">Wick<small>First visit?</small><button type="button" class="wk-ic" data-a="mute" aria-label="${soundOn() ? "Mute sounds" : "Turn sounds on"}">${soundOn() ? ICON.sound : ICON.mute}</button></div><div class="wk-txt">Hi! I'm Wick. Want a one-minute tour? It has sound; the speaker mutes it.</div><div class="wk-row"><div class="wk-acts" style="margin-left:auto"><button type="button" class="wk-alt" data-a="later">Maybe later</button><button type="button" class="wk-go" data-a="start">Show me</button></div></div>`;
+    bub.innerHTML = small ? `<div class="wk-row"><span class="wk-q">${esc(o.mini)}</span><button type="button" class="wk-go" data-a="start">Show me</button><button type="button" class="wk-ic" data-a="later" aria-label="No thanks"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button></div>` : `<div class="wk-hd">Wick<small>${esc(o.title)}</small><button type="button" class="wk-ic" data-a="mute" aria-label="${soundOn() ? "Mute sounds" : "Turn sounds on"}">${soundOn() ? ICON.sound : ICON.mute}</button></div><div class="wk-txt">${esc(o.text)}</div><div class="wk-row"><div class="wk-acts" style="margin-left:auto"><button type="button" class="wk-alt" data-a="later">Maybe later</button><button type="button" class="wk-go" data-a="start">Show me</button></div></div>`;
     const sb = document.getElementById("savebar"), sbH = sb && !sb.hidden ? sb.getBoundingClientRect().height : 0;
     const bh = bub.offsetHeight, ox = innerWidth - bw - 12 - (small ? 0 : 12), oy = Math.max(110, innerHeight - sbH - bh - 14);
     bub.style.transition = "none"; bub.style.translate = `${ox}px ${oy}px`; void bub.offsetWidth; bub.style.transition = "";
     const wx = small ? 6 : ox + bw - 100, wy = small ? oy + bh / 2 - 46 : oy - 88;
     wk.style.transition = "none"; wk.style.transform = `translate(${innerWidth + 20}px,${wy}px)`; void wk.offsetWidth; wk.style.transition = "";
     wk.style.transform = `translate(${wx}px,${wy}px)`;
-    setTimeout(() => { if (this.peeking){ bub.classList.add("show"); this.anim("hop"); } }, 650);
+    setTimeout(() => { if (this.peeking && this.peekOpts === o){ bub.classList.add("show"); this.anim("hop"); } }, 650);
+  },
+  offer(){
+    if (this.active || ls.get(K.tour)) return;
+    this.peek({ title:"First visit?", text:"Hi! I'm Wick. Want a one-minute tour? It has sound; the speaker mutes it.", mini:"New here? One-minute tour, with sound.",
+      onStart:() => this.begin(), onLater:() => ls.set(K.tour, "1") });
+  },
+  offerPage(tab){
+    if (!tab || this.active || this.peeking || !ls.get(K.tour) || ls.get("fpd-tab-" + tab) || !OFFER[tab]) return;
+    if (this.cfg.current && this.cfg.current() !== tab) return;
+    if (this.pageSteps(tab).length < 2) return;
+    this.peek({ title:TABS[tab], text:OFFER[tab][0], mini:OFFER[tab][1],
+      onStart:() => this.startPage(tab), onLater:() => ls.set("fpd-tab-" + tab, "1") });
+  },
+  onTab(tab){
+    clearTimeout(this.offerT);
+    if (this.peeking){ const o = this.peekOpts; if (o && o.onLater) o.onLater(); this.hide(); }
+    this.syncSoon();
+    if (this.active) return;
+    this.offerT = setTimeout(() => this.offerPage(tab), 1100);
   },
   hide(){
     if (!this.els) return;
@@ -449,16 +583,58 @@ const Tour = {
     spot.style.opacity = "0"; dim.style.display = "none"; this.peeking = false;
   },
   start(){ this.build(); Snd.unlock(); this.active = false; this.peeking = false; this.els.wk.classList.remove("peek"); this.begin(); },
-  begin(){
+  begin(){ this.run(this.makeSteps(), { kind:"site" }); },
+  run(steps, meta){
     const { wk, bub, spot, dim } = this.build();
-    this.peeking = false; wk.classList.remove("peek");
-    this.active = true; this.steps = this.makeSteps();
+    this.peeking = false; wk.classList.remove("peek"); clearTimeout(this.offerT);
+    this.meta = meta || { kind:"site" }; this.active = true; this.steps = steps;
     dim.style.display = ""; spot.style.opacity = "1"; bub.style.width = "";
     document.body.classList.remove("fd-open");
     this.go(0);
     clearInterval(this.watch); this.watch = setInterval(() => { if (!this.active) return clearInterval(this.watch); this.reflow(); }, 350);
   },
-  next(){ this.stopTyping(); if (this.i < this.steps.length - 1) this.go(this.i + 1); },
+  findSection(re){
+    const it = (this.cfg.sections ? this.cfg.sections() : []).find(x => re.test(x.label));
+    return it ? (it.el.matches(".panel-head") && it.el.closest(".panel")) || it.el : null;
+  },
+  pageSteps(tab){
+    const items = this.cfg.sections ? this.cfg.sections() : [], steps = [];
+    (STOPS[tab] || []).forEach(re => {
+      const it = items.find(x => re.test(x.label)), text = it && noteFor(tab, it.label);
+      if (it && text) steps.push({ tab, label:it.label, target:() => this.findSection(re), text });
+    });
+    if (steps.length < 2 && LOCKED[tab]) return [{ tab, label:TABS[tab], target:["#view-" + tab + " .locked", "#view-" + tab], text:LOCKED[tab] }];
+    return steps;
+  },
+  async startPage(tab){
+    this.build(); Snd.unlock();
+    tab = tab || (this.cfg.current && this.cfg.current()) || "ballot";
+    ls.set("fpd-tab-" + tab, "1");
+    if (this.cfg.current && this.cfg.current() !== tab && this.cfg.setTab){ this.cfg.setTab(tab); Snd.play("page"); await wait(180); }
+    const steps = this.pageSteps(tab);
+    if (!steps.length) return;
+    if (steps.length > 1) steps.push({ finale:true });
+    this.run(steps, { kind: steps.length > 1 ? "page" : "one", tab });
+  },
+  explain(label){
+    const tab = (this.cfg.current && this.cfg.current()) || "ballot", text = noteFor(tab, label);
+    if (!text) return;
+    const re = new RegExp("^" + label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "$");
+    this.build(); Snd.unlock();
+    this.run([{ tab, label, target:() => this.findSection(re), text }], { kind:"one", tab });
+  },
+  sync(){
+    if (!this.cfg.sections || !this.cfg.current) return;
+    const tab = this.cfg.current();
+    for (const it of this.cfg.sections()){
+      if (!it.el || !noteFor(tab, it.label)) continue;
+      const h = it.el.matches("h2,h3,h4,.lbl") ? it.el : it.el.querySelector("h2, h3, h4, .lbl");
+      if (!h || h.querySelector(".wk-ask")) continue;
+      h.insertAdjacentHTML("beforeend", `<button type="button" class="wk-ask" data-label="${esc(it.label)}" aria-label="Ask Wick about ${esc(it.label)}" title="Ask Wick about this">${ICON.lantern}</button>`);
+    }
+  },
+  syncSoon(){ clearTimeout(this.syncT); this.syncT = setTimeout(() => this.sync(), 120); },
+  next(){ this.stopTyping(); if (this.meta && this.meta.kind === "one"){ this.end(true); return; } if (this.i < this.steps.length - 1) this.go(this.i + 1); },
   async go(i){
     if (i < 0 || i >= this.steps.length) return;
     const token = this.tok = (this.tok || 0) + 1;
@@ -487,6 +663,7 @@ const Tour = {
   },
   resolve(t){
     if (!t) return null;
+    if (typeof t === "function"){ const el = t(); return el && el.getClientRects().length ? el : null; }
     for (const sel of [].concat(t)){
       for (const el of document.querySelectorAll(sel)){
         const r = el.getBoundingClientRect();
@@ -569,14 +746,16 @@ const Tour = {
     const m = h.querySelector('[data-a="mute"]'); if (m){ m.innerHTML = soundOn() ? ICON.sound : ICON.mute; m.setAttribute("aria-label", soundOn() ? "Mute sounds" : "Turn sounds on"); }
   },
   renderBubble(step, measureOnly){
-    const { bub } = this.els, n = this.steps.length - 1, i = this.i;
-    const pct = Math.round(i / n * 100);
+    const { bub } = this.els, kind = (this.meta && this.meta.kind) || "site", i = this.i;
+    const n = kind === "one" ? 1 : this.steps.length - 1, pct = Math.round(i / n * 100);
+    const tag = kind === "one" ? esc(step.label) : kind === "page" ? `${TABS[this.meta.tab]} · ${i + 1} of ${n}` : `${i + 1} of ${n}`;
     bub.className = measureOnly ? "" : bub.className.replace(/\bfin\b/, "").trim();
-    bub.innerHTML = `<div class="wk-hd">Wick<small>${i + 1} of ${n}</small><button type="button" class="wk-ic" data-a="mute" aria-label="${soundOn() ? "Mute sounds" : "Turn sounds on"}">${soundOn() ? ICON.sound : ICON.mute}</button><button type="button" class="wk-ic" data-a="close" aria-label="End the tour"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button></div>`
+    bub.innerHTML = `<div class="wk-hd">Wick<small>${tag}</small><button type="button" class="wk-ic" data-a="mute" aria-label="${soundOn() ? "Mute sounds" : "Turn sounds on"}">${soundOn() ? ICON.sound : ICON.mute}</button><button type="button" class="wk-ic" data-a="close" aria-label="End the tour"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button></div>`
       + `<div class="wk-txt"><span class="full">${step.text}</span><span class="typed"></span></div>`
-      + `<div class="wk-row"><div class="wk-xp" title="Tour XP"><i style="width:${pct}%"></i></div><div class="wk-acts">`
+      + (kind === "one" ? `<div class="wk-row"><div class="wk-acts" style="margin-left:auto"><button type="button" class="wk-alt" data-a="pagetour">Tour this page</button><button type="button" class="wk-go" data-a="done">Got it</button></div></div>` :
+        `<div class="wk-row"><div class="wk-xp" title="Tour XP"><i style="width:${pct}%"></i></div><div class="wk-acts">`
       + (step.alt ? `<button type="button" class="wk-alt" data-a="close">${step.alt}</button>` : (i > 0 ? `<button type="button" class="wk-alt" data-a="back">Back</button>` : ""))
-      + `<button type="button" class="wk-go" data-a="next">${step.go || (i === n - 1 ? "Finish" : "Next")}</button></div></div>`;
+      + `<button type="button" class="wk-go" data-a="next">${step.go || (i === n - 1 ? "Finish" : "Next")}</button></div></div>`);
     if (measureOnly) bub.querySelector(".typed").textContent = "";
   },
   type(text){
@@ -615,7 +794,35 @@ const Tour = {
       if (++n > 14) clearInterval(id);
     }, 45);
   },
+  async pageFinale(){
+    const { wk, bub, spot } = this.els, token = this.tok, tab = this.meta.tab;
+    spot.classList.add("empty"); Object.assign(spot.style, { left:"50%", top:"50%", width:"0px", height:"0px" }); this.hole(null);
+    const nextTab = TAB_ORDER[(TAB_ORDER.indexOf(tab) + 1) % TAB_ORDER.length];
+    const n = this.steps.length - 1;
+    bub.className = "fin";
+    bub.innerHTML = `<div class="wk-hd">Wick<small>${TABS[tab]} explored</small><button type="button" class="wk-ic" data-a="close" aria-label="Close"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button></div>`
+      + `<div class="wk-big">${TABS[tab]} explored!</div><div class="wk-txt" style="margin-top:4px">Every section has a little lantern button if you want me again. I'll be right here. Glowing.</div>`
+      + `<div class="wk-row"><div class="wk-xp"><i style="width:${Math.round((n - 1) / n * 100)}%"></i></div><div class="wk-acts"><button type="button" class="wk-alt" data-a="close">Close</button><button type="button" class="wk-go" data-a="nextpage" data-tab="${nextTab}">Tour the ${TABS[nextTab]}</button></div></div>`;
+    const bw = Math.min(380, innerWidth - 24); bub.style.width = bw + "px";
+    const bh = bub.offsetHeight, bx = (innerWidth - bw) / 2, by = Math.max(110, innerHeight / 2 - bh / 2 + 40);
+    bub.style.translate = `${bx}px ${by}px`;
+    const small = innerWidth < 640, ww = small ? 72 : 88;
+    wk.style.transform = `translate(${innerWidth / 2 - ww / 2}px,${by - (small ? 92 : 112)}px)`;
+    this.mood("happy"); Snd.play("whoosh");
+    await wait(500); if (token !== this.tok) return;
+    requestAnimationFrame(() => bub.classList.add("show"));
+    await wait(350); if (token !== this.tok) return;
+    const bar = bub.querySelector(".wk-xp i"); if (bar) bar.style.width = "100%";
+    await wait(500); if (token !== this.tok) return;
+    Snd.play("quest"); this.anim("hop");
+    if (!reduce()){
+      const r = wk.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+      const ring = document.createElement("i"); ring.className = "wk-ring"; ring.style.left = cx + "px"; ring.style.top = cy + "px"; document.body.appendChild(ring); setTimeout(() => ring.remove(), 1200);
+      const plus = document.createElement("div"); plus.className = "wk-plus"; plus.textContent = "+50 XP"; plus.style.left = cx + "px"; plus.style.top = (r.top - 10) + "px"; document.body.appendChild(plus); setTimeout(() => plus.remove(), 1700);
+    }
+  },
   async finale(){
+    if (this.meta && this.meta.kind === "page") return this.pageFinale();
     const { wk, bub, spot } = this.els, token = this.tok;
     spot.classList.add("empty"); Object.assign(spot.style, { left:"50%", top:"50%", width:"0px", height:"0px" }); this.hole(null);
     const voted = this.state().voted;
@@ -679,7 +886,20 @@ window.FX = {
       const w = function(msg){ if (skinOn() || Tour.active) toastSound(msg); return t0.apply(this, arguments); };
       w.__fx = true; window.toast = w;
     }
-    if (!ls.get(K.tour) && !/^#vote=/.test(location.hash) && !(cfg && cfg.noOffer)) setTimeout(() => { if (!Tour.active) Tour.offer(); }, 1600);
-  }
+    if (!/^#vote=/.test(location.hash) && !(cfg && cfg.noOffer)){
+      if (!ls.get(K.tour)) setTimeout(() => { if (!Tour.active) Tour.offer(); }, 1600);
+      else setTimeout(() => { if (!Tour.active && !Tour.peeking) Tour.offerPage(cfg.current && cfg.current()); }, 1600);
+    }
+    const main = document.querySelector("main");
+    if (main && window.MutationObserver) new MutationObserver(() => Tour.syncSoon()).observe(main, { childList:true, subtree:true });
+    Tour.sync();
+  },
+  onTab(tab){ Tour.onTab(tab); },
+  sync(){ Tour.sync(); }
 };
+document.addEventListener("click", ev => {
+  const b = ev.target.closest(".wk-ask"); if (!b) return;
+  ev.preventDefault(); ev.stopPropagation();
+  Tour.explain(b.dataset.label);
+}, true);
 })();
